@@ -20,7 +20,7 @@ function renderEvent(event, canRespond, active) {
   const entry = area && event.area !== 'plant'
     ? `<button class="event-entry" type="button" data-event-id="${escape(event.id)}" title="${escape(area.name)} 보기">${content}</button>`
     : `<div class="event-entry">${content}</div>`;
-  return `<li${active ? ` class="alarm-card" data-kind="${escape(event.kind)}"${event.ack ? ' data-silenced' : ''}` : ''}>
+  return `<li${active ? ` class="alarm-card" data-kind="${escape(event.kind)}"` : ''}>
     ${entry}${active || canRespond ? `<div class="alarm-card-actions">${alarmActions(event, canRespond, active)}</div>` : ''}</li>`;
 }
 
@@ -36,32 +36,33 @@ export function mountEventMonitor(selectEvent, openResponse, silenceAlarm) {
 
   function render(resetScroll = false) {
     const alarmMode = mode === 'alarms';
-    const current = status?.[mode] ?? [];
+    const alarms = status?.alarms.filter(({ ack }) => !ack) ?? [];
+    const current = alarmMode ? alarms : status?.events ?? [];
     const responseIds = new Set(status?.response_events ?? []);
     const available = current.filter(({ id }) => responseIds.has(id)).map(({ id }) => id);
     const key = JSON.stringify([status?.run, mode, current, available]);
     if (renderKey !== key) {
       const focused = document.activeElement;
       const { eventId, responseId, ackId } = focused?.dataset ?? {};
-      entries = current.slice().sort((a, b) => (alarmMode ? Number(Boolean(a.ack)) - Number(Boolean(b.ack)) : 0) || b.id - a.id);
+      entries = current.slice().sort((a, b) => b.id - a.id);
       list.classList.toggle('alarm-list', alarmMode);
       const restoreFocus = list.contains(focused);
       list.innerHTML = entries.map((entry) => renderEvent(entry, responseIds.has(entry.id), alarmMode)).join('');
       list.hidden = !entries.length;
       if (restoreFocus) {
         const selector = responseId ? `[data-response-id="${responseId}"]` : eventId ? `[data-event-id="${eventId}"]`
-          : `[data-ack-id="${ackId}"], [data-response-id="${ackId}"]:enabled`;
+          : `[data-ack-id="${ackId}"]`;
         const nextFocus = list.querySelector(selector) ?? content;
-        nextFocus.focus({ preventScroll: !ackId });
+        nextFocus.focus({ preventScroll: true });
       }
       renderKey = key;
     }
     const text = connected
-      ? (current.length ? '' : alarmMode ? '현재 활성 알람이 없습니다.' : '이 실행에 기록된 이벤트가 없습니다.')
+      ? (current.length ? '' : alarmMode ? '표시할 알람이 없습니다.' : '이 실행에 기록된 이벤트가 없습니다.')
       : status ? '연결 끊김 · 마지막 수신 기록' : '알람 및 이벤트에 연결하지 못했습니다.';
     if (message.textContent !== text) message.textContent = text;
     message.hidden = !text;
-    const total = status ? String(status.alarms.length) : '';
+    const total = status ? String(alarms.length) : '';
     if (count.textContent !== total) count.textContent = total;
     if (resetScroll || shownRun !== status?.run) content.scrollTop = 0;
     shownRun = status?.run;

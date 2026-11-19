@@ -16,6 +16,5 @@ export function alarmActions(alarm, canRespond, active = true) {
   const response = alarm.kind === 'trip' ? '대응 절차 보기' : '대응 비교';
   return `${active || canRespond ? `<button class="alarm-response" type="button" data-response-id="${id}"
     aria-label="${response} · ${label}" aria-haspopup="dialog"${canRespond ? '' : ' disabled title="비교할 발생 기록이 없습니다"'}>${response}</button>` : ''}
-    ${!active ? '' : alarm.ack ? '<span class="alarm-silenced">알림 꺼짐</span>'
-    : `<button type="button" data-ack-id="${id}" aria-label="알림 끄기 · ${label}">알림 끄기</button>`}`;
+    ${active ? `<button type="button" data-ack-id="${id}" aria-label="알림 끄기 · ${label}">알림 끄기</button>` : ''}`;
 }

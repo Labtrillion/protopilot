@@ -289,7 +289,6 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
   background: color-mix(in srgb, var(--alarm-ink) 13%, var(--surface-raised));
 }
 .alarm-card[data-kind="trip"] { --alarm-ink: var(--danger); }
-.alarm-card[data-silenced] { --alarm-ink: var(--muted); background: var(--surface); }
 .alarm-card-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.12rem 0.38rem; }
 .alarm-card-kind {
   flex: none; padding: 0.09rem 0.3rem; border-radius: 3px; color: var(--alarm-ink);
@@ -300,7 +299,6 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .alarm-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
 .alarm-card-actions button { padding-inline: 0.5rem; font-size: 0.81rem; }
 .alarm-response:enabled { border-color: var(--tracked); color: var(--tracked); }
-.alarm-silenced { color: var(--muted); font-size: 0.78rem; }
 .event-entry {
   display: grid; width: 100%; gap: 0.22rem; padding: 0.48rem 0.7rem; border: 0; border-radius: 0;
   justify-content: stretch; text-align: left; white-space: normal; overflow-wrap: anywhere;
