@@ -3,6 +3,7 @@
   font-family: "Inter", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   /* Console surfaces and controls */
   --surface: #eef0f2;
+  --surface-raised: #fafbfc;
   --line: #b7bcc2;
   --line-soft: #cdd1d5;
   --control-line: #727a83;
@@ -79,38 +80,62 @@ select {
   background-size: var(--select-arrow-size);
   background-repeat: no-repeat;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
+select:disabled { cursor: default; }
 @supports (appearance: base-select) and selector(select::picker(select)) {
   select, select::picker(select) { appearance: base-select; }
-  select::picker-icon, select option::checkmark { display: none; }
+  select {
+    align-items: center;
+    gap: 0.5rem;
+    padding-inline-end: 0.56rem;
+    background-image: none;
+  }
+  select::picker-icon { color: var(--muted); flex: none; }
   select::picker(select) {
     position-area: block-end span-inline-end;
     position-try-fallbacks: flip-block;
-    min-inline-size: anchor-size(self-inline);
+    inline-size: anchor-size(self-inline);
     max-inline-size: 100%;
     max-block-size: min(18rem, calc(50dvh - var(--control-size)));
-    margin: 0.2rem 0;
-    padding: 0.2rem 0;
+    margin: 0.25rem 0;
+    padding: 0.25rem;
     overflow: auto;
     overscroll-behavior: contain;
     border: 0;
+    border-radius: 5px;
     outline: none;
-    box-shadow: none;
-    background: var(--surface);
+    box-shadow: 0 0.25rem 0.75rem color-mix(in srgb, var(--text) 19%, transparent);
+    background: var(--surface-raised);
     color: var(--text);
+    font: inherit;
   }
   select option {
-    display: block;
-    padding: 0.42rem 0.56rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    min-block-size: var(--control-size);
+    padding: 0.4rem 0.5rem;
     border: 0;
+    border-radius: 3px;
     outline: none;
     color: inherit;
     background: transparent;
-    font-weight: inherit;
+    font-weight: 400;
     overflow-wrap: anywhere;
+    cursor: pointer;
   }
-  select option:disabled { color: var(--disabled-text); }
-  :root:not([data-pointer-focus]) select option:focus-visible { text-decoration: underline; }
+  select option::checkmark { order: 1; flex: none; color: var(--muted); }
+  select option:disabled { color: var(--disabled-text); cursor: default; }
+  @media (hover: hover) {
+    select option:not(:disabled):hover { background: var(--surface); }
+  }
+  :root:not([data-pointer-focus]) select option:focus-visible {
+    background: var(--surface);
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
 }
 @media (forced-colors: active) {
   select { appearance: auto; padding-right: 0.56rem; background-image: none; }
@@ -210,7 +235,7 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .search svg { position: absolute; left: 0.51rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
 .search input { width: 100%; min-height: var(--control-size); padding: 0.24rem 0.42rem 0.24rem 1.96rem; }
 .search input::placeholder { color: var(--muted); }
-.filter-bar select { --select-arrow-inset: 0.5rem; width: 100%; font-size: 0.8rem; }
+.filter-bar select { --select-arrow-inset: 0.5rem; width: 100%; font-size: 0.9rem; }
 .matches { color: var(--muted); white-space: nowrap; font: 0.76rem var(--mono); }
 .table-scroll { height: clamp(250px, 44vh, 520px); }
 table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 0.85rem; }
@@ -377,7 +402,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .response-controls, .response-legend { display: flex; align-items: center; gap: 0.55rem; }
 .response-controls { flex-wrap: wrap; }
 .response-controls label { flex: 1 1 12rem; min-width: 0; }
-.response-controls select { width: 100%; font-size: 0.80rem; }
+.response-controls select { width: 100%; font-size: 0.9rem; }
 .response-legend { color: var(--subtext); font-size: 0.76rem; }
 .response-legend i { display: inline-block; width: 0.9rem; margin-right: 0.28rem; border-top: 2px solid var(--plot-pv); vertical-align: 0.2em; }
 .response-legend span:nth-child(2) i { border-top: 2px dashed var(--response-target); }
