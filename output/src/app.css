@@ -204,8 +204,6 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .model-tag::after { content: ""; position: absolute; width: 1px; left: 50%; top: 100%; height: calc(0.3rem + var(--tag-leader, 0px)); background: var(--control-line); pointer-events: none; }
 .model-tag small { font: 0.72rem var(--mono); color: var(--subtext); }
 .model-tag b { color: var(--text); font-size: 0.80rem; }
-.model-tag span:empty { display: none; }
-.model-tag span { font: 0.72rem var(--mono); color: var(--subtext); margin-top: 0.19rem; }
 .model-tag.selected { border-color: var(--focus); z-index: 2; }
 .model-tag.in-alarm { border-color: var(--warning); z-index: 3; }
 .model-tag.in-alarm small { color: var(--warning); }
@@ -349,8 +347,16 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .model-port[data-feed-tag][aria-pressed="true"] { color: var(--tracked); border-color: var(--tracked); }
 .model-flow-reading { position: absolute; padding-inline: 0.2rem; color: var(--subtext); background: var(--stage); font: 650 0.73rem var(--mono); white-space: nowrap; }
 .model-flow-reading.tracked { color: var(--tracked); }
-.model-tag.has-pressure span { color: var(--text); font-size: 0.76rem; font-weight: 700; }
-.model-tag.in-alarm span { color: var(--warning); }
+.model-pressure-value, .model-pressure-test { display: none; }
+.model-tag.has-pressure { grid-template-columns: 1fr auto; }
+.has-pressure b, .model-pressure-value { grid-column: 1 / -1; }
+/* Keep the collision box stable while the reading and sensor-test state change. */
+.has-pressure .model-pressure-value {
+  display: flex; gap: 1ch; inline-size: 16ch; margin-top: 0.19rem; color: var(--text); font: 700 0.76rem var(--mono);
+}
+.model-pressure-value strong { overflow: hidden; text-overflow: ellipsis; }
+.has-pressure .model-pressure-test { display: block; grid-area: 1 / 2; align-self: center; color: var(--warning); font-size: 0.72rem; }
+.model-tag.in-alarm .model-pressure-value { color: var(--warning); }
 .legend .level-key { background: none; height: 0; border-top: 2px dashed var(--plot-sp); }
 .circuit-route { flex: none; padding: 0.57rem 0.65rem; border-top: 1px solid var(--line-soft); }
 .circuit-route h2 { font-size: 0.83rem; }
@@ -476,7 +482,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .model-toolbar button svg { width: 1rem; height: 1rem; }
 }
 @container (max-width: 720px) {
-  .model-tag:not(.selected, .tracked, .in-alarm) b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .model-tag:not(.selected, .tracked, .in-alarm, .has-pressure) b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 }
 /* Keep the model and its readouts visible together on the desktop console. */
 @media (min-width: 960px) and (min-height: 540px) {

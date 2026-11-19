@@ -168,10 +168,14 @@ function createLabels(host, onSelect) {
     button.dataset.area = key;
     button.title = AREAS[key].en;
     button.setAttribute('aria-label', `${AREAS[key].code} ${AREAS[key].name}`);
-    button.innerHTML = `<small>${AREAS[key].code}</small><b>${AREAS[key].name}</b><span></span>`;
+    const pressure = CORE_PRESSURES[key] ? '<span class="model-pressure-value"><strong>—</strong> kPa(g)</span><span class="model-pressure-test" hidden>시험</span>' : '';
+    button.innerHTML = `<small>${AREAS[key].code}</small><b>${AREAS[key].name}</b>${pressure}`;
     button.addEventListener('click', () => onSelect(key));
     host.append(button);
-    labels[key] = { button, position, value: button.querySelector('span'), width: 70, height: 36 };
+    labels[key] = {
+      button, position, width: 70, height: 36,
+      value: button.querySelector('.model-pressure-value strong'), test: button.querySelector('.model-pressure-test'),
+    };
   }
   return labels;
 }
@@ -477,13 +481,6 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       label.button.classList.toggle('selected', focus === area && !(area === 'feeds' && trackedFeed));
       label.button.classList.toggle('in-alarm', alertAreas.has(area));
       label.button.classList.toggle('has-pressure', showPressure && Boolean(CORE_PRESSURES[area]));
-      let pressure = '';
-      if (showPressure && CORE_PRESSURES[area] && data) {
-        const tag = codeFor(CORE_PRESSURES[area]);
-        const value = data.values[tag];
-        if (Number.isFinite(value)) pressure = `${reading(value, 'kPa(g)')} kPa(g)${tag in data.offsets ? ' · 시험' : ''}`;
-      }
-      if (label.value.textContent !== pressure) label.value.textContent = pressure;
     }
     projectParts(placed);
     for (const port of ports) {
@@ -569,6 +566,16 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   function updateVisuals(status) {
     data = status;
     for (const { el, def } of flowLabels) el.textContent = flowReading(status, def);
+    for (const [area, id] of Object.entries(CORE_PRESSURES)) {
+      const tag = codeFor(id);
+      const { value, test } = labels[area];
+      const pressure = reading(status.values[tag], 'kPa(g)');
+      if (value.textContent !== pressure) {
+        value.textContent = pressure;
+        value.parentElement.title = `${pressure} kPa(g)`;
+      }
+      test.hidden = !(tag in status.offsets);
+    }
     alertAreas.clear();
     status.alarms.forEach((a) => alertAreas.add(a.area));
     for (const { tag, fill, bottom, height: max } of Object.values(sight)) {
