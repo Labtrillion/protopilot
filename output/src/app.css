@@ -197,8 +197,9 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .legend i, .inspect-stream i { display: inline-block; width: 1.06rem; height: 0.23rem; margin-right: 0.35rem; background: var(--medium); vertical-align: 0.19em; border-radius: 2px; }
 .orbit-hint { color: var(--muted); font-size: 0.72rem; white-space: nowrap; }
 .model-tag {
+  --tag-padding: 0.35rem 0.48rem;
   position: absolute; transform: translate(-50%, -100%); display: grid; gap: 0.13rem; min-height: var(--map-tag-size); min-width: var(--map-tag-size);
-  align-content: center; justify-items: start; line-height: 1.18; padding: 0.35rem 0.48rem; background: var(--surface); border-color: var(--control-line); pointer-events: auto;
+  align-content: center; justify-items: start; line-height: 1.18; padding: var(--tag-padding); background: var(--surface); border-color: var(--control-line); pointer-events: auto;
 }
 .model-tag::after { content: ""; position: absolute; width: 1px; left: 50%; top: 100%; height: calc(0.3rem + var(--tag-leader, 0px)); background: var(--control-line); pointer-events: none; }
 .model-tag small { font: 0.72rem var(--mono); color: var(--subtext); }
@@ -357,7 +358,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .legend { gap: 0.35rem 0.52rem; }
   .legend span { font-size: 0.70rem; }
   .orbit-hint { display: none; }
-  .model-tag { padding: 0.22rem; }
+  .model-tag { --tag-padding: 0.22rem; }
 }
 
 /* Process canvas tools and shared instrumentation. */
@@ -370,15 +371,28 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .model-port[data-feed-tag][aria-pressed="true"] { color: var(--tracked); border-color: var(--tracked); }
 .model-flow-reading { position: absolute; padding-inline: 0.2rem; color: var(--subtext); background: var(--stage); font: 650 0.73rem var(--mono); white-space: nowrap; }
 .model-flow-reading.tracked { color: var(--tracked); }
-.model-pressure-value, .model-pressure-test { display: none; }
-.model-tag.has-pressure { grid-template-columns: 1fr auto; }
-.has-pressure b, .model-pressure-value { grid-column: 1 / -1; }
-/* Keep the collision box stable while the reading and sensor-test state change. */
-.has-pressure .model-pressure-value {
-  display: flex; gap: 1ch; inline-size: 16ch; margin-top: 0.19rem; color: var(--text); font: 700 0.76rem var(--mono);
+.model-tag.pressure-tag {
+  justify-items: center; min-height: 0; min-width: 0; padding: 0; border-width: 0; background: transparent; pointer-events: none;
+}
+.model-tag-caption, .model-pressure-value {
+  border: 1px solid; border-color: inherit; border-radius: inherit; background: var(--surface); pointer-events: auto;
+}
+.model-tag-caption {
+  display: grid; grid-template-columns: 1fr auto; gap: 0.13rem; align-content: center; justify-items: start;
+  min-height: var(--map-tag-size); min-width: var(--map-tag-size); padding: var(--tag-padding);
+}
+.model-tag-caption b { grid-column: 1 / -1; }
+.pressure-tag:focus-visible { outline: none; }
+.pressure-tag:focus-visible .model-tag-caption { outline: 2px solid var(--focus); outline-offset: 2px; }
+.model-pressure-value {
+  display: flex; gap: 1ch; box-sizing: content-box; inline-size: 16ch; padding-inline: 0.48rem;
+  color: var(--text); font: 700 0.76rem var(--mono);
 }
 .model-pressure-value strong { overflow: hidden; text-overflow: ellipsis; }
-.has-pressure .model-pressure-test { display: block; grid-area: 1 / 2; align-self: center; color: var(--warning); font-size: 0.72rem; line-height: 1; }
+.model-pressure-test { grid-area: 1 / 2; align-self: center; color: var(--warning); font-size: 0.72rem; line-height: 1; }
+/* Keep space for the readouts so toggling the layer leaves equipment tags in place. */
+.model-labels:not(.show-pressure) :is(.model-pressure-value, .model-pressure-test),
+.model-pressure-test:not(.active) { visibility: hidden; pointer-events: none; }
 .model-tag.in-alarm .model-pressure-value { color: var(--warning); }
 .legend .level-key { background: none; height: 0; border-top: 2px dashed var(--plot-sp); }
 .circuit-paths { list-style: none; padding: 0; margin: 0; }
@@ -503,7 +517,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .model-toolbar button svg { width: 1rem; height: 1rem; }
 }
 @container (max-width: 720px) {
-  .model-tag:not(.selected, .tracked, .in-alarm, .has-pressure) b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .model-tag:not(.selected, .tracked, .in-alarm, .pressure-tag) b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 }
 /* Keep the model and its readouts visible together on the desktop console. */
 @media (min-width: 960px) and (min-height: 540px) {

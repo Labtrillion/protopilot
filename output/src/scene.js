@@ -165,11 +165,15 @@ function createLabels(host, onSelect) {
     button.type = 'button';
     button.className = 'model-tag';
     button.classList.toggle('compact', !primaryLabels.has(key));
+    const hasPressure = Boolean(CORE_PRESSURES[key]);
+    button.classList.toggle('pressure-tag', hasPressure);
     button.dataset.area = key;
     button.title = AREAS[key].en;
     button.setAttribute('aria-label', `${AREAS[key].code} ${AREAS[key].name}`);
-    const pressure = CORE_PRESSURES[key] ? '<span class="model-pressure-value"><strong>—</strong> kPa(g)</span><span class="model-pressure-test" hidden>시험</span>' : '';
-    button.innerHTML = `<small>${AREAS[key].code}</small><b>${AREAS[key].name}</b>${pressure}`;
+    const caption = `<small>${AREAS[key].code}</small><b>${AREAS[key].name}</b>`;
+    button.innerHTML = hasPressure ? `
+      <span class="model-pressure-value"><strong>—</strong> kPa(g)</span>
+      <span class="model-tag-caption">${caption}<span class="model-pressure-test">시험</span></span>` : caption;
     button.addEventListener('click', () => onSelect(key));
     host.append(button);
     labels[key] = {
@@ -290,6 +294,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   const overviewFrame = setupSite(scene, groups);
   const internal = buildInternals(models, sight);
   const labels = createLabels(host, select);
+  host.classList.add('show-pressure');
   const labelEntries = Object.entries(labels);
   const parts = makePartLabels(host, internal.parts, pick);
   const ports = makePortLabels(host, selectFeed);
@@ -325,7 +330,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   const cameraOffset = new T.Vector3();
   const cameraOrbit = new T.Spherical(), destinationOrbit = new T.Spherical();
   const box = new T.Box3();
-  let width = 1, height = 1, focus = 'plant', showFlow = true, showPressure = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
+  let width = 1, height = 1, focus = 'plant', showFlow = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
   let trackedArea = '', trackedTag = '';
   let trackedFeed, focusedValve;
   let down = null, framing = false, valveRadius = 14;
@@ -455,10 +460,9 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     }
     const priority = (area) => {
       if (focus === area || trackedArea === area) return 3;
-      // Pressure readouts keep their placement priority when a pressure alarm changes color.
-      if (showPressure && CORE_PRESSURES[area]) return 2;
+      if (CORE_PRESSURES[area]) return 2;
       if (alertAreas.has(area)) return 3;
-      return CORE_PRESSURES[area] ? 2 : primaryLabels.has(area) ? 1 : 0;
+      return primaryLabels.has(area) ? 1 : 0;
     };
     const ordered = [...labelEntries].sort(([a], [b]) => priority(b) - priority(a));
     for (const [area, label] of ordered) {
@@ -485,7 +489,6 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       label.button.style.setProperty('--tag-leader', `${Math.max(0, anchor - y)}px`);
       label.button.classList.toggle('selected', focus === area && !(area === 'feeds' && trackedFeed));
       label.button.classList.toggle('in-alarm', alertAreas.has(area));
-      label.button.classList.toggle('has-pressure', showPressure && Boolean(CORE_PRESSURES[area]));
     }
     projectParts(placed);
     for (const port of ports) {
@@ -579,7 +582,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
         value.textContent = pressure;
         value.parentElement.title = `${pressure} kPa(g)`;
       }
-      test.hidden = !(tag in status.offsets);
+      test.classList.toggle('active', tag in status.offsets);
     }
     alertAreas.clear();
     status.alarms.forEach((a) => alertAreas.add(a.area));
@@ -696,7 +699,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       frame = { zoom: saved.zoom, offset: saved.offset.clone(), panX: saved.panX ?? 0 };
     },
     flow(enabled) { showFlow = enabled; },
-    pressure(enabled) { showPressure = enabled; },
+    pressure(enabled) { host.classList.toggle('show-pressure', enabled); },
     circuit(id) { activeCircuit = id || ''; container.dataset.circuit = activeCircuit; },
     display(enabled) {
       displayed = enabled;
