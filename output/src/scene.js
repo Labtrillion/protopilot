@@ -23,8 +23,8 @@ const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
 const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'stripper']);
 const annotationPositions = {
-  equipment: { alignY: 1, lift: 4, range: 110 },
-  part: { range: 180 },
+  equipment: { alignY: 1, lift: 4, range: 110, edgeMargin: labelEdgeMargin },
+  part: { range: 180, edgeMargin: labelEdgeMargin },
   port: { alignY: 0.65, range: 100 },
   flow: { alignX: 1, alignY: 0.88, range: 100 },
 };
@@ -442,12 +442,12 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     annotationsDirty = true;
   }
 
-  function projectAnnotation(item, placed, { alignX = 0.5, alignY = 0.5, lift = 0, range }) {
+  function projectAnnotation(item, placed, { alignX = 0.5, alignY = 0.5, lift = 0, range, edgeMargin = 0 }) {
     const { el } = item;
     projected.copy(item.layoutPoint ?? item.point).project(camera);
-    const edgeMargin = el.hasAttribute('data-placed') ? labelEdgeMargin : 0;
-    if (Math.abs(projected.x) > 1 + 2 * edgeMargin / width ||
-      Math.abs(projected.y) > 1 + 2 * edgeMargin / height || Math.abs(projected.z) > 1) {
+    const margin = el.hasAttribute('data-placed') ? edgeMargin : 0;
+    if (Math.abs(projected.x) > 1 + 2 * margin / width ||
+      Math.abs(projected.y) > 1 + 2 * margin / height || Math.abs(projected.z) > 1) {
       el.removeAttribute('data-placed');
       return;
     }
