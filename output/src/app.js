@@ -256,6 +256,17 @@ function attachEvents() {
     }
   }, true);
 
+  const dashboard = byId('console');
+  const panes = [...dashboard.querySelectorAll('[data-pane-target]')];
+  function showPane(pane) {
+    dashboard.dataset.pane = pane;
+    for (const button of panes) button.setAttribute('aria-pressed', button.dataset.paneTarget === pane);
+  }
+  for (const button of panes) button.addEventListener('click', () => showPane(button.dataset.paneTarget));
+  matchMedia('(max-width: 500px) and (max-height: 640px), (max-height: 460px)').addEventListener('change', ({ matches }) => {
+    if (!matches && dashboard.dataset.pane === 'pipes') showPane('plant');
+  });
+
   run.addEventListener('click', () => doCommand({ op: 'run', enabled: !status.running }));
   reset.addEventListener('click', () => doCommand({ op: 'reset' }, () => {
     explicitTag = '';

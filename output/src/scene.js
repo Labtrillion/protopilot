@@ -337,11 +337,13 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
   const cameraOffset = new T.Vector3();
   const cameraOrbit = new T.Spherical(), destinationOrbit = new T.Spherical();
   const box = new T.Box3();
-  let width = 1, height = 1, focus = 'plant', showFlow = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
+  let width = 1, height = 1, focus = 'plant', activeCircuit = '', displayed = true, frame = null, data = null;
+  let showFlow = true, showPressure = true, showLabels = true, showInternals = false;
   let trackedArea = '', trackedTag = '';
   let trackedFeed, focusedValve;
   let down = null, framing = false, valveRadius = 14;
   let panX = 0, cameraDirty = true, lastRender = 0, lastProcessFrame = -Infinity;
+  largerTargets.addEventListener('change', () => { cameraDirty = true; });
   let alertAreas = new Set();
   const geometryBounds = {};
   scene.updateMatrixWorld(true);
@@ -567,8 +569,12 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
   });
 
   function updateVisuals(status) {
+    if (!data) annotationsDirty = true;
     data = status;
-    for (const { el, def } of flowLabels) el.textContent = flowReading(status, def);
+    for (const { el, def } of flowLabels) {
+      const value = flowReading(status, def);
+      if (el.textContent !== value) el.textContent = value;
+    }
     for (const [area, id] of Object.entries(CORE_PRESSURES)) {
       const tag = codeFor(id);
       const label = labels[area];
@@ -577,10 +583,15 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
       if (label.state.textContent !== state) label.state.textContent = state;
       const title = `${value} kPa(g)${state ? ` · ${state}` : ''}${alarm ? ` · ${alarm.label}` : ''}`;
       if (label.value.parentElement.title !== title) label.value.parentElement.title = title;
-      label.button.classList.toggle('pressure-alarm', Boolean(alarm));
+      label.el.classList.toggle('pressure-alarm', Boolean(alarm));
     }
-    alertAreas.clear();
-    status.alarms.forEach((a) => alertAreas.add(a.area));
+    const nextAlerts = new Set(status.alarms.map(({ area }) => area));
+    for (const [area, { el }] of labelEntries) {
+      if (alertAreas.has(area) === nextAlerts.has(area)) continue;
+      el.classList.toggle('in-alarm', nextAlerts.has(area));
+      annotationsDirty = true;
+    }
+    alertAreas = nextAlerts;
     for (const { tag, fill, bottom, height: max } of Object.values(sight)) {
       if (!tag) continue;
       const channel = codeFor(tag);
@@ -655,18 +666,24 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
     requestAnimationFrame(animate);
     if (!displayed || !container.isConnected || document.hidden) return;
     const processDue = now - lastProcessFrame >= processFrameInterval;
+    const cameraChanged = cameraDirty || Boolean(frame);
     // Redraw changed camera poses on the next display frame while process motion keeps its own cadence.
-    if (!cameraDirty && !frame && !processDue) return;
+    if (!cameraChanged && !processDue && !annotationsDirty) return;
     if (frame) animateCamera(Math.min(0.075, (now - lastRender) / 1000));
     if (processDue) {
       animateProcess(Math.min(0.075, (now - lastProcessFrame) / 1000));
       lastProcessFrame = now;
     }
-    lastRender = now;
-    cameraDirty = false;
-    camera.updateMatrixWorld();
-    projectLabels();
-    renderer.render(scene, camera);
+    if (cameraChanged) {
+      cameraDirty = false;
+      camera.updateMatrixWorld();
+      projectValves();
+    }
+    if (cameraChanged || annotationsDirty) projectLabels();
+    if (cameraChanged || processDue) {
+      lastRender = now;
+      renderer.render(scene, camera);
+    }
   }
 
   requestAnimationFrame(animate);
@@ -677,7 +694,11 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
       trackedTag = tag;
       trackedFeed = streams.find((line) => line.feedTag && streamMatchesTag(line.def, tag));
       moveHighlight();
-      for (const [key, label] of labelEntries) label.button.classList.toggle('tracked', key === area && !trackedFeed);
+      updateLabelSelection();
+      for (const part of parts) {
+        part.el.classList.toggle('tracked', part.tag === trackedTag);
+        part.el.setAttribute('aria-pressed', part.tag === trackedTag);
+      }
       for (const line of streams) line.tracked = streamMatchesTag(line.def, tag);
       for (const { el, feedTag } of ports) {
         if (feedTag) el.setAttribute('aria-pressed', feedTag === trackedFeed?.feedTag);
@@ -693,24 +714,39 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
       desired.copy(saved.target);
       frame = { zoom: saved.zoom, offset: saved.offset.clone(), panX: saved.panX ?? 0 };
     },
-    flow(enabled) { showFlow = enabled; },
+    flow(enabled) {
+      showFlow = enabled;
+      annotationsDirty = true;
+    },
     pressure(enabled) {
+      showPressure = enabled;
+      annotationsDirty = true;
       host.classList.toggle('show-pressure', enabled);
       for (const area of Object.keys(CORE_PRESSURES)) {
-        const { button } = labels[area];
-        if (enabled) button.setAttribute('aria-describedby', `model-pressure-${area} model-pressure-state-${area}`);
-        else button.removeAttribute('aria-describedby');
+        const { el } = labels[area];
+        if (enabled) el.setAttribute('aria-describedby', `model-pressure-${area} model-pressure-state-${area}`);
+        else el.removeAttribute('aria-describedby');
       }
     },
-    circuit(id) { activeCircuit = id || ''; container.dataset.circuit = activeCircuit; },
+    circuit(id) {
+      activeCircuit = id || '';
+      container.dataset.circuit = activeCircuit;
+      annotationsDirty = true;
+    },
     display(enabled) {
       displayed = enabled;
+      host.hidden = !displayed || !showLabels;
       if (enabled) cameraDirty = true;
     },
-    tags(visible) { showLabels = visible; },
+    tags(visible) {
+      showLabels = visible;
+      host.hidden = !displayed || !showLabels;
+      annotationsDirty = true;
+    },
     internals(visible) {
       showInternals = visible;
       applyInternals();
+      annotationsDirty = true;
     },
   };
 }
