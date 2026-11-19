@@ -198,6 +198,20 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .canvas, .model-labels { position: absolute; inset: 0; }
 .canvas canvas { display: block; width: 100%; height: 100%; }
 .model-labels { pointer-events: none; isolation: isolate; }
+.model-tag-list {
+  display: grid; flex: none; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: 0.28rem;
+  block-size: min(9rem, 24dvh); align-content: start; overflow: auto; scrollbar-gutter: stable;
+  padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--line-soft); background: var(--surface);
+}
+.tag-list-entry {
+  display: flex; min-inline-size: 0; min-height: 1.85rem; align-items: center; justify-content: flex-start; flex-wrap: wrap;
+  gap: 0.08rem 0.4rem; padding: 0.18rem 0.38rem; border: 1px solid var(--line-soft); border-radius: 4px;
+  color: var(--text); font-size: 0.75rem; text-align: start; white-space: normal;
+}
+.tag-list-entry small { color: var(--subtext); font: 0.69rem var(--mono); white-space: nowrap; }
+.tag-list-entry.tracked, .tag-list-entry:is([aria-pressed=true], [aria-current=true]) { border-color: var(--tracked); color: var(--tracked); }
+.tag-list-entry.in-alarm { border-color: var(--warning); color: var(--warning); }
+.model-tag-list:not(.show-pressure) .tag-list-pressure { display: none; }
 .model-labels > * { inset: 0 auto auto 0; inline-size: max-content; }
 .model-labels > :not([data-placed]) { visibility: hidden; }
 .model-labels > [data-leader]::after {
@@ -383,7 +397,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .model-port { color: var(--route-color); position: absolute; padding: 0.20rem 0.35rem; border-radius: 3px; border: 1px solid var(--route-color); background: var(--surface); font: 650 0.75rem var(--mono); white-space: nowrap; }
 .model-port[data-feed-tag] { min-height: 0; min-width: 0; pointer-events: auto; }
 .model-port[data-feed-tag][aria-pressed="true"] { color: var(--tracked); border-color: var(--tracked); }
-.model-flow-reading { position: absolute; padding-inline: 0.2rem; color: var(--subtext); background: var(--stage); font: 650 0.73rem var(--mono); white-space: nowrap; }
+.model-flow-reading { position: absolute; min-inline-size: 13ch; padding-inline: 0.2rem; color: var(--subtext); background: var(--stage); font: 650 0.73rem var(--mono); text-align: end; white-space: nowrap; }
 .model-flow-reading.tracked { color: var(--tracked); }
 .model-tag.pressure-tag {
   --pressure-row-height: 1.45rem;
@@ -610,7 +624,8 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.65rem;
   padding: 0.3rem 0.65rem; border-bottom: 1px solid var(--line-soft); background: var(--surface);
 }
-.interior-parts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; min-width: 0; }
+.interior-parts, .interior-unit { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; min-width: 0; }
+.interior-parts { column-gap: 0.75rem; }
 .interior-parts .toolbar-label { margin-right: 0.1rem; font-size: 0.74rem; }
 .interior-parts button { min-height: 2rem; padding: 0.16rem 0.48rem; gap: 0.32rem; font-size: 0.76rem; }
 .interior-parts code { color: var(--muted); font: 0.68rem var(--mono); }

@@ -7,13 +7,15 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
   const canvas = byId('canvas'), labels = byId('model-labels'), diagramRoot = byId('diagram');
   const threeButton = byId('view-3d'), twoButton = byId('view-2d');
   const flows = byId('view-flow'), pressure = byId('view-pressure'), internals = byId('toggle-internals'), tags = byId('toggle-tags');
+  const tagListButton = byId('toggle-tag-list'), tagList = byId('model-tag-list');
   const internalsLabel = byId('internals-label'), interiorTools = byId('interior-tools'), partStrip = byId('interior-parts');
   const circuitButtons = [...document.querySelectorAll('.circuit-controls button[data-circuit]')];
   let scene, area = 'plant', circuit = '', visible = '3d', tracked = '', focusedTag = '';
+  let tagListOpen = false;
   const flags = { flows: true, pressure: true, internals: false, tags: true };
   const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve, selectFeed);
   try {
-    scene = mountScene(canvas, labels, (unit, valve) => {
+    scene = mountScene(canvas, labels, tagList, (unit, valve) => {
       if (valve) selectValve(valve);
       else selectArea(unit);
     }, trackTag, chooseCircuit, selectFeed);
@@ -30,20 +32,34 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
     internalsLabel.textContent = list ? `${AREAS[area].code} 내부` : '내부 전체';
     internals.title = list ? `${AREAS[area].code} 단면만 표시` : '모든 설비 내부 표시';
     interiorTools.hidden = !(flags.internals && visible === '3d' && scene);
-    partStrip.hidden = interiorTools.hidden || !flags.tags || !list;
+    const units = scene?.interiorAreas().filter((unit) => INTERIOR_PARTS[unit]) ?? [];
+    partStrip.hidden = interiorTools.hidden || !flags.tags || !units.length;
     if (partStrip.hidden) return;
-    const key = `${area}/${tracked}`;
-    if (partStrip.dataset.key === key) return;
-    partStrip.dataset.key = key;
-    partStrip.setAttribute('aria-label', `${AREAS[area].code} 내부 부품 태그`);
-    const focusedPart = partStrip.contains(document.activeElement) ? document.activeElement.dataset.tag : '';
-    partStrip.innerHTML = `<span class="toolbar-label">${AREAS[area].code} 내부</span>${list.map(([tag, name]) =>
-      `<button type="button" data-tag="${tag}" aria-pressed="${tag === tracked}">${escape(name)}<code>${tag}</code></button>`).join('')}`;
-    if (focusedPart) partStrip.querySelector(`[data-tag="${focusedPart}"]`)?.focus({ preventScroll: true });
+    const key = units.join(',');
+    if (partStrip.dataset.key !== key) {
+      const focusedPart = partStrip.contains(document.activeElement) ? document.activeElement.dataset.tag : '';
+      partStrip.dataset.key = key;
+      partStrip.innerHTML = units.map((unit) => `<div class="interior-unit" role="group" aria-label="${AREAS[unit].code} 내부">
+        <span class="toolbar-label">${AREAS[unit].code} 내부</span>${INTERIOR_PARTS[unit].map(([tag, name]) =>
+          `<button type="button" data-area="${unit}" data-tag="${tag}">${escape(name)}<code>${tag}</code></button>`).join('')}</div>`).join('');
+      if (focusedPart) partStrip.querySelector(`[data-tag="${focusedPart}"]`)?.focus({ preventScroll: true });
+    }
+    for (const button of partStrip.querySelectorAll('button')) button.setAttribute('aria-pressed', button.dataset.tag === tracked);
   }
   partStrip.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-tag]');
-    if (button) trackTag(button.dataset.tag, area);
+    if (button) trackTag(button.dataset.tag, button.dataset.area);
+  });
+
+  function renderTagList() {
+    tagListButton.hidden = visible !== '3d' || !scene;
+    tagListButton.disabled = !flags.tags;
+    tagList.hidden = tagListButton.hidden || tagListButton.disabled || !tagListOpen;
+    tagListButton.setAttribute('aria-expanded', !tagList.hidden);
+  }
+  tagListButton.addEventListener('click', () => {
+    tagListOpen = !tagListOpen;
+    renderTagList();
   });
 
   function switchView(next) {
@@ -60,6 +76,7 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
     scene?.display(three);
     diagram.focus(area, area === 'plant', focusedTag);
     renderInterior();
+    renderTagList();
   }
 
   function chooseCircuit(next, refocus = true) {
@@ -97,6 +114,7 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
     tags.title = enabled ? '3D 태그 가리기' : '3D 태그 표시';
     scene?.tags(enabled);
     renderInterior();
+    renderTagList();
   });
   // Toggling the interior keeps the selected unit, camera, tracked tag and telemetry view.
   toggle(internals, 'internals', (enabled) => {
@@ -112,6 +130,7 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
   applyPressure(true);
   legend('');
   renderInterior();
+  renderTagList();
   return {
     focus(next, reset, tag) {
       area = next;

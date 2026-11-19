@@ -9,6 +9,7 @@ import { flowReading, pressureReading } from './ui.js';
 import { readColor } from './palette.js';
 import { FEEDS } from './schematic.js';
 import { placeAnnotation } from './annotation-layout.js';
+import { populateAnnotationList } from './annotation-list.js';
 import * as geo from './geometry.js';
 
 const initialOffset = geo.v3(OVERVIEW.offset);
@@ -17,6 +18,7 @@ const verticalOrbitLimit = T.MathUtils.degToRad(25);
 const clickSlop = 5;
 const processFrameInterval = 24;
 const interiorClearance = 8;
+const labelEdgeMargin = 16;
 const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
 const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'stripper']);
@@ -186,7 +188,7 @@ function createLabels(host, onSelect) {
     button.addEventListener('click', () => onSelect(key));
     host.append(button);
     labels[key] = {
-      el: button, point,
+      el: button, point, caption: `${AREAS[key].code} ${AREAS[key].name}`,
       value: button.querySelector('.model-pressure-value strong'), state: button.querySelector('.model-pressure-state'),
     };
   }
@@ -208,7 +210,7 @@ function makePortLabels(host, selectFeed) {
       el.addEventListener('click', () => selectFeed(feedTag));
     }
     host.append(el);
-    return { el, point, circuit, feedTag };
+    return { el, point, circuit, feedTag, caption: feedTag ? `${text} 원료` : text };
   });
 }
 
@@ -218,7 +220,7 @@ function makeFlowLabels(host) {
     el.className = 'model-flow-reading';
     el.dataset.flowReading = def.id;
     host.append(el);
-    return { el, def, point: FLOW_POINTS[def.id] };
+    return { el, def, point: FLOW_POINTS[def.id], caption: `#${def.id} ${def.name}` };
   });
 }
 
@@ -233,11 +235,11 @@ function makePartLabels(host, parts, onPick) {
     button.innerHTML = `<b>${part.name}</b><small>${part.tag}</small>`;
     button.addEventListener('click', () => onPick(part.tag, part.area));
     host.append(button);
-    return { ...part, el: button, point: new T.Vector3() };
+    return { ...part, el: button, point: new T.Vector3(), caption: `${AREAS[part.area].code} ${part.name} ${part.tag}` };
   });
 }
 
-export function mountScene(container, host, select, pick, selectCircuit, selectFeed) {
+export function mountScene(container, host, tagList, select, pick, selectCircuit, selectFeed) {
   const scene = new T.Scene();
   scene.background = new T.Color(readColor('--stage'));
   const renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -307,7 +309,9 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   const ports = makePortLabels(host, selectFeed);
   const flowLabels = makeFlowLabels(host);
   let annotationsDirty = true;
-  const sized = new Map([...Object.values(labels), ...parts, ...ports, ...flowLabels].map((item) => [item.el, item]));
+  const annotations = [...Object.values(labels), ...parts, ...ports, ...flowLabels];
+  populateAnnotationList(tagList, annotations);
+  const sized = new Map(annotations.map((item) => [item.el, item]));
   const labelSizes = new ResizeObserver((entries) => {
     for (const { target, borderBoxSize } of entries) {
       const { inlineSize, blockSize } = borderBoxSize[0];
@@ -381,6 +385,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   }).observe(container);
 
   function go(area, resetOrientation = false, tag) {
+    if (area !== focus || resetOrientation) resetAnnotationOffsets();
     focus = area;
     container.dataset.focus = area;
     const group = groups[area];
@@ -413,9 +418,13 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   }
 
   function updateLabelSelection() {
-    for (const [area, { el }] of labelEntries) {
-      el.classList.toggle('selected', focus === area && !(area === 'feeds' && trackedFeed));
-      el.classList.toggle('tracked', trackedArea === area && !trackedFeed);
+    for (const [area, { el, listEntry }] of labelEntries) {
+      const selected = focus === area && !(area === 'feeds' && trackedFeed);
+      const tracked = trackedArea === area && !trackedFeed;
+      el.classList.toggle('selected', selected);
+      el.classList.toggle('tracked', tracked);
+      listEntry.setAttribute('aria-current', selected);
+      listEntry.classList.toggle('tracked', tracked);
     }
     annotationsDirty = true;
   }
@@ -427,23 +436,39 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     renderer.shadowMap.needsUpdate = true;
   }
 
+  function resetAnnotationOffsets() {
+    for (const item of annotations) item.offset = undefined;
+    for (const part of parts) part.layoutPoint = undefined;
+    annotationsDirty = true;
+  }
+
   function projectAnnotation(item, placed, { alignX = 0.5, alignY = 0.5, lift = 0, range }) {
     const { el } = item;
-    projected.copy(item.point).project(camera);
-    if (Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1 || Math.abs(projected.z) > 1) {
+    projected.copy(item.layoutPoint ?? item.point).project(camera);
+    const edgeMargin = el.hasAttribute('data-placed') ? labelEdgeMargin : 0;
+    if (Math.abs(projected.x) > 1 + 2 * edgeMargin / width ||
+      Math.abs(projected.y) > 1 + 2 * edgeMargin / height || Math.abs(projected.z) > 1) {
       el.removeAttribute('data-placed');
       return;
     }
     const x = (projected.x + 1) * width / 2;
     const y = (1 - projected.y) * height / 2;
     const box = placeAnnotation(x - item.width * alignX, y - item.height * alignY - lift,
-      item.width, item.height, width, height, placed, range);
+      item.width, item.height, width, height, placed, range, item.offset);
     el.toggleAttribute('data-placed', Boolean(box));
     if (!box) return;
+    item.offset = box.offset;
+    item.placement = box;
     placed.push(box);
     el.style.left = `${box.left}px`;
     el.style.top = `${box.top}px`;
+    drawLeader(item);
+  }
 
+  function drawLeader({ el, point, placement: box }) {
+    projected.copy(point).project(camera);
+    const x = T.MathUtils.clamp((projected.x + 1) * width / 2, 0, width);
+    const y = T.MathUtils.clamp((1 - projected.y) * height / 2, 0, height);
     const startX = T.MathUtils.clamp(x, box.left, box.right);
     const startY = T.MathUtils.clamp(y, box.top, box.bottom);
     const dx = x - startX, dy = y - startY;
@@ -455,6 +480,12 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       el.style.setProperty('--leader-length', `${length}px`);
       el.style.setProperty('--leader-angle', `${Math.atan2(dy, dx)}rad`);
     }
+  }
+
+  function projectIfEnabled(item, enabled, placed, position) {
+    item.listEntry.hidden = !enabled;
+    if (enabled) projectAnnotation(item, placed, position);
+    else item.el.removeAttribute('data-placed');
   }
 
   function projectValves() {
@@ -503,24 +534,22 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     }
     const orderedParts = [...parts].sort((a, b) => Number(b.tag === trackedTag) - Number(a.tag === trackedTag));
     for (const part of orderedParts) {
-      if (showInternals && internal.visible(part.area)) {
+      const enabled = showInternals && internal.visible(part.area);
+      if (enabled) {
         part.anchorHeight = part.anchor.position.y;
         part.anchor.getWorldPosition(part.point);
-        projectAnnotation(part, placed, annotationPositions.part);
-      } else {
-        part.el.removeAttribute('data-placed');
+        part.layoutPoint ??= part.point.clone();
       }
+      projectIfEnabled(part, enabled, placed, annotationPositions.part);
     }
     for (const [area, label] of ordered) {
       if (priority(area) < 2) projectAnnotation(label, placed, annotationPositions.equipment);
     }
     for (const port of ports) {
-      if (!activeCircuit || activeCircuit === port.circuit) projectAnnotation(port, placed, annotationPositions.port);
-      else port.el.removeAttribute('data-placed');
+      projectIfEnabled(port, !activeCircuit || activeCircuit === port.circuit, placed, annotationPositions.port);
     }
     for (const label of flowLabels) {
-      if (showFlow && data && (!activeCircuit || activeCircuit === label.def.circuit)) projectAnnotation(label, placed, annotationPositions.flow);
-      else label.el.removeAttribute('data-placed');
+      projectIfEnabled(label, showFlow && Boolean(data) && (!activeCircuit || activeCircuit === label.def.circuit), placed, annotationPositions.flow);
     }
   }
 
@@ -597,9 +626,12 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   function updateVisuals(status) {
     if (!data) annotationsDirty = true;
     data = status;
-    for (const { el, def } of flowLabels) {
+    for (const { el, def, listReading } of flowLabels) {
       const value = flowReading(status, def);
-      if (el.textContent !== value) el.textContent = value;
+      if (el.textContent !== value) {
+        el.textContent = value;
+        listReading.textContent = value;
+      }
     }
     for (const [area, id] of Object.entries(CORE_PRESSURES)) {
       const tag = codeFor(id);
@@ -608,13 +640,18 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       if (label.value.textContent !== value) label.value.textContent = value;
       if (label.state.textContent !== state) label.state.textContent = state;
       const title = `${value} kPa(g)${state ? ` · ${state}` : ''}${alarm ? ` · ${alarm.label}` : ''}`;
-      if (label.value.parentElement.title !== title) label.value.parentElement.title = title;
+      if (label.value.parentElement.title !== title) {
+        label.value.parentElement.title = title;
+        label.listReading.textContent = `${value} kPa(g)${state ? ` · ${state}` : ''}`;
+        label.listReading.title = title;
+      }
       label.el.classList.toggle('pressure-alarm', Boolean(alarm));
     }
     const nextAlerts = new Set(status.alarms.map(({ area }) => area));
-    for (const [area, { el }] of labelEntries) {
+    for (const [area, { el, listEntry }] of labelEntries) {
       if (alertAreas.has(area) === nextAlerts.has(area)) continue;
       el.classList.toggle('in-alarm', nextAlerts.has(area));
+      listEntry.classList.toggle('in-alarm', nextAlerts.has(area));
       annotationsDirty = true;
     }
     alertAreas = nextAlerts;
@@ -657,9 +694,6 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
 
   function animateProcess(dt) {
     internal.animate(data, dt, showInternals && data?.running && !motionReduced);
-    // The liquid-level anchors move with the interpolated surface.
-    if (showLabels && showInternals && parts.some(({ area, anchor, anchorHeight }) =>
-      internal.visible(area) && Math.abs(anchor.position.y - anchorHeight) > 0.004)) annotationsDirty = true;
     for (const line of streams) {
       const { def, path, length, markers, material, color, valve, flanges } = line;
       const tag = codeFor(def.tag);
@@ -691,6 +725,17 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     highlightMat.color.set(alertAreas.has(focus) ? warningColor : trackedArea === focus ? trackedColor : selectionColor);
   }
 
+  function updatePartLeaders() {
+    // Follow the liquid surface without repacking any of the tag boxes.
+    if (!showLabels || !showInternals) return;
+    for (const part of parts) {
+      if (!part.el.hasAttribute('data-placed') || Math.abs(part.anchor.position.y - part.anchorHeight) <= 0.004) continue;
+      part.anchorHeight = part.anchor.position.y;
+      part.anchor.getWorldPosition(part.point);
+      drawLeader(part);
+    }
+  }
+
   function animate(now) {
     requestAnimationFrame(animate);
     if (!displayed || !container.isConnected || document.hidden) return;
@@ -709,6 +754,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       projectValves();
     }
     if (cameraChanged || annotationsDirty) projectLabels();
+    else if (processDue) updatePartLeaders();
     if (cameraChanged || processDue) {
       lastRender = now;
       renderer.render(scene, camera);
@@ -718,6 +764,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   requestAnimationFrame(animate);
   return {
     go, updateVisuals,
+    interiorAreas: () => openInteriors,
     track(area, tag) {
       trackedArea = area;
       trackedTag = tag;
@@ -727,12 +774,20 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       for (const part of parts) {
         part.el.classList.toggle('tracked', part.tag === trackedTag);
         part.el.setAttribute('aria-pressed', part.tag === trackedTag);
+        part.listEntry.setAttribute('aria-pressed', part.tag === trackedTag);
       }
       for (const line of streams) line.tracked = streamMatchesTag(line.def, tag);
-      for (const { el, feedTag } of ports) {
-        if (feedTag) el.setAttribute('aria-pressed', feedTag === trackedFeed?.feedTag);
+      for (const { el, listEntry, feedTag } of ports) {
+        if (!feedTag) continue;
+        const selected = feedTag === trackedFeed?.feedTag;
+        el.setAttribute('aria-pressed', selected);
+        listEntry.setAttribute('aria-pressed', selected);
       }
-      for (const { el, def } of flowLabels) el.classList.toggle('tracked', streamMatchesTag(def, tag));
+      for (const { el, listEntry, def } of flowLabels) {
+        const tracked = streamMatchesTag(def, tag);
+        el.classList.toggle('tracked', tracked);
+        listEntry.classList.toggle('tracked', tracked);
+      }
     },
     // Camera pose for returning to a previous investigation position.
     view() {
@@ -751,6 +806,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       showPressure = enabled;
       annotationsDirty = true;
       host.classList.toggle('show-pressure', enabled);
+      tagList.classList.toggle('show-pressure', enabled);
       for (const area of Object.keys(CORE_PRESSURES)) {
         const { el } = labels[area];
         if (enabled) el.setAttribute('aria-describedby', `model-pressure-${area} model-pressure-state-${area}`);
@@ -775,7 +831,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     internals(visible) {
       showInternals = visible;
       applyInternals();
-      annotationsDirty = true;
+      resetAnnotationOffsets();
     },
   };
 }
