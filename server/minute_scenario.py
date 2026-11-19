@@ -44,6 +44,8 @@ class ScenarioEvent:
     def from_dict(cls, raw):
         if not isinstance(raw, dict):
             raise ValueError("시나리오 event 형식을 확인하세요.")
+        if "step" in raw:
+            raise ValueError("분 단위 시나리오의 조작 시각은 at_min으로 입력하세요.")
         duration = read_minutes(raw["duration_min"], "duration_min") if "duration_min" in raw else None
         event = cls(read_minutes(raw.get("at_min"), "at_min"),
                     {key: value for key, value in raw.items() if key not in cls.META_KEYS}, duration)

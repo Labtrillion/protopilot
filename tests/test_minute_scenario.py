@@ -64,7 +64,7 @@ class BundledScenarioTest(unittest.TestCase):
     def load(self, name):
         return json.loads((SCENARIO_DIR / name).read_text(encoding="utf-8"))
 
-    def test_every_demo_scenario_uploads_as_a_paused_replay(self):
+    def test_every_demo_scenario_loads_as_a_paused_replay(self):
         names = sorted(path.name for path in SCENARIO_DIR.glob("*.json"))
         self.assertEqual(len(names), 5)
         for name in names:
@@ -93,6 +93,19 @@ class BundledScenarioTest(unittest.TestCase):
             self.plant.command({"op": "replay_scenario", "scenario": late})
         self.assertEqual(self.plant.recording.id, run)
         self.assertTrue(self.plant.running)
+
+    def test_step_cannot_override_minutes_or_bypass_the_replay_end(self):
+        run = self.plant.recording.id
+        for minute in (1, 20):
+            with self.subTest(at_min=minute):
+                scenario = {
+                    "format": "protopilot-scenario-1", "duration_min": 10,
+                    "events": [{"at_min": minute, "step": 0, "op": "offset", "id": "XMEAS(9)", "value": 1}],
+                }
+                with self.assertRaisesRegex(ValueError, "at_min"):
+                    self.plant.command({"op": "replay_scenario", "scenario": scenario})
+                self.assertEqual(self.plant.recording.id, run)
+                self.assertNotIn("XMEAS(9)", self.plant.offsets)
 
 
 if __name__ == "__main__":
