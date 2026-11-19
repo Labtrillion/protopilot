@@ -48,6 +48,14 @@ class BranchOutcome(Model):
     disturbance_profile_id: str = Field(description="분기들이 공유하는 외란 조건의 불투명 식별자. 외란 번호를 넣지 않는다")
     seed: int | None = None
     timeseries_ref: str | None = None
+    # 제어 스텝 단위로 적분한 지표 (server/alarm_response.branch_summary, feat/setpoint-decision 정의).
+    # 비용은 TEP 내부 운전비, 알람 시간은 AlarmMonitor 의 실제값(true) 채널. 없으면 null.
+    operating_cost_usd: float | None = Field(default=None, description="TEP 내부 운전비 적분 [USD]")
+    produced_m3: float | None = Field(default=None, description="제어 스텝 적분 생산량 [m3]")
+    production_loss_m3: float | None = Field(default=None, description="기준 생산 목표 x horizon - 생산량. 트립 후 구간도 손실")
+    alarm_minutes: float | None = Field(default=None, description="AlarmMonitor 실제값 채널의 알람 활성 시간 [min]")
+    observed_alarm_minutes: float | None = Field(default=None, description="운전원 화면(센서 오프셋 포함) 기준 [min]")
+    alarm_minutes_by_rule: dict[str, float] = {}
 
 
 class BranchRunner(Protocol):
@@ -164,7 +172,9 @@ class SimulationToolkit:
         score = None
         if spec is not None:
             try:
-                score = score_timeseries(run_id, t, x, spec.tracked, spec, out.tripped)
+                score = score_timeseries(run_id, t, x, spec.tracked, spec, out.tripped,
+                                         operating_cost=out.operating_cost_usd,
+                                         produced_m3=out.produced_m3 if out.operating_cost_usd is not None else None)
             except (KeyError, ValueError):
                 score = None  # 채점에 필요한 계측이 없으면 점수 없음 (만들지 않음)
         if score is not None:
@@ -172,6 +182,12 @@ class SimulationToolkit:
                 metrics["usd_per_m3"] = MetricValue(value=round(score.usd_per_m3, 6), unit="USD/m3", better="lower")
             metrics["tracking_accuracy"] = MetricValue(value=score.tracking_accuracy, unit="score_0_1", better="higher")
             metrics["product_m3"] = MetricValue(value=round(score.product_m3, 6), unit="m3", better="higher")
+        if out.operating_cost_usd is not None:
+            metrics["operating_cost_usd"] = MetricValue(value=round(out.operating_cost_usd, 6), unit="USD", better="lower")
+        if out.production_loss_m3 is not None:
+            metrics["production_loss_m3"] = MetricValue(value=round(out.production_loss_m3, 6), unit="m3", better="lower")
+        if out.alarm_minutes is not None:
+            metrics["alarm_minutes"] = MetricValue(value=out.alarm_minutes, unit="min", better="lower")
         for tag in self.alarm_tags:
             if tag in x[0]:
                 metrics[f"peak_{tag}"] = MetricValue(value=max(s[tag] for s in x), unit=self.units.get(tag, ""), better="lower")

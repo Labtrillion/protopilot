@@ -464,6 +464,24 @@ def test_cost_matches_rag_studio_eval(sc):
         assert not tripped and s.failed_gates == []
 
 
+def test_simulator_cost_overrides_the_table9_estimate(sc):
+    """분기 실행기가 준 TEP 내부 운전비·적분 생산량(feat/setpoint-decision 정의)이 있으면 그 값으로 채점한다."""
+    b = sc.policy.benchmark
+    base = {f"XMEAS({n})": 1.0 for n in range(1, 42)}
+    base.update({v.tag: v.setpoint for v in b.tracked})
+    t, x = [0.0, 1800.0, 3600.0], [dict(base), dict(base), dict(base)]
+    est = score_timeseries("E", t, x, b.tracked, b)
+    assert est.cost_basis == "downs_vogel_table9" and set(est.cost_usd) >= {"purge", "steam", "total"}
+    sim = score_timeseries("S", t, x, b.tracked, b, operating_cost=150.0, produced_m3=20.0)
+    assert sim.cost_basis == "tep_operating_cost_internal"
+    assert sim.cost_usd == {"total": 150.0} and sim.product_m3 == 20.0 and sim.usd_per_m3 == pytest.approx(7.5)
+    assert sim.tracking_accuracy == est.tracking_accuracy  # 정확도는 표본으로 같게 계산
+    with pytest.raises(ValueError):
+        score_timeseries("X", t, x, b.tracked, b, operating_cost=150.0)
+    # 비용 정의가 다르면 비교하지 않는다
+    assert beats(sim, est, sim, b, b.vs_baseline) == (False, "비용 정의 불일치(tep_operating_cost_internal vs downs_vogel_table9)")
+
+
 def test_accuracy_is_closeness_to_setpoint_within_threshold():
     v = TrackedVariable(tag="XMEAS(7)", setpoint=2705, unit="kPa(g)", hi=2895, lo=None, source="t")
     assert closeness(v, 2705) == 1 and closeness(v, 2800) == pytest.approx(0.5)

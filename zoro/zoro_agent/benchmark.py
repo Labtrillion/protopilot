@@ -1,8 +1,12 @@
 """Zoro 대 심슨(SOP 단독, hold) 벤치마크: run 점수, 비교 규칙, case 탐색 종료 규칙.
 
 지표 두 개
-- 비용: Downs & Vogel (1993) 표 9 운전비(퍼지·제품 손실·압축기·스팀)를 시간 적분한 뒤 생산량으로 나눈
-  USD/m³. zoro-rag/studio_eval.py 와 같은 식이다(tests 에서 validation CSV 로 대조).
+- 비용: 시뮬레이터 분기(ProtoPilot)에서는 server/alarm_response.py(feat/setpoint-decision)의 정의를 그대로 쓴다.
+  TEP 내부 운전비 `operating_cost_internal_per_hour` 를 제어 스텝마다 적분한 총액(`operating_cost`)을
+  같은 스텝 적분 생산량(`produced_m3`)으로 나눈 값(`cost_per_m3`)이다. 분기 실행기가 두 값을 넘기면
+  score_timeseries 는 이 값을 쓰고 표본으로 다시 계산하지 않는다(cost_basis = "tep_operating_cost_internal").
+  두 값이 없을 때(TEP Studio CSV 등 오프라인 시계열)만 Downs & Vogel (1993) 표 9 운전비(퍼지·제품 손실·
+  압축기·스팀)를 3분 표본으로 적분해 추정한다(cost_basis = "downs_vogel_table9", zoro-rag/studio_eval.py 와 같은 식).
   생산량이 정책 간 최대 1% 달라질 수 있으므로 총액이 아니라 m³당 비용으로 비교한다.
 - 정확도(tracking accuracy, 0~1): 추적 변수마다 s(t) = max(0, 1 − |x − 목표| / |경보 임계값 − 목표|).
   목표에 있으면 1, 경보 임계값에 닿거나 넘으면 0. 평가 구간 시간 평균 → 변수 가중 평균.
@@ -21,7 +25,9 @@ from pydantic import Field
 
 from .common import Model
 
-# Downs & Vogel (1993) Table 9, zoro-rag/studio_eval.py 와 동일. benchmark USD per kmol.
+# 오프라인 추정용: Downs & Vogel (1993) Table 9, zoro-rag/studio_eval.py 와 동일. benchmark USD per kmol.
+COST_BASIS_TEP = "tep_operating_cost_internal"  # server/alarm_response.step_cost 적분 (feat/setpoint-decision)
+COST_BASIS_DV = "downs_vogel_table9"
 PURGE_PRICES = (2.206, 0, 6.177, 22.06, 14.56, 17.89, 30.44, 22.94)  # XMEAS(29..36) A..H
 PRODUCT_PRICES = (22.06, 14.56, 17.89, 0, 0)  # XMEAS(37..41) D,E,F,G,H
 PURGE_KMOL_PER_KSCM = 44.79
@@ -75,7 +81,9 @@ class RunScore(Model):
     run_id: str
     tripped: bool
     usd_per_m3: float | None = Field(description="null = 생산량 0 → 계산 불가")
-    cost_usd: dict[str, float] = Field(description="purge/product/power/steam/total, 평가 구간 누적")
+    cost_usd: dict[str, float] = Field(description="평가 구간 누적. TEP 내부 운전비면 total 만, 표 9 추정이면 purge/product/power/steam/total")
+    cost_basis: Literal["tep_operating_cost_internal", "downs_vogel_table9"] = Field(
+        default="downs_vogel_table9", description="비용 정의. 시뮬레이터 분기는 tep_operating_cost_internal")
     product_m3: float
     tracking_accuracy: float = Field(ge=0, le=1)
     per_variable_accuracy: dict[str, float]
@@ -132,18 +140,29 @@ def cost_rates(x: dict[str, float]) -> tuple[float, float, float, float]:
 
 def score_timeseries(run_id: str, times_s: list[float], samples: list[dict[str, float]],
                      tracked: list[TrackedVariable], policy: "BenchmarkPolicy | EvaluationSpec",
-                     tripped: bool = False) -> RunScore:
-    """평가 구간 전체 표본(시각 오름차순, run 기준 초)으로 점수를 낸다. 동은 모듈의 참조 구현."""
+                     tripped: bool = False, *, operating_cost: float | None = None,
+                     produced_m3: float | None = None) -> RunScore:
+    """평가 구간 전체 표본(시각 오름차순, run 기준 초)으로 점수를 낸다.
+
+    operating_cost·produced_m3 를 함께 주면(시뮬레이터 분기) 비용은 그 값을 쓴다: usd_per_m3 = operating_cost /
+    produced_m3, server/alarm_response.branch_summary 의 cost_per_m3 와 같다. 정확도·게이트는 표본으로 계산한다.
+    """
     if len(times_s) < 2 or len(times_s) != len(samples):
         raise ValueError("표본 2개 이상, 시각과 표본 수 일치 필요")
     if any(b <= a for a, b in zip(times_s, times_s[1:])):
         raise ValueError("시각이 증가하지 않음")
-    hours = [t / 3600 for t in times_s]
-    rates = [cost_rates(x) for x in samples]
-    names = ("purge", "product", "power", "steam")
-    cost = {n: _trapz(hours, [r[i] for r in rates]) for i, n in enumerate(names)}
-    cost["total"] = sum(cost.values())
-    vol = _trapz(hours, [x["XMEAS(17)"] for x in samples])
+    if (operating_cost is None) != (produced_m3 is None):
+        raise ValueError("operating_cost 와 produced_m3 는 함께 주어야 함")
+    if operating_cost is not None:
+        cost, vol, basis = {"total": float(operating_cost)}, float(produced_m3), COST_BASIS_TEP
+    else:
+        hours = [t / 3600 for t in times_s]
+        rates = [cost_rates(x) for x in samples]
+        names = ("purge", "product", "power", "steam")
+        cost = {n: _trapz(hours, [r[i] for r in rates]) for i, n in enumerate(names)}
+        cost["total"] = sum(cost.values())
+        vol = _trapz(hours, [x["XMEAS(17)"] for x in samples])
+        basis = COST_BASIS_DV
 
     span = times_s[-1] - times_s[0]
     per_var, wsum, acc = {}, 0.0, 0.0
@@ -175,7 +194,7 @@ def score_timeseries(run_id: str, times_s: list[float], samples: list[dict[str, 
     failed = [n for n, bad in (("no_trip", tripped), ("final_window_inside", not final_ok),
                                ("quality", q_ok is False)) if bad]
     return RunScore(run_id=run_id, tripped=tripped, usd_per_m3=cost["total"] / vol if vol > 0 else None,
-                    cost_usd=cost, product_m3=vol, tracking_accuracy=round(accuracy, 6),
+                    cost_usd=cost, cost_basis=basis, product_m3=vol, tracking_accuracy=round(accuracy, 6),
                     per_variable_accuracy={k: round(a, 6) for k, a in per_var.items()},
                     in_threshold_fraction=round(in_frac, 6), time_to_stable_s=stable,
                     final_window_inside=final_ok, quality_ok=q_ok, failed_gates=failed)
@@ -218,6 +237,8 @@ def eligible(run: RunScore, baseline: RunScore, policy: BenchmarkPolicy) -> tupl
 
 def beats(a: RunScore, b: RunScore, baseline: RunScore, policy: BenchmarkPolicy, margin: Margins) -> tuple[bool, str]:
     """a 가 b 보다 의미 있게 좋은가. 적격이 먼저, 그다음 ε-지배(한 지표는 margin 이상 개선, 다른 지표는 허용폭 안)."""
+    if a.cost_basis != b.cost_basis:
+        return False, f"비용 정의 불일치({a.cost_basis} vs {b.cost_basis})"
     ea, fa = eligible(a, baseline, policy)
     eb, _ = eligible(b, baseline, policy)
     if not ea:
