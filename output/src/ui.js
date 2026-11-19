@@ -18,8 +18,6 @@ export function elapsed(hours) {
   const seconds = Math.round((hours ?? 0) * 3600);
   return [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60].map((value) => String(value).padStart(2, '0')).join(':');
 }
-const time = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
-export const wallTime = (stamp) => time.format(new Date(stamp));
 
 const icons = {
   play: '<path d="m8 5 12 7-12 7z"/>', pause: '<path d="M9 5H6v14h3zm9 0h-3v14h3z"/>',
@@ -183,42 +181,3 @@ export function renderRows(channels, status, selected, recentReadings) {
   renderChannelTrend(trendCell, trendCell ? recentReadings.map((values) => values[selected]).filter(Number.isFinite) : []);
 }
 
-const KIND = { warning: '경고', trip: '트립', change: '조작', clear: '복구', ack: '확인', protection: '보호 제어' };
-export const unacknowledgedAlarms = (status) => status?.alarms.filter((alarm) => !alarm.ack) ?? [];
-
-export function renderAlarms(status, tab, metadata) {
-  const pending = unacknowledgedAlarms(status);
-  const events = tab === 'active' ? pending : status?.events;
-  const panel = byId('events');
-  const count = pending.length;
-  const responseEvents = new Set(status?.response_events ?? []);
-  byId('alarm-count').textContent = count;
-  byId('alarm-count').classList.toggle('alarming', count > 0);
-  const focused = document.activeElement;
-  const focusAttribute = ['data-response-alarm', 'data-ack', 'data-event-id']
-    .find((name) => panel.contains(focused) && focused.hasAttribute(name));
-  const focusKey = focusAttribute && focused.getAttribute(focusAttribute);
-  const items = !events?.length ? `<div class="alarm-empty">${icon('check')}<b>${tab === 'active' ? '미확인 알람 없음' : '기록된 이벤트 없음'}</b></div>`
-    : events.map((e) => {
-      const unit = metadata.get(e.tag)?.unit;
-      const detail = [e.tag, e.value == null ? '' : `${reading(e.value, unit)} ${unit ?? ''}`,
-        e.limit == null ? '' : `기준 ${reading(e.limit)}`, e.source].filter(Boolean).join(' · ');
-      return `<article class="event ${e.kind}"><button type="button" class="event-open" data-event-id="${e.id}" data-event-area="${e.area}" data-event-tag="${escape(e.tag ?? '')}">
-        <span class="event-head"><span class="event-kind">${KIND[e.kind]}</span><time datetime="${e.time_utc}">${wallTime(e.time_utc)}</time></span>
-        <span class="event-title">${escape(e.label)}${icon('arrow')}</span><span class="event-detail">${escape(detail)}</span>
-        </button>
-        <div class="event-actions">
-          ${responseEvents.has(e.id) ? `<button type="button" class="alarm-study" data-response-alarm="${e.id}">${e.kind === 'trip' ? 'SOP 확인' : '대응 비교'}</button>` : ''}
-          ${tab === 'active' ? `<button type="button" data-ack="${e.id}">알람 확인</button>` : ''}
-        </div>
-      </article>`;
-    }).join('');
-  if (panel.dataset.html !== items) {
-    panel.innerHTML = items;
-    panel.dataset.html = items;
-    if (focusKey) {
-      const nextFocus = panel.querySelector(`[${focusAttribute}="${focusKey}"]`) ?? panel;
-      nextFocus.focus({ preventScroll: true });
-    }
-  }
-}
