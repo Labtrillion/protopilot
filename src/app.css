@@ -444,6 +444,20 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 /* Orthogonal Fig. 1 diagram. */
 .diagram { position: absolute; inset: 0; }
 .pfd-svg { display: block; width: 100%; height: 100%; }
+.diagram-preview {
+  position: absolute; display: flex; align-items: center; gap: 0.35rem;
+  inline-size: 9.5rem; padding: 0.25rem; pointer-events: none;
+  border: 1px solid var(--focus); border-radius: 4px; background: var(--surface-raised);
+}
+.diagram-preview:not([data-placed]) { visibility: hidden; }
+.diagram-preview::after {
+  content: ""; position: absolute; left: var(--leader-x); top: var(--leader-y); width: var(--leader-length);
+  height: 1px; transform-origin: left; transform: rotate(var(--leader-angle)); background: var(--focus);
+}
+.diagram-preview canvas { display: block; flex: 0 0 auto; inline-size: 3.5rem; block-size: auto; }
+.diagram-preview span { display: grid; gap: 0.15rem; line-height: 1.2; }
+.diagram-preview code { color: var(--tracked); font: 650 0.75rem var(--mono); }
+.diagram-preview b { color: var(--text); font-size: 0.75rem; word-break: keep-all; }
 .stage[data-view="2d"] .stage-controls { display: none; }
 .pfd-stream { --display-pipe: var(--pipe); }
 .pfd-stream .pipe-sleeve { stroke: var(--stage); stroke-width: 7; }

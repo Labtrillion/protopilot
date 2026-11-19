@@ -13,7 +13,8 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
   let scene, area = 'plant', circuit = '', visible = '3d', tracked = '', focusedTag = '';
   let tagListOpen = false;
   const flags = { flows: true, pressure: true, internals: false, tags: true };
-  const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve, selectFeed);
+  const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve, selectFeed,
+    (unit, preview) => scene?.drawEquipmentPreview(unit, preview));
   try {
     scene = mountScene(canvas, labels, tagList, (unit, valve) => {
       if (valve) selectValve(valve);

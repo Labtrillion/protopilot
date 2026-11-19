@@ -1,6 +1,7 @@
 import { AREAS, CORE_PRESSURES, FEED_TAGS, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { ANCHORS, BODIES, BOUNDARY_PORTS, FEEDS, FLOW_READOUTS, JUNCTIONS, ROUTES, SAMPLES, VALVES, VIEWBOX } from './schematic.js';
 import { flowReading, pressureReading } from './ui.js';
+import { mountDiagramPreview } from './diagram-preview.js';
 
 // Orthogonal routing reads left-to-right. Only solid dots indicate a pipe junction.
 const routePath = (points) => 'M' + points.map(([x, y]) => `${x} ${y}`).join('L');
@@ -41,7 +42,7 @@ function equipment() {
   ].join('');
 }
 
-export function mountDiagram(host, selectArea, selectCircuit, openValve, selectFeed) {
+export function mountDiagram(host, selectArea, selectCircuit, openValve, selectFeed, drawPreview) {
   const lines = STREAMS.map((stream) => {
     const d = routePath(ROUTES[stream.id]);
     const { colorToken } = MEDIA[stream.media];
@@ -63,7 +64,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
     ${target}<path d="M-8-5 8 5V-5L-8 5ZM0 0v-8m-4 0h8"/></g>`).join('');
   const labels = anchors.map(([id, [x, y]]) => {
     const { code, name } = AREAS[id];
-    return `<g class="pfd-unit" role="button" tabindex="0" data-area="${id}" aria-label="${code} ${name}" transform="translate(${x} ${y})">
+    return `<g class="pfd-unit" role="button" tabindex="0" data-area="${id}" aria-pressed="false" aria-label="${code} ${name}" transform="translate(${x} ${y})">
       <title>${name}</title>${target}<rect class="pfd-chip" x="-22" y="-12" width="44" height="17" rx="3"/><text y="0">${code}</text></g>`;
   }).join('');
   const levelClips = Object.entries(LEVELS).map(([id, { body }]) => `<clipPath id="level-clip-${id}">${vessel(...body)}</clipPath>`).join('');
@@ -85,6 +86,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
     <g class="pfd-junctions">${JUNCTIONS.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3"/>`).join('')}</g>
     ${equipment()}${levelLayers}${valves}${portsMarkup}${meterMarkup}${labels}${readouts}${flowReadouts}</svg>`;
   const svg = host.firstElementChild;
+  const preview = mountDiagramPreview(host, svg, drawPreview);
   const targets = [...svg.querySelectorAll('.pfd-hit')];
   const largerTargets = matchMedia('(max-width: 600px), (pointer: coarse)');
   function sizeTargets() {
@@ -141,13 +143,18 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
   const feedPorts = new Map([...svg.querySelectorAll('.pfd-port[data-feed-tag]')].map((port) => [port.dataset.feedTag, port]));
   return {
     focus(area, reset, tag) {
-      for (const unit of svg.querySelectorAll('[data-area],[data-symbol]')) unit.classList.toggle('selected', (unit.dataset.area || unit.dataset.symbol) === area);
+      for (const unit of svg.querySelectorAll('[data-area],[data-symbol]')) {
+        const selected = (unit.dataset.area || unit.dataset.symbol) === area;
+        unit.classList.toggle('selected', selected);
+        if (unit.dataset.area) unit.setAttribute('aria-pressed', selected);
+      }
       if (reset) host.scrollLeft = 0;
       else if (area !== 'plant' && ANCHORS[area] && !host.hidden && !feedPorts.has(tag)) {
         const valve = VALVES.find(([id]) => `XMV(${id})` === tag);
         const center = (valve?.[1] ?? ANCHORS[area][0]) / VIEWBOX[0] * svg.clientWidth;
         host.scrollLeft = Math.max(0, center - host.clientWidth / 2);
       }
+      preview.show(area);
     },
     track(area, tag) {
       let trackingFeed = false;
@@ -174,7 +181,10 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
       }
     },
     flow(on) { svg.classList.toggle('show-flow', on); },
-    pressure(on) { svg.classList.toggle('show-pressure', on); },
+    pressure(on) {
+      svg.classList.toggle('show-pressure', on);
+      preview.position();
+    },
     update(status) {
       svg.classList.toggle('running', status.running);
       for (const stream of STREAMS) {

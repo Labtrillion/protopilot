@@ -129,6 +129,52 @@ function buildEquipment(scene) {
   return { groups, models, sight, feedSkids };
 }
 
+function equipmentPreview(renderer, environment, models) {
+  // Copy the exterior before cutaway groups are attached. Geometry and materials are shared.
+  const exteriors = Object.fromEntries(Object.entries(models).map(([area, model]) => [area, model.clone()]));
+  const preview = new T.Scene();
+  preview.background = new T.Color(readColor('--surface-raised'));
+  preview.environment = environment;
+  preview.environmentIntensity = 0.38;
+  preview.add(new T.HemisphereLight(0xffffff, 0x777777, 1.68));
+  const light = new T.DirectionalLight(0xffffff, 1.65);
+  light.position.set(-3, 6, 4);
+  preview.add(light);
+  const camera = new T.OrthographicCamera();
+  const bounds = new T.Box3(), center = new T.Vector3(), size = new T.Vector3();
+  const viewDirection = new T.Vector3(0.65, 0.52, 1).normalize();
+  const originalSize = new T.Vector2();
+
+  return (area, canvas) => {
+    const model = exteriors[area];
+    if (!model || renderer.getContext().isContextLost()) return false;
+    bounds.setFromObject(model).getCenter(center);
+    camera.position.copy(center).addScaledVector(viewDirection, bounds.getSize(size).length() + 1);
+    camera.lookAt(center);
+    camera.updateMatrixWorld();
+    bounds.applyMatrix4(camera.matrixWorldInverse).getSize(size);
+    const aspect = canvas.width / canvas.height;
+    camera.top = Math.max(size.y, size.x / aspect) * 0.56;
+    camera.right = camera.top * aspect;
+    camera.bottom = -camera.top;
+    camera.left = -camera.right;
+    camera.updateProjectionMatrix();
+
+    // The main canvas is hidden in 2D. Copy this frame before restoring its size.
+    renderer.getSize(originalSize);
+    preview.add(model);
+    try {
+      renderer.setSize(canvas.width, canvas.height, false);
+      renderer.render(preview, camera);
+      canvas.getContext('2d').drawImage(renderer.domElement, 0, 0, canvas.width, canvas.height);
+    } finally {
+      preview.remove(model);
+      renderer.setSize(originalSize.x, originalSize.y, false);
+    }
+    return true;
+  };
+}
+
 function buildStreams(scene, groups) {
   const markerGeometry = new T.ConeGeometry(0.103, 0.31, 9);
   const markerMaterial = new T.MeshBasicMaterial({ color: readColor('--flow-marker'), toneMapped: false });
@@ -292,6 +338,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   scene.add(rim);
 
   const { groups, models, sight, feedSkids } = buildEquipment(scene);
+  const drawEquipmentPreview = equipmentPreview(renderer, scene.environment, models);
   const streams = buildStreams(scene, groups);
   const pickable = [...Object.values(groups)];
   for (const { def, feedTag, tube, flanges } of streams) {
@@ -755,7 +802,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
 
   requestAnimationFrame(animate);
   return {
-    go, updateVisuals,
+    go, updateVisuals, drawEquipmentPreview,
     interiorAreas: () => openInteriors,
     track(area, tag) {
       trackedArea = area;
