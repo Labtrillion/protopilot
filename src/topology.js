@@ -59,6 +59,15 @@ const PIPES = [
 
 export const codeFor = (tag) => typeof tag === 'number' ? `XMEAS(${tag})` : tag;
 
+const coolingSignals = {
+  reactor: new Set(['XMEAS(9)', 'XMEAS(21)', 'XMEASADD(5)', 'XMEASADD(6)']),
+  condenser: new Set(['XMEAS(22)', 'XMEASADD(7)', 'XMEASADD(8)']),
+};
+
+export function hasCoolingPath({ area, tag, source }) {
+  return source !== '센서 시험' && Boolean(coolingSignals[area]?.has(tag));
+}
+
 export function streamMatchesTag(stream, tag) {
   return Boolean(tag && (codeFor(stream.tag) === tag || (stream.valve && `XMV(${stream.valve})` === tag)));
 }

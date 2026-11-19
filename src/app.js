@@ -4,6 +4,7 @@ import { mountResponse } from './response.js';
 import { mountSetpointControls, setupControls } from './controls.js';
 import { mountScenario } from './scenario.js';
 import { mountEventMonitor } from './event-monitor.js';
+import { mountAlarmResponse } from './alarm-response.js';
 import {
   byId, elapsed, icon, initIcons, option, renderPipeDetails, renderRows,
 } from './ui.js';
@@ -19,6 +20,8 @@ const channels = new Map();
 const recentReadings = [];
 const reset = byId('reset'), run = byId('run'), speed = byId('speed');
 const connection = byId('connection');
+const dashboard = byId('console');
+const panes = [...dashboard.querySelectorAll('[data-pane-target]')];
 const pageId = crypto.randomUUID();
 let plantView, openControls, status, noticeTimer, pageRecorded = false;
 let setpoints = [], telemetryView = 'values';
@@ -26,9 +29,11 @@ let focusedArea = 'plant', selection, connected = false;
 let visibleChannels = [], channelScope = 'primary', explicitTag = '';
 
 const response = mountResponse(trackSetpoint);
-const eventMonitor = mountEventMonitor(({ area, tag }) => {
-  focus(area, channels.has(tag) ? tag : '');
-});
+const alarmResponse = mountAlarmResponse(request);
+const eventMonitor = mountEventMonitor((event) => {
+  if (status?.alarms.some(({ id }) => id === event.id)) locateAlarm(event);
+  else focus(event.area, channels.has(event.tag) ? event.tag : '');
+}, openAlarmResponse, silenceAlarm);
 let latestSetpointChange = 0;
 const setpointControls = mountSetpointControls((id, value) => {
   const change = ++latestSetpointChange;
@@ -155,6 +160,23 @@ function selectEquipment(area, tag, resetCamera) {
   else focus(area, tag, resetCamera);
 }
 
+function locateAlarm({ area, tag }) {
+  const active = document.activeElement;
+  showPane('plant');
+  focus(area, channels.has(tag) ? tag : '', true);
+  if (active?.closest('#event-monitor') && !active.getClientRects().length) {
+    byId('overview').focus();
+  }
+}
+
+function openAlarmResponse(alarm) {
+  if (status?.response_events?.includes(alarm.id)) alarmResponse.open(status.run, alarm);
+}
+
+function silenceAlarm(alarm) {
+  doCommand({ op: 'ack', id: alarm.id }, () => note('이 알림을 껐습니다.'));
+}
+
 function trackSetpoint(id) {
   const item = setpoints.find((entry) => entry.id === id);
   if (!item) return;
@@ -247,6 +269,11 @@ function selectTag(tag) {
   if (ch) focus(ch.area, tag);
 }
 
+function showPane(pane) {
+  dashboard.dataset.pane = pane;
+  for (const button of panes) button.setAttribute('aria-pressed', button.dataset.paneTarget === pane);
+}
+
 function attachEvents() {
   // Chrome can match :focus-visible on a select clicked with a pointer.
   const root = document.documentElement;
@@ -258,12 +285,6 @@ function attachEvents() {
     }
   }, true);
 
-  const dashboard = byId('console');
-  const panes = [...dashboard.querySelectorAll('[data-pane-target]')];
-  function showPane(pane) {
-    dashboard.dataset.pane = pane;
-    for (const button of panes) button.setAttribute('aria-pressed', button.dataset.paneTarget === pane);
-  }
   for (const button of panes) button.addEventListener('click', () => showPane(button.dataset.paneTarget));
   matchMedia('(max-width: 500px) and (max-height: 700px), (max-height: 460px)').addEventListener('change', ({ matches }) => {
     if (!matches && dashboard.dataset.pane === 'pipes') showPane('plant');

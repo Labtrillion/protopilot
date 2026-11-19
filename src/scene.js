@@ -1,7 +1,7 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { AREAS, CORE_PRESSURES, FEED_TAGS, LEVEL_TAGS, MEDIA, STREAMS, codeFor, levelFraction, levelReading, streamMatchesTag } from './topology.js';
+import { AREAS, CORE_PRESSURES, FEED_TAGS, LEVEL_TAGS, MEDIA, STREAMS, codeFor, hasCoolingPath, levelFraction, levelReading, streamMatchesTag } from './topology.js';
 import { buildInternals } from './internals.js';
 import { EQUIPMENT_LAYOUT, FEED_OFFSETS, FLOW_POINTS, LABEL_POINTS, OVERVIEW, PORTS_3D, ROUTES_3D, SAMPLE_ROUTES_3D,
   VESSELS, pipePath, scenePoint, valvePosition } from './layout.js';
@@ -179,18 +179,20 @@ function createLabels(host, onSelect) {
     button.classList.toggle('pressure-tag', hasPressure);
     button.dataset.area = key;
     button.title = AREAS[key].en;
-    button.setAttribute('aria-label', `${AREAS[key].code} ${AREAS[key].name}`);
+    button.setAttribute('aria-label', `${AREAS[key].name} ${AREAS[key].code}`);
     button.setAttribute('aria-pressed', 'false');
     const caption = `<small>${AREAS[key].code}</small><b>${AREAS[key].name}</b>`;
+    const alarm = `<span class="model-alarm-state" id="model-alarm-state-${key}" hidden></span>`;
     button.innerHTML = hasPressure ? `
-      <span class="model-tag-caption">${caption}<span class="model-pressure-state" id="model-pressure-state-${key}"></span></span>
-      <span class="model-pressure-value" id="model-pressure-${key}"><strong>—</strong> <span class="model-pressure-unit">kPa(g)</span></span>` : caption;
+      <span class="model-tag-caption">${caption}${alarm}<span class="model-pressure-state" id="model-pressure-state-${key}"></span></span>
+      <span class="model-pressure-value" id="model-pressure-${key}"><strong>—</strong> <span class="model-pressure-unit">kPa(g)</span></span>` : `${caption}${alarm}`;
     if (hasPressure) button.setAttribute('aria-describedby', `model-pressure-${key} model-pressure-state-${key}`);
     button.addEventListener('click', () => onSelect(key));
     host.append(button);
     labels[key] = {
       el: button, point, caption: `${AREAS[key].code} ${AREAS[key].name}`,
       value: button.querySelector('.model-pressure-value strong'), state: button.querySelector('.model-pressure-state'),
+      alarmState: button.querySelector('.model-alarm-state'),
     };
   }
   return labels;
@@ -325,7 +327,9 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   for (const el of sized.keys()) labelSizes.observe(el, { box: 'border-box' });
   const selectionColor = readColor('--focus');
   const warningColor = readColor('--warning');
+  const dangerColor = readColor('--danger');
   const trackedColor = new T.Color(readColor('--tracked'));
+  const coolingPathColor = new T.Color(readColor('--alarm-route'));
   const mutedPipeColor = new T.Color(readColor('--pipe-muted'));
   const highlightMat = new T.MeshBasicMaterial({
     color: selectionColor, toneMapped: false, depthWrite: false,
@@ -351,8 +355,14 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   let down = null, framing = false, valveRadius = 14;
   let panX = 0, panY = 0, cameraDirty = true, lastRender = 0, lastProcessFrame = -Infinity;
   largerTargets.addEventListener('change', () => { cameraDirty = true; });
-  let alertAreas = new Set();
-  const equipmentBounds = {}, geometryBounds = {};
+  let alertAreas = new Map();
+  const equipmentBounds = {}, geometryBounds = {}, alarmRings = {};
+  const alarmRingGeometry = new T.RingGeometry(1, 1.16, 56);
+  const alarmRingMaterials = {
+    warning: new T.MeshBasicMaterial({ color: warningColor, toneMapped: false, depthWrite: false }),
+    trip: new T.MeshBasicMaterial({ color: dangerColor, toneMapped: false, depthWrite: false }),
+  };
+  const coolingLines = streams.filter(({ def }) => def.media === 'water');
   scene.updateMatrixWorld(true);
   for (const [area, group] of Object.entries(groups)) {
     // Large auxiliary pipes/pumps belong to the unit but the orbit centers on its vessel.
@@ -361,6 +371,13 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     const bounds = new T.Box3().setFromObject(models[area]);
     equipmentBounds[area] = bounds;
     group.userData.top = bounds.max.y;
+    const ring = new T.Mesh(alarmRingGeometry, alarmRingMaterials.warning);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(group.position.x, 0.252, group.position.z);
+    ring.scale.setScalar(geometryBounds[area] * 1.1);
+    ring.visible = false;
+    scene.add(ring);
+    alarmRings[area] = ring;
   }
   const casingBounds = Object.fromEntries(Object.entries(sight).map(([area, { casing }]) => {
     const bounds = new T.Box3();
@@ -575,17 +592,18 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
 
   function projectLabels() {
     annotationsDirty = false;
-    if (!showLabels) return;
     // Reserve the same space for each section whether its casing is opaque or transparent.
     const placed = valveTargets.map(({ bounds }) => bounds).filter(Boolean);
     reserveCasings(placed);
     const priority = (area) => {
-      if (focus === area || trackedArea === area || alertAreas.has(area)) return 3;
+      if (alertAreas.has(area)) return alertAreas.get(area) === 'trip' ? 5 : 4;
+      if (focus === area || trackedArea === area) return 3;
       if (showPressure && CORE_PRESSURES[area]) return 2;
       return primaryLabels.has(area) ? 1 : 0;
     };
     const ordered = [...labelEntries].sort(([a], [b]) => priority(b) - priority(a));
-    for (const [, label] of ordered) projectAnnotation(label, placed, annotationPositions.equipment);
+    for (const [area, label] of ordered) projectIfEnabled(label, showLabels || alertAreas.has(area), placed, annotationPositions.equipment);
+    if (!showLabels) return;
     for (const port of ports) {
       projectIfEnabled(port, !activeCircuit || activeCircuit === port.circuit, placed, annotationPositions.port);
     }
@@ -602,6 +620,45 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
         part.layoutPoint ??= part.point.clone();
       }
       projectIfEnabled(part, enabled, placed, annotationPositions.part);
+    }
+  }
+
+  function describeLabel(area) {
+    const { el } = labels[area];
+    const hasAlarm = alertAreas.has(area);
+    const descriptions = [];
+    if (hasAlarm) descriptions.push(`model-alarm-state-${area}`);
+    if (showLabels && showPressure && CORE_PRESSURES[area]) {
+      descriptions.push(`model-pressure-${area}`);
+      if (!hasAlarm) descriptions.push(`model-pressure-state-${area}`);
+    }
+    if (descriptions.length) el.setAttribute('aria-describedby', descriptions.join(' '));
+    else el.removeAttribute('aria-describedby');
+  }
+
+  function updateAlarms(alarms) {
+    const previous = alertAreas;
+    alertAreas = new Map();
+    const coolingAreas = new Set();
+    for (const alarm of alarms) {
+      if (alarm.kind === 'trip' || !alertAreas.has(alarm.area)) alertAreas.set(alarm.area, alarm.kind);
+      if (hasCoolingPath(alarm)) coolingAreas.add(alarm.area);
+    }
+    for (const line of coolingLines) line.alarmRelated = coolingAreas.has(line.def.area);
+    for (const [area, { el, alarmState, listEntry }] of labelEntries) {
+      const kind = alertAreas.get(area);
+      if (kind === previous.get(area)) continue;
+      el.classList.toggle('in-alarm', Boolean(kind));
+      listEntry.classList.toggle('in-alarm', Boolean(kind));
+      if (kind) el.dataset.alarmKind = kind;
+      else delete el.dataset.alarmKind;
+      alarmState.hidden = !kind;
+      alarmState.textContent = kind === 'trip' ? '보호 정지' : kind ? '경고' : '';
+      describeLabel(area);
+      const ring = alarmRings[area];
+      ring.visible = displayed && Boolean(kind);
+      ring.material = alarmRingMaterials[kind] ?? alarmRingMaterials.warning;
+      annotationsDirty = true;
     }
   }
 
@@ -699,14 +756,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       if (label.value.parentElement.title !== title) label.value.parentElement.title = title;
       label.el.classList.toggle('pressure-alarm', Boolean(alarm));
     }
-    const nextAlerts = new Set(status.alarms.map(({ area }) => area));
-    for (const [area, { el, listEntry }] of labelEntries) {
-      if (alertAreas.has(area) === nextAlerts.has(area)) continue;
-      el.classList.toggle('in-alarm', nextAlerts.has(area));
-      listEntry.classList.toggle('in-alarm', nextAlerts.has(area));
-      annotationsDirty = true;
-    }
-    alertAreas = nextAlerts;
+    updateAlarms(status.alarms);
     for (const area of Object.keys(LEVEL_TAGS)) {
       const { fill, bottom, height: max } = sight[area];
       const level = levelFraction(levelReading(status, area));
@@ -754,8 +804,9 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       const tag = codeFor(def.tag);
       const measured = data?.native_values[tag] ?? data?.values[tag];
       const ratio = tag && Number.isFinite(measured) ? Math.max(0, measured / def.nominal) : 0.58;
-      const dimmed = Boolean(activeCircuit) && activeCircuit !== def.circuit;
-      material.color.copy(dimmed ? mutedPipeColor : line.tracked ? trackedColor : color);
+      const alarmRelated = displayed && line.alarmRelated;
+      const dimmed = !alarmRelated && Boolean(activeCircuit) && activeCircuit !== def.circuit;
+      material.color.copy(alarmRelated ? coolingPathColor : dimmed ? mutedPipeColor : line.tracked ? trackedColor : color);
       for (const flange of flanges) flange.visible = !dimmed;
       if (valve) {
         const pos = data?.actuators?.[valve.userData.valve];
@@ -777,7 +828,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       }
       markers.instanceMatrix.needsUpdate = true;
     }
-    highlightMat.color.set(alertAreas.has(focus) ? warningColor : trackedArea === focus ? trackedColor : selectionColor);
+    highlightMat.color.set(trackedArea === focus ? trackedColor : selectionColor);
   }
 
   function updatePartLeaders() {
@@ -874,11 +925,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       showPressure = enabled;
       annotationsDirty = true;
       host.classList.toggle('show-pressure', enabled);
-      for (const area of Object.keys(CORE_PRESSURES)) {
-        const { el } = labels[area];
-        if (enabled) el.setAttribute('aria-describedby', `model-pressure-${area} model-pressure-state-${area}`);
-        else el.removeAttribute('aria-describedby');
-      }
+      for (const area of Object.keys(CORE_PRESSURES)) describeLabel(area);
     },
     circuit(id) {
       activeCircuit = id || '';
@@ -887,7 +934,8 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     },
     display(enabled) {
       displayed = enabled;
-      host.hidden = !displayed || !showLabels;
+      host.hidden = !displayed;
+      for (const [area, ring] of Object.entries(alarmRings)) ring.visible = displayed && alertAreas.has(area);
       if (enabled) {
         showCloseup();
         resizeMain();
@@ -896,7 +944,8 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     },
     tags(visible) {
       showLabels = visible;
-      host.hidden = !displayed || !showLabels;
+      host.classList.toggle('hide-tags', !visible);
+      for (const area of Object.keys(CORE_PRESSURES)) describeLabel(area);
       annotationsDirty = true;
     },
     internals(visible) {

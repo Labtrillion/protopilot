@@ -166,10 +166,13 @@ def analyze_alarm(checkpoint, trace_path):
     sop = find_sop(alarm)
     readings = evidence(checkpoint, sop) if sop else []
     digest = sha256(checkpoint.native.model_bytes).hexdigest()[:12]
+    sop_summary = {key: sop[key] for key in ("id", "revision", "title", "checks")} if sop else None
+    source_url = sop.get("source_url") if sop else None
+    if isinstance(source_url, str) and source_url.startswith("https://doi.org/") and sop.get("source_title"):
+        sop_summary.update(source_title=sop["source_title"], source_url=source_url)
     result = {
         "decision_id": uuid4().hex, "alarm": alarm, "related_alarms": checkpoint.related_alarms,
-        "sop": {key: value for key, value in sop.items()
-                if key in {"id", "revision", "title", "source_title", "source_url", "checks"}} if sop else None,
+        "sop": sop_summary,
         "readings": readings, "decision": None, "branches": [],
         "start": {"checkpoint": digest, "run_id": checkpoint.run_id, "step": checkpoint.step,
                   "time_hours": round(checkpoint.native.time, 8), "horizon_hours": HORIZON_HOURS,

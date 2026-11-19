@@ -58,6 +58,7 @@
         </div>
       </div>
       <div class="stage" id="stage" data-view="3d">
+        <p class="plant-guide"><b>공정 흐름</b> 원료 공급 → 반응 → 분리 → 제품 배출</p>
         <div id="model-tag-list" class="model-tag-list" role="region" aria-label="태그 목록" tabindex="0" hidden></div>
         <div class="stage-controls">
           <div id="interior-tools" class="interior-tools" hidden>
@@ -85,6 +86,7 @@
 
     <div class="plant-sidebar">
       <aside class="panel event-monitor" id="event-monitor" aria-labelledby="event-monitor-title">
+        <p id="alarm-announcement" class="sr-only" role="status"></p>
         <div class="panel-head">
           <div class="heading-inline"><span data-icon="bell"></span><h2 id="event-monitor-title">알람 및 이벤트 추적</h2></div>
         </div>
@@ -242,6 +244,20 @@
         </details>
       </div>
       <div class="dialog-actions"><button type="submit" id="load-scenario" class="solid">불러와 재실행 준비</button></div>
+    </form>
+  </dialog>
+  <dialog id="alarm-response-dialog" aria-labelledby="alarm-response-title">
+    <div class="dialog-head">
+      <div><p class="context-label">알람 대응</p><h2 id="alarm-response-title"></h2><p id="alarm-response-context"></p></div>
+      <button id="close-alarm-response" type="button" class="icon-button" data-icon="close" aria-label="알람 대응 닫기"></button>
+    </div>
+    <div class="dialog-fields">
+      <p id="alarm-response-status" class="adjust-info" role="status"></p>
+      <div id="alarm-response-result" hidden></div>
+    </div>
+    <form method="dialog" class="dialog-actions">
+      <button type="submit">닫기</button>
+      <button id="retry-alarm-response" type="button" class="solid" hidden>다시 비교</button>
     </form>
   </dialog>
   <div id="notice" class="notice" role="status" hidden></div>

@@ -4,8 +4,6 @@
     "revision": 1,
     "title": "반응기 냉각 이상",
     "tags": ["XMEAS(9)", "XMEASADD(5)", "XMEASADD(6)", "XMV(10)"],
-    "source_title": "팀 기획 · TEP Studio 복합 사례 조사",
-    "source_url": "https://docs.google.com/document/d/1j1GcJa8Gsw9cVSSM_ujbMqWm2AnQx6fdS987m-W5CuQ/edit?tab=t.0",
     "checks": [
       "반응기 온도와 냉각수 입구 온도의 추세를 대조합니다.",
       "냉각수 밸브 명령, 실제 개도, 냉각수 유량이 함께 움직였는지 확인합니다.",
