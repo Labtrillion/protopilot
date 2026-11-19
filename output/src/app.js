@@ -141,6 +141,7 @@ function receive(next) {
   const newAlarm = status.alarms.filter((alarm) => !seenAlarms.has(alarm.id)).sort((a, b) => b.id - a.id)[0];
   seenAlarms = new Set(status.alarms.map((alarm) => alarm.id));
   if (newAlarm) {
+    plantView?.reveal(newAlarm.tag);
     focus(newAlarm.area, newAlarm.tag);
     alarmTab = 'active';
     byId('active-tab').setAttribute('aria-pressed', 'true');

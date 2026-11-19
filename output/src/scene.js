@@ -1,7 +1,7 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { AREAS, CORE_PRESSURES, MEDIA, PORTS, STREAMS, codeFor } from './topology.js';
+import { AREAS, CORE_PRESSURES, MEDIA, PORTS, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { buildInternals } from './internals.js';
 import * as geo from './geometry.js';
 
@@ -233,6 +233,7 @@ export function mountScene(container, host, select) {
   const labels = createLabels(host, select);
   const ports = makePortLabels(host);
   const highlightMat = new T.MeshBasicMaterial({ color: 0x53eff1, transparent: true, opacity: 0.85, depthWrite: false });
+  const trackedColor = new T.Color(0xf0cf82);
   const highlight = new T.Mesh(new T.RingGeometry(1, 1.07, 56), highlightMat);
   highlight.rotation.x = -Math.PI / 2;
   highlight.visible = false;
@@ -245,6 +246,7 @@ export function mountScene(container, host, select) {
   const cameraOffset = new T.Vector3();
   const box = new T.Box3();
   let width = 1, height = 1, focus = 'plant', showFlow = true, showPressure = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
+  let trackedArea = '';
   let down = null, last = 0, framing = false;
   const alertAreas = new Set();
   const geometryBounds = {};
@@ -295,8 +297,8 @@ export function mountScene(container, host, select) {
     for (const [area, label] of Object.entries(labels)) {
       projected.copy(label.position).project(camera);
       const offscreen = Math.abs(projected.x) > 0.96 || Math.abs(projected.y) > 0.95 || projected.z > 1;
-      label.button.hidden = offscreen || (!showLabels && focus !== area) ||
-        (!visibleLabels.has(area) && focus !== area && !alertAreas.has(area));
+      label.button.hidden = offscreen || (!showLabels && focus !== area && trackedArea !== area) ||
+        (!visibleLabels.has(area) && focus !== area && trackedArea !== area && !alertAreas.has(area));
       if (label.button.hidden) continue;
       const active = area === focus;
       const x = (projected.x + 1) * width / 2;
@@ -407,10 +409,10 @@ export function mountScene(container, host, select) {
       const ratio = tag && Number.isFinite(measured) ? Math.max(0, measured / def.nominal) : 0.58;
       const selected = activeCircuit && activeCircuit === def.circuit;
       const dimmed = Boolean(activeCircuit && !selected);
-      material.color.copy(selected ? color : pipeColor);
+      material.color.copy(line.tracked && !dimmed ? trackedColor : selected ? color : pipeColor);
       material.color.multiplyScalar(dimmed ? 0.28 : 1);
-      material.emissive.copy(color);
-      material.emissiveIntensity = dimmed ? 0 : selected ? 0.44 : 0.08 + Math.min(ratio, 2) * 0.10;
+      material.emissive.copy(line.tracked && !dimmed ? trackedColor : color);
+      material.emissiveIntensity = dimmed ? 0 : (line.tracked || selected) ? 0.44 : 0.08 + Math.min(ratio, 2) * 0.10;
       for (const flange of flanges) flange.visible = !dimmed;
       if (valve) {
         const pos = data?.actuators?.[valve.userData.valve];
@@ -432,7 +434,7 @@ export function mountScene(container, host, select) {
       }
       markers.instanceMatrix.needsUpdate = true;
     }
-    highlightMat.color.set(alertAreas.has(focus) ? 0xff8c58 : 0x53eff1);
+    highlightMat.color.set(alertAreas.has(focus) ? 0xff8c58 : trackedArea === focus ? trackedColor : 0x53eff1);
     highlightMat.opacity = alertAreas.has(focus) && !motionReduced ? 0.68 + 0.26 * Math.sin(now / 240) : 0.86;
     projectLabels();
     renderer.render(scene, camera);
@@ -441,6 +443,11 @@ export function mountScene(container, host, select) {
   requestAnimationFrame(animate);
   return {
     go, updateVisuals,
+    track(area, tag) {
+      trackedArea = area;
+      for (const [key, label] of Object.entries(labels)) label.button.classList.toggle('tracked', key === area);
+      for (const line of streams) line.tracked = streamMatchesTag(line.def, tag);
+    },
     flow(enabled) { showFlow = enabled; },
     pressure(enabled) { showPressure = enabled; },
     circuit(id) { activeCircuit = id || ''; container.dataset.circuit = activeCircuit; },

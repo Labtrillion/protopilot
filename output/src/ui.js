@@ -54,7 +54,7 @@ export function legend(circuit, interiors) {
   }).join('') + (interiors ? '<span><i class="level-key"></i>액위 SP</span>' : '');
 }
 
-export function renderPressures(status, enabled) {
+export function renderPressures(status, enabled, tracked = '') {
   const root = byId('pressure-overview');
   root.hidden = !enabled;
   if (!enabled) return;
@@ -68,6 +68,7 @@ export function renderPressures(status, enabled) {
     const formatted = Number.isFinite(value) ? value.toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '—';
     row.querySelector('b').innerHTML = `${formatted}<small>kPa(g)</small>`;
     row.classList.toggle('alarming', alarming);
+    row.toggleAttribute('data-tracked', tag === tracked);
   }
 }
 
@@ -108,7 +109,7 @@ export function renderKpis(status, metadata, trends) {
   });
 }
 
-export function renderInspector(areaKey, status, metadata, circuit = '', setpoint = null, control = null) {
+export function renderInspector(areaKey, status, metadata, circuit = '', setpoint = null, control = null, tracked = '') {
   const area = AREAS[areaKey];
   const values = status?.values ?? {};
   const rows = [...area.tags.map(codeFor), ...(area.extra ?? [])].map((tag) => {
@@ -138,7 +139,8 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
   if (setpoint) root.querySelector('[data-response] b').textContent = `${reading(status?.setpoints?.[setpoint.id])} ${setpoint.unit}`;
   if (control) {
     const current = status?.actuators?.[control.id];
-    root.querySelector('[data-control] b').textContent = `실제 ${reading(current)}% · 명령 ${reading(values[control.id])}%`;
+    const command = status?.manual[control.id] ?? values[control.id];
+    root.querySelector('[data-control] b').textContent = `실제 ${reading(current)}% · 명령 ${reading(command)}%`;
   }
   const measures = root.querySelector('.inspect-values');
   if (!measures.children.length || !measures.contains(document.activeElement)) measures.innerHTML = rows;
@@ -148,6 +150,7 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
       button.querySelector('b').innerHTML = `${reading(values[button.dataset.tag], channel?.unit)} <small>${escape(channel?.unit ?? '')}</small>`;
     }
   }
+  for (const button of measures.children) button.toggleAttribute('data-tracked', button.dataset.tag === tracked);
   if (flows) root.querySelector('.inspect-streams').innerHTML = flows;
 }
 
@@ -158,7 +161,7 @@ export function renderRows(channels, status, selected) {
     return;
   }
   if (holder.children.length !== channels.length || channels.some((channel, i) => holder.children[i].dataset.tag !== channel.id)) {
-    holder.innerHTML = channels.map((ch) => `<tr data-tag="${escape(ch.id)}"><td class="tag-cell"><button type="button" data-tag="${escape(ch.id)}" title="3D 설비 보기">${escape(ch.id)}</button></td>
+    holder.innerHTML = channels.map((ch) => `<tr data-tag="${escape(ch.id)}"><td class="tag-cell"><button type="button" data-tag="${escape(ch.id)}" title="신호와 설비 추적">${escape(ch.id)}</button></td>
       <td title="${escape(ch.description)}">${escape(ch.label)}</td><td>${AREAS[ch.area].code}</td><td class="right numeric"></td><td class="channel-unit">${escape(ch.unit)}</td><td class="channel-state"></td></tr>`).join('');
   }
   const active = new Set((status?.alarms ?? []).map((alarm) => alarm.tag));
@@ -168,9 +171,12 @@ export function renderRows(channels, status, selected) {
     const isOffset = ch.id in (status?.offsets ?? {});
     const manual = ch.id in (status?.manual ?? {});
     tr.classList.toggle('selected-row', selected === ch.id);
+    if (selected === ch.id) tr.cells[0].firstElementChild.setAttribute('aria-current', 'true');
+    else tr.cells[0].firstElementChild.removeAttribute('aria-current');
     tr.classList.toggle('alarm-row', isAlarm);
     tr.cells[3].textContent = reading(status?.values[ch.id], ch.unit);
-    const state = isAlarm ? '경보' : isOffset ? '시험' : manual ? '수동' : ch.period ? `${ch.period} h 샘플` : ch.group.endsWith('monitors') ? '진단' : '정상';
+    const pending = manual && status.manual[ch.id] !== status.values[ch.id];
+    const state = isAlarm ? '경보' : isOffset ? '시험' : pending ? '명령 대기' : manual ? '수동' : ch.period ? `${ch.period} h 샘플` : ch.group.endsWith('monitors') ? '진단' : '정상';
     tr.cells[5].textContent = state;
     if (ch.period) tr.cells[5].title = `갱신 ${ch.period} h / 지연 ${ch.delay} h`;
   });

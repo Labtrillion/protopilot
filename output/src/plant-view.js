@@ -1,4 +1,4 @@
-import { CIRCUITS } from './topology.js';
+import { CIRCUITS, CORE_PRESSURES, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { mountDiagram } from './diagram.js';
 import { mountScene } from './scene.js';
 import { byId, legend, renderPressures } from './ui.js';
@@ -8,7 +8,7 @@ export function mountPlantView({ selectArea, selectValve, onCircuit }) {
   const threeButton = byId('view-3d'), twoButton = byId('view-2d');
   const flows = byId('view-flow'), pressure = byId('view-pressure'), internals = byId('toggle-internals'), tags = byId('toggle-tags');
   const circuitButtons = [...document.querySelectorAll('.circuit-controls button[data-circuit]')];
-  let scene, current, area = 'plant', circuit = '', visible = '3d';
+  let scene, current, area = 'plant', circuit = '', visible = '3d', tracked = '', focusedTag = '';
   const flags = { flows: true, pressure: true, internals: false, tags: true };
   const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve);
   try {
@@ -32,7 +32,7 @@ export function mountPlantView({ selectArea, selectValve, onCircuit }) {
     byId('stage-caption-text').textContent = three ? '공정 모델' : 'Fig. 1 · 공정도';
     byId('canvas-error').hidden = !three || Boolean(scene);
     scene?.display(three);
-    diagram.focus(area, area === 'plant');
+    diagram.focus(area, area === 'plant', focusedTag);
     legend(circuit, three && flags.internals);
   }
 
@@ -68,7 +68,7 @@ export function mountPlantView({ selectArea, selectValve, onCircuit }) {
   function applyPressure(enabled) {
     scene?.pressure(enabled);
     diagram.pressure(enabled);
-    renderPressures(current, enabled);
+    renderPressures(current, enabled, tracked);
   }
   byId('pressure-overview').addEventListener('click', (event) => {
     const button = event.target.closest('[data-pressure-tag]');
@@ -80,10 +80,24 @@ export function mountPlantView({ selectArea, selectValve, onCircuit }) {
   return {
     focus(next, reset, tag) {
       area = next;
+      focusedTag = tag;
       scene?.go(next, reset, tag);
-      diagram.focus(next, reset);
+      diagram.focus(next, reset, tag);
     },
     circuit: chooseCircuit,
+    track(signalArea, tag) {
+      tracked = tag;
+      scene?.track(signalArea, tag);
+      diagram.track(signalArea, tag);
+      renderPressures(current, flags.pressure, tracked);
+    },
+    reveal(tag) {
+      if (!flags.pressure && Object.values(CORE_PRESSURES).map(codeFor).includes(tag)) pressure.click();
+      if (visible === '3d' && !flags.internals && ['XMEAS(8)', 'XMEAS(12)', 'XMEAS(15)', 'XMV(12)'].includes(tag)) internals.click();
+      const stream = STREAMS.find((line) => streamMatchesTag(line, tag));
+      if (stream && !flags.flows && !tag.startsWith('XMV')) flows.click();
+      if (stream && circuit && stream.circuit !== circuit) chooseCircuit('', false);
+    },
     showPressure() {
       if (!flags.pressure) pressure.click();
     },
@@ -91,7 +105,7 @@ export function mountPlantView({ selectArea, selectValve, onCircuit }) {
       current = status;
       scene?.updateVisuals(status);
       diagram.update(status);
-      renderPressures(status, flags.pressure);
+      renderPressures(status, flags.pressure, tracked);
     },
   };
 }

@@ -1,4 +1,4 @@
-import { AREAS, CORE_PRESSURES, STREAMS, codeFor } from './topology.js';
+import { AREAS, CORE_PRESSURES, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { byId, elapsed, reading } from './ui.js';
 
 const PRESSURE_TAGS = new Set(Object.values(CORE_PRESSURES).map(codeFor));
@@ -20,7 +20,7 @@ function describe(signal, status, format) {
   const { kind, item } = signal;
   const tag = signalTag(signal);
   const paused = status.running ? '' : ' · 재개 후 물리 응답';
-  const route = STREAMS.filter((line) => codeFor(line.tag) === tag || `XMV(${line.valve?.[0]})` === tag);
+  const route = STREAMS.filter((line) => streamMatchesTag(line, tag));
   const routeNames = route.map((line) => `#${line.id}`).join(' · ');
   const offset = status.offsets[tag];
   const measured = status.values[tag];
@@ -31,10 +31,11 @@ function describe(signal, status, format) {
     const mode = tag in status.manual ? '수동' : '자동';
     const location = routeNames ? `${routeNames} 밸브` : '반응기 교반기';
     const actual = Number.isFinite(position) ? `실제 ${format(position)}` : '실제 위치 데이터 없음';
-    return [location, `${mode} 제어 · ${actual}${paused}`, '조작 명령'];
+    const pending = tag in status.manual && status.manual[tag] !== measured;
+    return [location, `${mode} 제어 · ${actual}${paused}`, pending ? '조작 명령 · 적용 대기' : '조작 명령'];
   }
   if (kind === 'setpoint') {
-    const location = LEVEL_TAGS.has(tag) ? '3D 내부 액위 목표선' : `${tag} 실측 추세`;
+    const location = LEVEL_TAGS.has(tag) ? '설비 액위 목표선' : `${tag} 실측 추세`;
     return [location, `표시 PV ${format(measured)}${paused}`, 'SP 목표'];
   }
   if (kind === 'disturbance') return ['시뮬레이션 외란', `외란 상태가 모델 입력에 반영됩니다${paused}`, '적용 상태'];
@@ -43,9 +44,9 @@ function describe(signal, status, format) {
     return ['알람 기준', `하한 ${format(low)} / 상한 ${format(high)}`, '현재 계측'];
   }
 
-  const location = PRESSURE_TAGS.has(tag) ? '설비 압력 표시' : LEVEL_TAGS.has(tag) ? '3D 설비 액면' : routeNames ? `${routeNames} 배관 유량` : '설비 계측 표시';
+  const location = PRESSURE_TAGS.has(tag) ? '설비 압력 표시' : LEVEL_TAGS.has(tag) ? '설비 액면' : routeNames ? `${routeNames} 배관 유량` : '설비 계측 표시';
   const offsetInfo = `원계측 ${format(native)} · 오프셋 ${offset > 0 ? '+' : ''}${format(offset)}`;
-  if (offset != null) return [location, offsetInfo, '센서 시험 표시값'];
+  if (offset != null) return [location, `${offsetInfo}${routeNames || LEVEL_TAGS.has(tag) ? ' · 모델은 원계측 사용' : ''}`, '센서 시험 표시값'];
   if (routeNames) return [location, '유량에 따라 화살표 속도가 변합니다.', '현재 계측'];
   if (item.period) return [location, `분석기 갱신 ${item.period} h · 지연 ${item.delay} h`, '현재 계측'];
   return [location, PRESSURE_TAGS.has(tag) || LEVEL_TAGS.has(tag) ? '' : '선택한 태그를 공정 화면에 표시합니다.', '현재 계측'];
@@ -121,7 +122,8 @@ export function mountSignal() {
     nodes.name.textContent = item.label;
     nodes['value-label'].textContent = alarming ? `${label} · 경보` : label;
     nodes.value.textContent = format(current);
-    nodes.previous.textContent = Number.isFinite(previous) ? `직전 ${format(previous)}${kind === 'disturbance' || sameReading ? '' : ` · ${delta > 0 ? '+' : ''}${signed}`}` : '직전 수신값 없음';
+    const change = Number.isFinite(current) && !sameReading && kind !== 'disturbance' ? ` · ${delta > 0 ? '+' : ''}${signed}` : '';
+    nodes.previous.textContent = Number.isFinite(previous) ? `직전 ${format(previous)}${change}` : '직전 수신값 없음';
     nodes.location.textContent = `${code} · ${location}`;
     nodes.effect.textContent = effect;
     nodes.effect.hidden = !effect;

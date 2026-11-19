@@ -1,4 +1,4 @@
-import { AREAS, CORE_PRESSURES, MEDIA, STREAMS, codeFor } from './topology.js';
+import { AREAS, CORE_PRESSURES, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { reading } from './ui.js';
 
 // Orthogonal routing reads left-to-right. Only solid dots indicate a pipe junction.
@@ -13,9 +13,9 @@ const ROUTING = {
   '09': 'M729 139H1040',
   '10S': 'M729 282V327H750', '10': 'M792 327H828V273H856',
   '11S': 'M890 384V414H924', '11': 'M966 414H1040',
-  'CWS': 'M317 409H382', 'CWR': 'M355 447H317',
-  '12I': 'M382 409V286H338', '12': 'M338 319H355V447',
-  '13I': 'M382 409H470V184', '13': 'M503 184V447H355',
+  'CWS': 'M317 389H382', 'CWR': 'M355 447H317',
+  '12I': 'M382 389V286H338', '12': 'M338 319H355V447',
+  '13I': 'M382 389H470V184', '13': 'M503 184V447H355',
   'ST': 'M1040 295H990', 'CD': 'M990 355H1040',
   'RB-I': 'M890 393H973V371', 'RB-R': 'M973 272V260H941V320H924',
 };
@@ -35,7 +35,7 @@ const METERS = [
   ['09', 819, 131], ['10', 824, 266], ['11', 983, 407], ['12', 371, 384], ['13', 517, 316],
 ];
 const DOTS = [[190,170], [190,214], [190,258], [190,306], [550,76], [517,76], [675,76],
-  [729,139], [382,409], [355,447], [890,393]];
+  [729,139], [382,389], [355,447], [890,393]];
 const LEVELS = {
   reactor: { tag: 8, body: [252, 228, 86, 133], datum: 354, range: 65 },
   separator: { tag: 12, body: [695, 188, 68, 94], datum: 278, range: 42 },
@@ -51,7 +51,7 @@ const vessel = (x,y,w,h) => rect(x,y,w,h,w / 2.3);
 const pump = (x,y) => `<circle cx="${x}" cy="${y}" r="15"/><path d="M${x-15} ${y}h-6m36 0h6m-29-6 11 6-11 6z"/>`;
 const ports = [
   [36,170,'A'], [36,214,'D'], [36,258,'E'], [36,414,'A/C'],
-  [268,409,'CWS'],[268,447,'CWR'],[1040,139,'PURGE'],[1040,295,'STM'],
+  [268,389,'CWS'],[268,447,'CWR'],[1040,139,'PURGE'],[1040,295,'STM'],
   [1040,355,'COND'],[1040,414,'PRODUCT'],
 ];
 const anchors = Object.entries(ANCHORS);
@@ -130,12 +130,24 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
   const flowByStream = new Map([...svg.querySelectorAll('[data-flow-reading]')].map((node) => [node.dataset.flowReading, node]));
   const linesById = new Map([...svg.querySelectorAll('.pfd-stream')].map((line) => [line.dataset.stream, line]));
   return {
-    focus(area, reset) {
+    focus(area, reset, tag) {
       for (const unit of svg.querySelectorAll('[data-area],[data-symbol]')) unit.classList.toggle('selected', (unit.dataset.area || unit.dataset.symbol) === area);
       if (reset) host.scrollLeft = 0;
       else if (area !== 'plant' && ANCHORS[area] && !host.hidden) {
-        const center = ANCHORS[area][0] / 1140 * svg.clientWidth;
+        const valve = VALVES.find(([id]) => `XMV(${id})` === tag);
+        const center = (valve?.[1] ?? ANCHORS[area][0]) / 1140 * svg.clientWidth;
         host.scrollLeft = Math.max(0, center - host.clientWidth / 2);
+      }
+    },
+    track(area, tag) {
+      for (const unit of svg.querySelectorAll('[data-area],[data-symbol],[data-pressure]')) {
+        unit.classList.toggle('tracked', (unit.dataset.area || unit.dataset.symbol || unit.dataset.pressure) === area);
+      }
+      for (const valve of svg.querySelectorAll('[data-valve]')) valve.classList.toggle('tracked', valve.dataset.valve === tag);
+      for (const line of STREAMS) {
+        const tracked = streamMatchesTag(line, tag);
+        linesById.get(line.id).classList.toggle('tracked', tracked);
+        flowByStream.get(line.id)?.classList.toggle('tracked', tracked);
       }
     },
     circuit(id) { svg.dataset.circuit = id || ''; },
@@ -146,7 +158,8 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
       for (const stream of STREAMS) {
         const tag = codeFor(stream.tag);
         const value = status.values[tag];
-        const ratio = tag && Number.isFinite(value) ? Math.max(0, value / stream.nominal) : 0.57;
+        const measured = status.native_values[tag] ?? value;
+        const ratio = tag && Number.isFinite(measured) ? Math.max(0, measured / stream.nominal) : 0.57;
         const line = linesById.get(stream.id);
         line.classList.toggle('no-flow', ratio < 0.015);
         line.style.setProperty('--speed', `${Math.min(5, 1.5 / Math.max(0.28, ratio))}s`);

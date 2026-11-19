@@ -70,6 +70,10 @@ const PIPES = [
 
 export const codeFor = (tag) => typeof tag === 'number' ? `XMEAS(${tag})` : tag;
 
+export function streamMatchesTag(stream, tag) {
+  return Boolean(tag && (codeFor(stream.tag) === tag || (stream.valve && `XMV(${stream.valve[0]})` === tag)));
+}
+
 
 export const CORE_PRESSURES = {
   reactor: 7, separator: 13, stripper: 16,
