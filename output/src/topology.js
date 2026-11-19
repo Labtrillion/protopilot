@@ -89,7 +89,7 @@ export const INTERIOR_TAGS = new Set(Object.values(INTERIOR_PARTS).flat().map(([
 
 export const CIRCUITS = {
   recycle: {
-    title: '재순환', colorToken: MEDIA.gas.colorToken, paths: [
+    title: '재순환', paths: [
       ['기액 분리기', 'K-101 압축기', '혼합 헤더', 'R-101 반응기'],
       ['T-101 상부', '압축기 토출측 합류', '혼합 헤더'],
       ['압축기 토출', 'XMV(5) 바이패스', '압축기 흡입'],
@@ -97,14 +97,14 @@ export const CIRCUITS = {
     info: '분리기 상부에서 퍼지 #09가 분기됩니다. 스트리퍼 상부 #05는 압축기 토출 유량계 뒤에서 합류합니다.',
   },
   cooling: {
-    title: '냉각수', colorToken: MEDIA.water.colorToken, paths: [
+    title: '냉각수', paths: [
       ['CWS 공급', '반응기 코일', 'XMV(10)', 'CWR 회수'],
       ['CWS 공급', '응축기 튜브', 'XMV(11)', 'CWR 회수'],
     ],
     info: '두 설비는 공용 냉각수 헤더에 병렬로 연결됩니다. 각 회수 배관에 제어 밸브가 있습니다.',
   },
   steam: {
-    title: '스팀·재비기', colorToken: MEDIA.steam.colorToken, paths: [
+    title: '스팀·재비기', paths: [
       ['STM 공급', 'XMV(9)', 'E-102 재비기', 'COND 회수'],
       ['T-101 하부', 'E-102 공정측', 'T-101 하부 증기 환류'],
     ],

@@ -44,7 +44,7 @@ function setupSite(scene) {
   geo.box(floor, [38.9, 0.035, 20.9], [0, -0.045, -0.65], slab, true).castShadow = false;
   const lines = new T.LineSegments(
     new T.EdgesGeometry(new T.BoxGeometry(40, 0.29, 22)),
-    new T.LineBasicMaterial({ color: readColor('--line') }),
+    new T.LineBasicMaterial({ color: readColor('--model-line') }),
   );
   lines.position.set(0, -0.18, -0.63);
   scene.add(lines);

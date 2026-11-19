@@ -80,7 +80,7 @@ function routeDetails(circuit) {
   if (!circuit) return '';
   const route = CIRCUITS[circuit];
   const paths = route.paths.map((path) => `<li>${path.map((item) => `<span>${escape(item)}</span>`).join('<i aria-hidden="true">→</i>')}</li>`).join('');
-  return `<section class="route-inspector" style="--route-color:var(${route.colorToken})">
+  return `<section class="route-inspector">
     <h3>${route.title} 경로</h3><ul>${paths}</ul><p>${route.info}</p></section>`;
 }
 

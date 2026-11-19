@@ -7,7 +7,7 @@ const relatedControl = {
   ya: 'XMV(3)', yac: 'XMV(4)',
 };
 const COLORS = {
-  pv: readColor('--plot-pv'), sp: readColor('--plot-sp'),
+  pv: readColor('--plot-pv'), sp: readColor('--response-target'),
   grid: readColor('--plot-grid'), label: readColor('--muted'),
 };
 const CHANGES = 360;

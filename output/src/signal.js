@@ -6,7 +6,7 @@ const PRESSURE_TAGS = new Set(Object.values(CORE_PRESSURES).map(codeFor));
 const LEVEL_TAGS = new Set([8, 12, 15].map(codeFor));
 const TRACE_LENGTH = 60;
 const traceColors = {
-  grid: readColor('--plot-grid'), tracked: readColor('--tracked'), warning: readColor('--warning'),
+  grid: readColor('--plot-grid'), normal: readColor('--subtext'), warning: readColor('--warning'),
 };
 
 export function signalTag(signal) {
@@ -149,7 +149,7 @@ export function mountSignal(loopFor = () => null) {
     const start = kind === 'disturbance' ? format(min) : reading(min, item.unit);
     nodes['trace-range'].textContent = min === max ? format(min) : numeric.length ? `${start} ~ ${format(max)}` : '—';
     drawTrace(nodes.chart, values, min, max, ['setpoint', 'disturbance', 'mv'].includes(kind),
-      alarming ? traceColors.warning : traceColors.tracked);
+      alarming ? traceColors.warning : traceColors.normal);
   }
 
   new ResizeObserver(render).observe(byId('signal-trace'));
