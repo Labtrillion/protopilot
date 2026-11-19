@@ -1,0 +1,216 @@
+{
+  "_comment": "임시 원본 형식 예시. content 는 zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json v1.0 원문 인용. kg.suggested_actions 의 연결(대응 후보↔근거)은 예시이며 지연님 출력으로 교체",
+  "query_id": "RQ-TEP-0001",
+  "retrieved": [
+    {
+      "chunk_id": "team-sop/tep-studio-closed-loop/S05#p1",
+      "doc": {
+        "id": "tep-studio-closed-loop",
+        "version": "1.0",
+        "title": "TEP Studio 폐루프 운전 SOP"
+      },
+      "section": "S05 procedure 1",
+      "content": "정상 경로는 퍼지 B 조성 XMEAS(30) → CONTRL19 → CONTRL6 유량 목표 → XMEAS(10)·XMV(6)이다. 목표 B는 13.823 mol%다.",
+      "score": 0.88,
+      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S05"
+    },
+    {
+      "chunk_id": "team-sop/tep-studio-closed-loop/S05#stop",
+      "doc": {
+        "id": "tep-studio-closed-loop",
+        "version": "1.0",
+        "title": "TEP Studio 폐루프 운전 SOP"
+      },
+      "section": "S05 stop_conditions",
+      "content": "압력 우선 제어 중에는 경제 조정을 보류한다. 트립 시 종료한다.",
+      "score": 0.84,
+      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S05"
+    },
+    {
+      "chunk_id": "team-sop/tep-studio-closed-loop/S08#p2",
+      "doc": {
+        "id": "tep-studio-closed-loop",
+        "version": "1.0",
+        "title": "TEP Studio 폐루프 운전 SOP"
+      },
+      "section": "S08 procedure 2",
+      "content": "SOP 단독은 기존 목표를 유지한다. Zoro 시험에서도 같은 하위 제어기를 유지하며, 연결된 감독기가 승인한 상위 설정값 후보만 기록·적용한다. 바꿀 근거가 부족하면 현재 목표를 유지한다.",
+      "score": 0.79,
+      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S08"
+    },
+    {
+      "chunk_id": "team-sop/tep-studio-closed-loop/S04#c1",
+      "doc": {
+        "id": "tep-studio-closed-loop",
+        "version": "1.0",
+        "title": "TEP Studio 폐루프 운전 SOP"
+      },
+      "section": "S04 constraints",
+      "content": "원료·퍼지 분석기는 6분 간격으로 이전 시료를 보고한다. 같은 값이 반복되는 3분 로그 두 행을 독립적인 조성 변화로 세지 않는다.",
+      "score": 0.71,
+      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S04"
+    },
+    {
+      "chunk_id": "team-sop/tep-studio-closed-loop/S08#c1",
+      "doc": {
+        "id": "tep-studio-closed-loop",
+        "version": "1.0",
+        "title": "TEP Studio 폐루프 운전 SOP"
+      },
+      "section": "S08 constraints",
+      "content": "Studio 평가에는 Downs & Vogel 표 9의 기준 환산을 적용한다. 경제 조정에도 생산 목표·품질 규격·제어 보호 설정은 고정한다.",
+      "score": 0.55,
+      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S08"
+    }
+  ],
+  "kg": {
+    "suggested_actions": [
+      {
+        "ref": "QUERY_PURGE_ANALYZER",
+        "purpose": "새 퍼지 시료 확인 (같은 값 반복은 새 시료 아님)",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S04#c1"
+        ],
+        "conditions": []
+      },
+      {
+        "ref": "SIM_HOLD",
+        "purpose": "SOP 단독 기준(현재 목표 유지)",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ],
+        "conditions": [
+          "pressure override inactive"
+        ]
+      },
+      {
+        "ref": "SIM_SP19_UP050",
+        "purpose": "퍼지 B 목표 14.323 mol% 응답 시험",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S05#p1",
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ],
+        "conditions": [
+          "pressure override inactive",
+          "purge sample fresh"
+        ]
+      },
+      {
+        "ref": "purge_b_setpoint_dn050",
+        "purpose": "퍼지 B 목표 13.323 mol% 응답 시험",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S05#p1",
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ],
+        "conditions": [
+          "pressure override inactive",
+          "purge sample fresh"
+        ]
+      },
+      {
+        "ref": "SIM_SP19_UP100",
+        "purpose": "퍼지 B 목표 14.823 mol% 응답 시험",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S05#p1",
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ],
+        "conditions": [
+          "pressure override inactive",
+          "purge sample fresh"
+        ]
+      },
+      {
+        "ref": "SIM_SP19_DN100",
+        "purpose": "퍼지 B 목표 12.823 mol% 응답 시험",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S05#p1",
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ],
+        "conditions": [
+          "pressure override inactive",
+          "purge sample fresh"
+        ]
+      },
+      {
+        "ref": "SIM_SP19_UP150",
+        "purpose": "퍼지 B 목표 15.323 mol% 응답 시험",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S05#p1",
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ],
+        "conditions": [
+          "pressure override inactive",
+          "purge sample fresh"
+        ]
+      },
+      {
+        "ref": "SIM_SP19_DN150",
+        "purpose": "퍼지 B 목표 12.323 mol% 응답 시험",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S05#p1",
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ],
+        "conditions": [
+          "pressure override inactive",
+          "purge sample fresh"
+        ]
+      },
+      {
+        "ref": "SIM_SP19_UP200",
+        "purpose": "퍼지 B 목표 15.823 mol% 응답 시험",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S05#p1",
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ],
+        "conditions": [
+          "pressure override inactive",
+          "purge sample fresh"
+        ]
+      },
+      {
+        "ref": "SIM_SP19_DN200",
+        "purpose": "퍼지 B 목표 11.823 mol% 응답 시험",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S05#p1",
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ],
+        "conditions": [
+          "pressure override inactive",
+          "purge sample fresh"
+        ]
+      },
+      {
+        "ref": "SIM_CHANGE_PRODUCTION_TARGET",
+        "purpose": "생산 감축으로 압력 완화",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S08#c1"
+        ],
+        "conditions": []
+      },
+      {
+        "ref": "XMV(6) 100% 수동 개방",
+        "purpose": "퍼지 밸브 직접 개방",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S05#p1"
+        ],
+        "conditions": [
+          "separator pressure check"
+        ]
+      }
+    ],
+    "notes": [
+      {
+        "topic": "퍼지 B 목표 변경 폭",
+        "text": "검색된 SOP에 상위 목표 변경 폭·변화율의 정량 기준이 없음 — 감독기 허용값 확인 필요",
+        "support": [
+          "team-sop/tep-studio-closed-loop/S08#p2"
+        ]
+      },
+      {
+        "topic": "원인 확정",
+        "text": "검색 결과만으로 압력 상승 원인을 확정할 수 없음",
+        "support": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,400 @@
+{
+  "$defs": {
+    "ActiveSetpoint": {
+      "additionalProperties": false,
+      "description": "현재 적용 중인 상위 목표 (경계 A, 장하 제공).",
+      "properties": {
+        "setpoint_id": {
+          "title": "Setpoint Id",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "since_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "이 값이 적용된 시뮬레이션 시각 [s]. null = 모름",
+          "title": "Since S"
+        }
+      },
+      "required": [
+        "setpoint_id",
+        "value",
+        "unit",
+        "since_s"
+      ],
+      "title": "ActiveSetpoint",
+      "type": "object"
+    },
+    "Alarm": {
+      "additionalProperties": false,
+      "properties": {
+        "alarm_id": {
+          "title": "Alarm Id",
+          "type": "string"
+        },
+        "sensor_id": {
+          "title": "Sensor Id",
+          "type": "string"
+        },
+        "condition": {
+          "enum": [
+            "high",
+            "high_high",
+            "low",
+            "low_low",
+            "deviation",
+            "rate",
+            "other"
+          ],
+          "title": "Condition",
+          "type": "string"
+        },
+        "raised_at_s": {
+          "title": "Raised At S",
+          "type": "number"
+        },
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "priority": {
+          "anyOf": [
+            {
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "critical"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Priority"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "경보 임계값. null = 미제공",
+          "title": "Threshold"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "raw_tag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "원본 계측 태그 (예: PIR100)",
+          "title": "Raw Tag"
+        }
+      },
+      "required": [
+        "alarm_id",
+        "sensor_id",
+        "condition",
+        "raised_at_s",
+        "active"
+      ],
+      "title": "Alarm",
+      "type": "object"
+    },
+    "CheckStatus": {
+      "enum": [
+        "pass",
+        "fail",
+        "unknown"
+      ],
+      "title": "CheckStatus",
+      "type": "string"
+    },
+    "DataQuality": {
+      "enum": [
+        "good",
+        "uncertain",
+        "bad"
+      ],
+      "title": "DataQuality",
+      "type": "string"
+    },
+    "MissingInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "title": "Item",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "sensor_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "관련 센서. 새 측정이 반영되면 해소 처리",
+          "title": "Sensor Id"
+        }
+      },
+      "required": [
+        "item",
+        "reason"
+      ],
+      "title": "MissingInfo",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "description": "실제 공정 측정값. 시뮬레이션 예측값은 절대 이 타입으로 만들지 않는다 (origin 고정).",
+      "properties": {
+        "origin": {
+          "const": "plant_measurement",
+          "default": "plant_measurement",
+          "title": "Origin",
+          "type": "string"
+        },
+        "sensor_id": {
+          "title": "Sensor Id",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "측정값. null = 값 없음(결측/측정 실패). 0으로 대체 금지.",
+          "title": "Value"
+        },
+        "unit": {
+          "description": "단위 문자열 (예: kPa(g), degC, mol_frac, t/h)",
+          "title": "Unit",
+          "type": "string"
+        },
+        "measured_at_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "측정(시료 채취) 시뮬레이션 시각 [s]. null = 시각 모름 → 신선도 unknown",
+          "title": "Measured At S"
+        },
+        "quality": {
+          "$ref": "#/$defs/DataQuality"
+        },
+        "sample_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "시료/측정 식별자. 같은 시료 재전달 판별용. null = 미제공",
+          "title": "Sample Id"
+        }
+      },
+      "required": [
+        "sensor_id",
+        "value",
+        "unit",
+        "measured_at_s",
+        "quality"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "SafetyCheck": {
+      "additionalProperties": false,
+      "description": "외부 규칙 엔진이 제공한 안전 검사 결과. 에이전트는 계산하지 않고 그대로 읽는다.",
+      "properties": {
+        "check_id": {
+          "title": "Check Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/CheckStatus"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "evaluated_at_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "null = 평가 시각 미제공/미평가",
+          "title": "Evaluated At S"
+        }
+      },
+      "required": [
+        "check_id",
+        "description",
+        "status",
+        "source"
+      ],
+      "title": "SafetyCheck",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "event_input.v0",
+      "default": "event_input.v0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "event_id": {
+      "title": "Event Id",
+      "type": "string"
+    },
+    "state_version": {
+      "description": "백엔드가 부여한 상태 버전. 에이전트는 갱신마다 +1",
+      "minimum": 0,
+      "title": "State Version",
+      "type": "integer"
+    },
+    "sim_time_s": {
+      "description": "현재 시뮬레이션 시각 [s]",
+      "title": "Sim Time S",
+      "type": "number"
+    },
+    "time_basis": {
+      "const": "simulation_seconds",
+      "default": "simulation_seconds",
+      "title": "Time Basis",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "description": "대응 실험의 공통 비교 출발점",
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "alarms": {
+      "items": {
+        "$ref": "#/$defs/Alarm"
+      },
+      "title": "Alarms",
+      "type": "array"
+    },
+    "observations": {
+      "description": "최근 관측 이력(센서별 여러 점 가능)",
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "title": "Observations",
+      "type": "array"
+    },
+    "safety_checks": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SafetyCheck"
+      },
+      "title": "Safety Checks",
+      "type": "array"
+    },
+    "missing_info": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/MissingInfo"
+      },
+      "title": "Missing Info",
+      "type": "array"
+    },
+    "active_setpoints": {
+      "default": [],
+      "description": "현재 적용 중인 상위 목표. 비어 있으면 설정값 변경 case 는 보류",
+      "items": {
+        "$ref": "#/$defs/ActiveSetpoint"
+      },
+      "title": "Active Setpoints",
+      "type": "array"
+    }
+  },
+  "required": [
+    "event_id",
+    "state_version",
+    "sim_time_s",
+    "snapshot_id",
+    "alarms",
+    "observations"
+  ],
+  "title": "EventInput",
+  "type": "object"
+}

@@ -1,0 +1,94 @@
+{
+  "tool_request_id": "EVT-TEP-0001-D05-T1",
+  "tool_name": "run_simulation",
+  "status": "succeeded",
+  "payload": {
+    "kind": "simulation",
+    "run": {
+      "kind": "simulation_prediction",
+      "run_id": "RUN-003-SIM_SP19_DN050",
+      "snapshot_id": "SNAP-TEP-0001-T21600",
+      "action_id": "SIM_SP19_DN050",
+      "case_id": "CASE-SP19-DN050",
+      "conditions": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "horizon_s": 14400.0,
+        "simulator_version": "tepsim-wasm 0.0.0 (example)",
+        "disturbance_profile_id": "DIST-REPLAY-EXAMPLE",
+        "seed": 4651207995,
+        "initial_composition_sample_id": "PURGE-0117"
+      },
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/RUN-003-SIM_SP19_DN050/studio.csv",
+      "error": null
+    },
+    "impact": {
+      "kind": "simulation_prediction",
+      "run_id": "RUN-003-SIM_SP19_DN050",
+      "original_alarm_recovered": true,
+      "recovery_time_s": 5400.0,
+      "affected_equipment": [
+        "reactor",
+        "purge"
+      ],
+      "affected_sensors": [
+        "XMEAS(7)",
+        "XMEAS(10)"
+      ],
+      "exceedances": [],
+      "metrics": {
+        "usd_per_m3": {
+          "value": 7.66,
+          "unit": "USD/m3",
+          "better": "lower"
+        },
+        "tracking_accuracy": {
+          "value": 0.74,
+          "unit": "score_0_1",
+          "better": "higher"
+        },
+        "product_m3": {
+          "value": 91.5,
+          "unit": "m3",
+          "better": "higher"
+        },
+        "cost_total_usd": {
+          "value": 700.89,
+          "unit": "USD(benchmark)",
+          "better": "lower"
+        }
+      },
+      "evidence_spans": [
+        {
+          "run_id": "RUN-003-SIM_SP19_DN050",
+          "sensor_id": "XMEAS(7)",
+          "t_start_s": 0.0,
+          "t_end_s": 5400.0
+        }
+      ],
+      "score": {
+        "run_id": "RUN-003-SIM_SP19_DN050",
+        "tripped": false,
+        "usd_per_m3": 7.66,
+        "cost_usd": {
+          "purge": 469.6,
+          "product": 126.16,
+          "power": 75.0,
+          "steam": 30.13,
+          "total": 700.89
+        },
+        "product_m3": 91.5,
+        "tracking_accuracy": 0.74,
+        "per_variable_accuracy": {},
+        "in_threshold_fraction": 0.625,
+        "time_to_stable_s": 5400.0,
+        "final_window_inside": true,
+        "quality_ok": true,
+        "failed_gates": []
+      }
+    }
+  },
+  "error": null,
+  "finished_sim_time_s": null,
+  "is_virtual": true
+}

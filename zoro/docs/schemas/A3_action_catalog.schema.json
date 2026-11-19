@@ -1,0 +1,664 @@
+{
+  "$defs": {
+    "ActionKind": {
+      "enum": [
+        "sensor_query",
+        "relation_query",
+        "simulation",
+        "human_review"
+      ],
+      "title": "ActionKind",
+      "type": "string"
+    },
+    "ActionSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "title": "Action Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ActionKind"
+        },
+        "tool_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "실행 도구 이름. human_review 는 null",
+          "title": "Tool Name"
+        },
+        "supported": {
+          "description": "실행 기능이 실제 구현·연결되었는가",
+          "title": "Supported",
+          "type": "boolean"
+        },
+        "case_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "simulation 이 시험할 등록 대응 case. 지원되는 simulation 은 필수",
+          "title": "Case Id"
+        },
+        "args_template": {
+          "additionalProperties": true,
+          "default": {},
+          "description": "도구 인자 틀. '$snapshot_id', '$event_id', '$latest_sample_id:<sensor>', '$latest_value:<sensor>' 만 치환",
+          "title": "Args Template",
+          "type": "object"
+        },
+        "preconditions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "required_fresh_sensors": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Fresh Sensors",
+          "type": "array"
+        },
+        "target_sensors": {
+          "default": [],
+          "description": "sensor_query 대상. 모두 신선하면 옵션 닫힘",
+          "items": {
+            "type": "string"
+          },
+          "title": "Target Sensors",
+          "type": "array"
+        },
+        "rerun": {
+          "$ref": "#/$defs/RerunPolicy",
+          "default": {
+            "scope": "per_snapshot",
+            "retry_after_failure": true,
+            "max_runs": null
+          }
+        },
+        "requires_rag_evidence": {
+          "default": false,
+          "title": "Requires Rag Evidence",
+          "type": "boolean"
+        },
+        "offer_without_rag": {
+          "default": false,
+          "description": "RAG 후보에 없어도 기본 제공",
+          "title": "Offer Without Rag",
+          "type": "boolean"
+        },
+        "recommendable": {
+          "default": false,
+          "description": "이 실험 결과를 근거로 최종 권고 옵션을 만들 수 있는가",
+          "title": "Recommendable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "action_id",
+        "description",
+        "kind",
+        "tool_name",
+        "supported"
+      ],
+      "title": "ActionSpec",
+      "type": "object"
+    },
+    "ConditionKind": {
+      "enum": [
+        "sensor_fresh",
+        "safety_check",
+        "run_succeeded"
+      ],
+      "title": "ConditionKind",
+      "type": "string"
+    },
+    "ConditionSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "condition_id": {
+          "title": "Condition Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ConditionKind"
+        },
+        "sensor_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sensor Id"
+        },
+        "check_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Check Id"
+        },
+        "action_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Action Id"
+        }
+      },
+      "required": [
+        "condition_id",
+        "description",
+        "kind"
+      ],
+      "title": "ConditionSpec",
+      "type": "object"
+    },
+    "RerunPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "default": "per_snapshot",
+          "description": "per_snapshot: 같은 snapshot 에서 성공/진행 중이면 재실행 금지. unlimited: 성공해도 재실행 허용",
+          "enum": [
+            "per_snapshot",
+            "unlimited"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "retry_after_failure": {
+          "default": true,
+          "title": "Retry After Failure",
+          "type": "boolean"
+        },
+        "max_runs": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "해당 범위 내 최대 시도 수. null = 무제한",
+          "title": "Max Runs"
+        }
+      },
+      "title": "RerunPolicy",
+      "type": "object"
+    },
+    "ResponseCase": {
+      "additionalProperties": false,
+      "description": "시나리오별 대응 case. Zoro 는 이 case 를 시험·권고할지 고를 뿐 내용을 바꾸지 않는다.",
+      "properties": {
+        "case_id": {
+          "title": "Case Id",
+          "type": "string"
+        },
+        "policy": {
+          "enum": [
+            "hold",
+            "propose_setpoint"
+          ],
+          "title": "Policy",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "setpoint_changes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SetpointChange"
+          },
+          "title": "Setpoint Changes",
+          "type": "array"
+        },
+        "sop_refs": {
+          "description": "근거 SOP 단계",
+          "items": {
+            "$ref": "#/$defs/SopRef"
+          },
+          "title": "Sop Refs",
+          "type": "array"
+        },
+        "watch_signals": {
+          "description": "적용 후 확인할 신호",
+          "items": {
+            "type": "string"
+          },
+          "title": "Watch Signals",
+          "type": "array"
+        },
+        "review_after_s": {
+          "description": "적용 시각 기준 재검토까지 [s]",
+          "title": "Review After S",
+          "type": "number"
+        },
+        "revert_rules": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RevertRule"
+          },
+          "title": "Revert Rules",
+          "type": "array"
+        },
+        "expected_cost_direction": {
+          "additionalProperties": {
+            "enum": [
+              "increase",
+              "decrease",
+              "no_change",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "description": "카탈로그 작성자의 사전 가설. 시뮬레이션·실측 결과가 아님",
+          "propertyNames": {
+            "enum": [
+              "purge",
+              "product",
+              "compressor",
+              "steam"
+            ]
+          },
+          "title": "Expected Cost Direction",
+          "type": "object"
+        },
+        "expected_direction_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "가설 근거. null = 근거 없음",
+          "title": "Expected Direction Basis"
+        },
+        "values_status": {
+          "enum": [
+            "example",
+            "agreed"
+          ],
+          "title": "Values Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "case_id",
+        "policy",
+        "description",
+        "sop_refs",
+        "watch_signals",
+        "review_after_s",
+        "expected_cost_direction",
+        "values_status"
+      ],
+      "title": "ResponseCase",
+      "type": "object"
+    },
+    "RevertRule": {
+      "additionalProperties": false,
+      "description": "원복(또는 hold 복귀) 조건. 감독기가 평가한다.",
+      "properties": {
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "signal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "판정 계측. null = 이벤트형(보호 작동 등)",
+          "title": "Signal"
+        },
+        "op": {
+          "enum": [
+            ">=",
+            "<=",
+            ">",
+            "<",
+            "event"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Threshold"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "rule_id",
+        "description",
+        "op"
+      ],
+      "title": "RevertRule",
+      "type": "object"
+    },
+    "SetpointChange": {
+      "additionalProperties": false,
+      "description": "case 안의 변경 한 건 (카탈로그 작성자가 정한 값).",
+      "properties": {
+        "setpoint_id": {
+          "title": "Setpoint Id",
+          "type": "string"
+        },
+        "target_value": {
+          "title": "Target Value",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "apply_at_s": {
+          "default": 0.0,
+          "description": "run 시작(=snapshot 시각) 기준 적용 시각 [s]",
+          "title": "Apply At S",
+          "type": "number"
+        },
+        "ramp_rate_per_h": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "null = 계단 변경",
+          "title": "Ramp Rate Per H"
+        }
+      },
+      "required": [
+        "setpoint_id",
+        "target_value",
+        "unit"
+      ],
+      "title": "SetpointChange",
+      "type": "object"
+    },
+    "SetpointSpec": {
+      "additionalProperties": false,
+      "description": "감독기가 바꿀 수 있도록 허용한 상위 목표 하나 (= STUDIO 의 allowed_actions 항목).",
+      "properties": {
+        "setpoint_id": {
+          "description": "예: 'SETPT(19)'",
+          "title": "Setpoint Id",
+          "type": "string"
+        },
+        "scheme_index": {
+          "description": "Studio Scheme::set_setpoint 의 index",
+          "title": "Scheme Index",
+          "type": "integer"
+        },
+        "loop_id": {
+          "description": "대상 상위 루프. 예: 'CONTRL19'",
+          "title": "Loop Id",
+          "type": "string"
+        },
+        "controlled_tag": {
+          "description": "루프가 추종하는 계측. 예: 'XMEAS(30)'",
+          "title": "Controlled Tag",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "default_value": {
+          "description": "Studio PRESET 기동값",
+          "title": "Default Value",
+          "type": "number"
+        },
+        "allowed_min": {
+          "title": "Allowed Min",
+          "type": "number"
+        },
+        "allowed_max": {
+          "title": "Allowed Max",
+          "type": "number"
+        },
+        "max_step": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "현재값 대비 1회 최대 변경폭 (unit). null = 제한 없음",
+          "title": "Max Step"
+        },
+        "max_rate_per_h": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "램프 최대 속도 (unit/h). null = 계단 변경 허용",
+          "title": "Max Rate Per H"
+        },
+        "min_wait_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "직전 변경 뒤 최소 대기 [s]. null = 제한 없음",
+          "title": "Min Wait S"
+        },
+        "values_status": {
+          "description": "example = 예시 설정(검증된 운전 기준 아님)",
+          "enum": [
+            "example",
+            "agreed"
+          ],
+          "title": "Values Status",
+          "type": "string"
+        },
+        "source": {
+          "description": "기본값·루프 매핑 출처",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "setpoint_id",
+        "scheme_index",
+        "loop_id",
+        "controlled_tag",
+        "description",
+        "unit",
+        "default_value",
+        "allowed_min",
+        "allowed_max",
+        "max_step",
+        "values_status",
+        "source"
+      ],
+      "title": "SetpointSpec",
+      "type": "object"
+    },
+    "SopRef": {
+      "additionalProperties": false,
+      "properties": {
+        "sop_id": {
+          "title": "Sop Id",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "step_id": {
+          "title": "Step Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sop_id",
+        "version",
+        "step_id"
+      ],
+      "title": "SopRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "action_catalog.v1",
+      "default": "action_catalog.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "label": {
+      "title": "Label",
+      "type": "string"
+    },
+    "setpoints": {
+      "default": [],
+      "description": "감독기 허용 상위 목표 목록",
+      "items": {
+        "$ref": "#/$defs/SetpointSpec"
+      },
+      "title": "Setpoints",
+      "type": "array"
+    },
+    "cases": {
+      "default": [],
+      "description": "시뮬레이터에 넘길 대응 case 목록",
+      "items": {
+        "$ref": "#/$defs/ResponseCase"
+      },
+      "title": "Cases",
+      "type": "array"
+    },
+    "actions": {
+      "items": {
+        "$ref": "#/$defs/ActionSpec"
+      },
+      "title": "Actions",
+      "type": "array"
+    },
+    "conditions": {
+      "items": {
+        "$ref": "#/$defs/ConditionSpec"
+      },
+      "title": "Conditions",
+      "type": "array"
+    },
+    "aliases": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {},
+      "description": "RAG 원본 참조 → action_id (팀 합의 표). 그 외 매핑 금지",
+      "title": "Aliases",
+      "type": "object"
+    },
+    "condition_aliases": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {},
+      "title": "Condition Aliases",
+      "type": "object"
+    }
+  },
+  "required": [
+    "label",
+    "actions",
+    "conditions"
+  ],
+  "title": "ActionCatalog",
+  "type": "object"
+}

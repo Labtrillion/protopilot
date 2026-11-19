@@ -1,0 +1,108 @@
+{
+  "additionalProperties": false,
+  "description": "run 하나의 벤치마크 점수. 시뮬레이션 run 이면 가상 예측.",
+  "properties": {
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "tripped": {
+      "title": "Tripped",
+      "type": "boolean"
+    },
+    "usd_per_m3": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "null = 생산량 0 → 계산 불가",
+      "title": "Usd Per M3"
+    },
+    "cost_usd": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "purge/product/power/steam/total, 평가 구간 누적",
+      "title": "Cost Usd",
+      "type": "object"
+    },
+    "product_m3": {
+      "title": "Product M3",
+      "type": "number"
+    },
+    "tracking_accuracy": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Tracking Accuracy",
+      "type": "number"
+    },
+    "per_variable_accuracy": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Per Variable Accuracy",
+      "type": "object"
+    },
+    "in_threshold_fraction": {
+      "description": "모든 추적 변수가 임계값 안인 시간 비율",
+      "title": "In Threshold Fraction",
+      "type": "number"
+    },
+    "time_to_stable_s": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "이후 끝까지 모두 임계값 안인 첫 시각(run 기준). null = 없음",
+      "title": "Time To Stable S"
+    },
+    "final_window_inside": {
+      "title": "Final Window Inside",
+      "type": "boolean"
+    },
+    "quality_ok": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "null = 품질 계측 없음",
+      "title": "Quality Ok"
+    },
+    "failed_gates": {
+      "description": "심슨 생산량 비교 전 자체 게이트 실패 목록",
+      "items": {
+        "type": "string"
+      },
+      "title": "Failed Gates",
+      "type": "array"
+    }
+  },
+  "required": [
+    "run_id",
+    "tripped",
+    "usd_per_m3",
+    "cost_usd",
+    "product_m3",
+    "tracking_accuracy",
+    "per_variable_accuracy",
+    "in_threshold_fraction",
+    "time_to_stable_s",
+    "final_window_inside",
+    "quality_ok",
+    "failed_gates"
+  ],
+  "title": "RunScore",
+  "type": "object"
+}

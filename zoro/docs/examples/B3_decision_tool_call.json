@@ -1,0 +1,134 @@
+{
+  "decision_id": "EVT-TEP-0001-D03",
+  "event_id": "EVT-TEP-0001",
+  "state_version": 2,
+  "request_id": "EVT-TEP-0001-D03-ZQ",
+  "decided_by": "zoro",
+  "client_kind": "fake",
+  "decision_kind": "tool_call",
+  "selected_option_id": "SIM_HOLD",
+  "model_choice_raw": "SIM_HOLD",
+  "action_id": "SIM_HOLD",
+  "tool_request": {
+    "tool_request_id": "EVT-TEP-0001-D03-T1",
+    "decision_id": "EVT-TEP-0001-D03",
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "action_id": "SIM_HOLD",
+    "tool_name": "run_simulation",
+    "case": {
+      "case_id": "CASE-HOLD",
+      "policy": "hold",
+      "setpoint_changes": [],
+      "other_setpoints": "unchanged",
+      "lower_loops_and_protection": "unchanged",
+      "values_status": "example"
+    },
+    "args": {
+      "snapshot_id": "SNAP-TEP-0001-T21600",
+      "horizon_s": 14400,
+      "composition_sample_id": "PURGE-0117"
+    },
+    "evaluation": {
+      "policy_label": "EXAMPLE — 벤치마크 수치는 예시 설정. 근거는 docs/BENCHMARK.md",
+      "values_status": "example",
+      "horizon_s": 14400.0,
+      "final_window_s": 3600.0,
+      "tracked": [
+        {
+          "tag": "XMEAS(7)",
+          "setpoint": 2705.0,
+          "unit": "kPa(g)",
+          "hi": 2895.0,
+          "lo": null,
+          "weight": 2.0,
+          "source": "목표: Downs & Vogel 기본 운전점 / 상한: STUDIO.md 데모 기준 2895 / 임계값: 경보 ALM-XMEAS7-H"
+        },
+        {
+          "tag": "XMEAS(9)",
+          "setpoint": 120.4,
+          "unit": "degC",
+          "hi": 120.9,
+          "lo": 119.9,
+          "weight": 1.0,
+          "source": "목표·폭: SOP S07 프로젝트 판정 폭(팀 기준)"
+        },
+        {
+          "tag": "XMEAS(8)",
+          "setpoint": 75.0,
+          "unit": "%",
+          "hi": 80.0,
+          "lo": 70.0,
+          "weight": 1.0,
+          "source": "목표·폭: SOP S07 프로젝트 판정 폭(팀 기준)"
+        },
+        {
+          "tag": "XMEAS(12)",
+          "setpoint": 50.0,
+          "unit": "%",
+          "hi": 55.0,
+          "lo": 45.0,
+          "weight": 1.0,
+          "source": "목표·폭: SOP S07 프로젝트 판정 폭(팀 기준)"
+        },
+        {
+          "tag": "XMEAS(15)",
+          "setpoint": 50.0,
+          "unit": "%",
+          "hi": 55.0,
+          "lo": 45.0,
+          "weight": 1.0,
+          "source": "목표·폭: SOP S07 프로젝트 판정 폭(팀 기준)"
+        }
+      ],
+      "untracked_alarm_tags": [],
+      "production_ratio_min": 0.99,
+      "g_mass_pct_range": [
+        45.0,
+        55.0
+      ],
+      "max_def_mol_pct": 2.0
+    },
+    "snapshot_id": "SNAP-TEP-0001-T21600",
+    "issued_sim_time_s": 21840.0
+  },
+  "evidence_refs": [
+    {
+      "ref_type": "rag_evidence",
+      "ref_id": "EV:team-sop/tep-studio-closed-loop/S08#p2",
+      "note": null
+    }
+  ],
+  "selection_distribution": {
+    "meaning": "action_selection_distribution",
+    "note": "모델의 행동 선택 분포. 안전 확률·회복 확률·정답률이 아님",
+    "probabilities": {
+      "SIM_HOLD": 0.7,
+      "SIM_SP19_UP050": 0.0375,
+      "SIM_SP19_DN050": 0.0375,
+      "SIM_SP19_UP100": 0.0375,
+      "SIM_SP19_DN100": 0.0375,
+      "SIM_SP19_DN150": 0.0375,
+      "SIM_SP19_DN200": 0.0375,
+      "QUERY_LOOP_RELATIONS": 0.0375,
+      "REQUEST_HUMAN_REVIEW": 0.0375
+    },
+    "confidence": 0.7
+  },
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "allowed_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ]
+  }
+}

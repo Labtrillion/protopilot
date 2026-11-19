@@ -1,0 +1,129 @@
+{
+  "$defs": {
+    "TerminationReason": {
+      "enum": [
+        "recommendation_ready",
+        "human_review_selected",
+        "limit_reached",
+        "unrecoverable_tool_error",
+        "no_valid_options",
+        "model_response_invalid",
+        "model_call_failed"
+      ],
+      "title": "TerminationReason",
+      "type": "string"
+    },
+    "Usage": {
+      "additionalProperties": false,
+      "properties": {
+        "decisions": {
+          "default": 0,
+          "title": "Decisions",
+          "type": "integer"
+        },
+        "tool_calls": {
+          "default": 0,
+          "title": "Tool Calls",
+          "type": "integer"
+        },
+        "simulations": {
+          "default": 0,
+          "title": "Simulations",
+          "type": "integer"
+        }
+      },
+      "title": "Usage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "title": "Event Id",
+      "type": "string"
+    },
+    "state_version": {
+      "title": "State Version",
+      "type": "integer"
+    },
+    "iteration": {
+      "title": "Iteration",
+      "type": "integer"
+    },
+    "phase": {
+      "enum": [
+        "options_built",
+        "awaiting_model",
+        "running_tool",
+        "state_updated",
+        "finished"
+      ],
+      "title": "Phase",
+      "type": "string"
+    },
+    "usage": {
+      "$ref": "#/$defs/Usage"
+    },
+    "remaining": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Remaining",
+      "type": "object"
+    },
+    "open_option_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Open Option Ids",
+      "type": "array"
+    },
+    "deferred_option_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Deferred Option Ids",
+      "type": "array"
+    },
+    "last_decision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last Decision Id"
+    },
+    "finished": {
+      "default": false,
+      "title": "Finished",
+      "type": "boolean"
+    },
+    "termination_reason": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TerminationReason"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "event_id",
+    "state_version",
+    "iteration",
+    "phase",
+    "usage",
+    "remaining"
+  ],
+  "title": "ProgressStatus",
+  "type": "object"
+}
