@@ -1,4 +1,5 @@
 import { SCORE_WEIGHTS, bestImprovement, evaluateBranch, scoreBranch } from './simulation-score.js';
+import { sopActionLabel, sopProductionTarget } from './sop-action.js';
 import { byId, elapsed, escape, reading } from './ui.js';
 
 import { renderZoroCards, renderZoroEvidence, renderZoroSummary } from './zoro-results.js';
@@ -40,7 +41,7 @@ function comparison(entry, reference) {
     : recovered !== referenceRecovered
       ? `<li>알람 범위 복귀 <strong data-trend="${recovered ? 'better' : 'worse'}">${recovered ? '이 대응에서만 복귀' : '비교 대상에서만 복귀'}</strong></li>` : '';
   return `<div class="simulation-comparison">
-    <p>${escape(reference.branch.label)} 대비</p>
+    <p>${escape(sopActionLabel(reference.branch))} 대비</p>
     <ul>
       ${relativeMetric('점수', rating.score - reference.rating.score, '점', '높음', '낮음')}
       ${tripDifference}
@@ -51,7 +52,7 @@ function comparison(entry, reference) {
   </div>`;
 }
 
-function resultDetails(entry, reference, { bestLabel = '', finalWindowHours, heading = 'h3' } = {}) {
+function resultDetails(entry, reference, { initialTarget, bestLabel = '', finalWindowHours, heading = 'h3' }) {
   const { rating, branch, issue } = entry;
   const state = branch.shutdown ? 'trip' : rating?.completed ? 'complete' : 'early';
   const outcome = branch.shutdown ? '보호 정지' : rating ? (rating.completed ? '완료' : '중도 종료') : '—';
@@ -59,12 +60,13 @@ function resultDetails(entry, reference, { bestLabel = '', finalWindowHours, hea
     : Number.isFinite(branch.alarm_recovery_minutes) ? `${elapsed(branch.alarm_recovery_minutes / 60)} 후`
       : '미복귀';
   const action = branch.id === 'hold' ? '해당 없음' : branch.action_applied ? '적용' : '미적용';
+  const target = sopProductionTarget(branch, initialTarget);
   const shortRecovery = finalWindowHours && branch.alarm_final_window_inside === false
     && Number.isFinite(branch.alarm_recovery_minutes);
   const recoveryNote = shortRecovery
     ? `<p class="simulation-note">종료 전 정상 범위 유지 ${elapsed(Math.max(0, branch.window_hours - branch.alarm_recovery_minutes / 60))} · 검토 기준 ${elapsed(finalWindowHours)}</p>` : '';
   return `<div class="simulation-card-heading">
-      <${heading}>${escape(branch.label)}</${heading}>
+      <${heading}>${escape(sopActionLabel(branch))}</${heading}>
       ${bestLabel ? `<span class="simulation-best">${bestLabel}</span>` : ''}
     </div>
     ${rating ? `<div class="simulation-score"><strong>${formatNumber.format(rating.score)}</strong><span>/ 100점</span></div>`
@@ -74,7 +76,7 @@ function resultDetails(entry, reference, { bestLabel = '', finalWindowHours, hea
       <dl class="simulation-metrics">
         <div><dt>운전 결과</dt><dd data-outcome="${state}">${outcome}</dd></div>
         <div><dt>실제 운전 시간</dt><dd>${Number.isFinite(branch.window_hours) ? elapsed(branch.window_hours) : '—'}</dd></div>
-        ${Object.hasOwn(branch, 'action_applied') ? `<div><dt>감량 적용</dt><dd>${action}</dd></div>` : ''}
+        ${Object.hasOwn(branch, 'action_applied') ? `<div><dt>생산량 목표 변경 적용</dt><dd>${action}</dd></div>` : ''}
         ${Object.hasOwn(branch, 'alarm_recovery_minutes') ? `<div><dt>알람 범위 복귀</dt><dd>${recovery}</dd></div>` : ''}
         ${Object.hasOwn(branch, 'final_window_inside') ? `<div><dt>종료 구간 운전 범위</dt><dd>${branch.final_window_inside ? '충족' : '미충족'}</dd></div>` : ''}
         ${Object.hasOwn(branch, 'alarm_final_window_inside') ? `<div><dt>종료 구간 알람 기준</dt><dd>${branch.alarm_final_window_inside ? '충족' : '미충족'}</dd></div>` : ''}
@@ -84,7 +86,7 @@ function resultDetails(entry, reference, { bestLabel = '', finalWindowHours, hea
         <div><dt>반응기 최고 온도</dt><dd>${quantity(branch.peak_temperature, ' °C')}</dd></div>
         <div><dt>온도 표준편차</dt><dd>${quantity(branch.temperature_sd, ' °C')}</dd></div>
         <div><dt>분리기 최고 액위</dt><dd>${quantity(branch.peak_separator_level, '%')}</dd></div>
-        <div><dt>계획 생산 목표</dt><dd>${quantity(branch.production_target, ' m³/h')}</dd></div>
+        <div><dt>계획 생산량 목표</dt><dd>${target}${target === '—' ? '' : ' m³/h'}</dd></div>
         <div><dt>평균 제품 유량</dt><dd>${quantity(branch.mean_production, ' m³/h')}</dd></div>
         <div><dt>누적 생산량</dt><dd>${quantity(rating?.volume, ' m³')}</dd></div>
       </dl>
@@ -94,6 +96,7 @@ function resultDetails(entry, reference, { bestLabel = '', finalWindowHours, hea
 }
 
 function renderLegacyCards(data) {
+  const initialTarget = data.start.production_target;
   const ranked = data.branches.map((branch) => ({ branch, rating: scoreBranch(branch, data.start) }))
     .sort((a, b) => (b.rating?.score ?? -1) - (a.rating?.score ?? -1));
   const scored = ranked.filter(({ rating }) => rating);
@@ -103,7 +106,7 @@ function renderLegacyCards(data) {
   byId('simulation-cards').innerHTML = ranked.map((entry) => {
     const reference = baseline && baseline !== entry ? baseline : scored.find((option) => option !== entry);
     const bestLabel = bestCount && entry.rating?.score === bestScore ? (bestCount > 1 ? '공동 최고 점수' : '최고 점수') : '';
-    return `<li class="simulation-card"${bestLabel ? ' data-best' : ''}>${resultDetails(entry, reference, { bestLabel })}</li>`;
+    return `<li class="simulation-card"${bestLabel ? ' data-best' : ''}>${resultDetails(entry, reference, { initialTarget, bestLabel })}</li>`;
   }).join('');
 }
 
@@ -116,19 +119,21 @@ function renderSweep(data) {
   const bestAlternative = candidates.filter(({ rating }) => rating)
     .sort((a, b) => Number(Boolean(a.issue)) - Number(Boolean(b.issue)) || b.rating.score - a.rating.score)[0];
   const verdict = improvement ? '개선안 검토' : baseline.issue ? 'SOP 기준안과 대안 재검토' : 'SOP 기준안 유지';
-  const reason = improvement ? `${improvement.branch.label} 조합이 ${baseline.issue ? '종료 구간 검토 조건을 충족했습니다.'
+  const reason = improvement ? `‘${sopActionLabel(improvement.branch)}’ 대응안이 ${baseline.issue ? '종료 구간 검토 조건을 충족했습니다.'
     : `SOP 기준안보다 ${formatNumber.format(improvement.rating.score - baseline.rating.score)}점 높습니다.`}`
     : !baseline.rating ? 'SOP 기준안의 점수를 계산하지 못했습니다.'
       : baseline.issue ? `SOP 기준안의 판정은 ‘${baseline.issue}’이며 기준안을 대체할 조합을 찾지 못했습니다.`
         : '종료 구간 검토 조건을 충족하면서 SOP 기준안보다 높은 점수를 얻은 조합이 없습니다.';
-  const preferred = data.decision?.response?.label;
+  const response = data.decision?.response;
+  const preferred = response && sopActionLabel(data.branches.find(({ id }) => id === response.choice) ?? response);
   byId('simulation-verdict').innerHTML = `<div><h3>${verdict}</h3><p>${escape(reason)}</p>
     ${preferred ? `<p class="simulation-note">사전 SOP 검토 · ${data.decision.fallback ? '로컬 규칙' : 'Zoro-1'} · ${escape(preferred)}</p>` : ''}</div>
     <dl><div><dt>SOP 기준 점수</dt><dd>${baseline.rating ? `${formatNumber.format(baseline.rating.score)}점` : '산정 불가'}</dd></div>
     <div><dt>검토 조건 충족</dt><dd>${eligible} / ${candidates.length}개</dd></div></dl>`;
 
   const { final_window_hours: finalWindowHours } = sweep;
-  byId('simulation-baseline-card').innerHTML = resultDetails(baseline, improvement ?? bestAlternative, { finalWindowHours });
+  const details = { finalWindowHours, initialTarget: start.production_target };
+  byId('simulation-baseline-card').innerHTML = resultDetails(baseline, improvement ?? bestAlternative, details);
   byId('simulation-sweep-cards').innerHTML = sweep.delay_minutes.map((delay, index) => {
     const row = candidates.filter(({ branch }) => branch.delay_minutes === delay)
       .sort((a, b) => a.branch.reduction_pct - b.branch.reduction_pct);
@@ -137,7 +142,7 @@ function renderSweep(data) {
       <ul class="simulation-grid simulation-sweep-grid" role="list">${row.map((entry) => {
         const bestLabel = entry === improvement ? '개선 후보' : '';
         return `<li class="simulation-card"${bestLabel ? ' data-best' : ''}>
-          ${resultDetails(entry, baseline.rating ? baseline : null, { bestLabel, finalWindowHours, heading: 'h4' })}</li>`;
+          ${resultDetails(entry, baseline.rating ? baseline : null, { ...details, bestLabel, heading: 'h4' })}</li>`;
       }).join('')}</ul></section>`;
   }).join('');
 }

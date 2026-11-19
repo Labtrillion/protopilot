@@ -17,6 +17,7 @@ const GATES = {
 };
 const BRANCH_NAMES = { hold: '현재 목표 유지', rule: '로컬 규칙', zoro: 'Zoro-1 기준안', feature1: 'Zoro-1 기준안' };
 const quantity = (value, unit = '') => Number.isFinite(value) ? reading(value) + unit : '—';
+const percentage = new Intl.NumberFormat('ko-KR', { style: 'percent', maximumFractionDigits: 2 });
 
 function reasonText(reason) {
   return REASONS[reason?.split(':')[0]] ?? (reason ? 'Zoro-1 판단을 완료하지 못했습니다.' : '');
@@ -28,9 +29,14 @@ export function zoroVerdict({ decision, feature2 }) {
 }
 
 function changesList(changes, setpoints) {
-  return changes.length ? `<ul class="zoro-changes">${changes.map(({ setpoint, from, to, unit }) => {
+  return changes.length ? `<ul class="zoro-changes">${changes.map(({ setpoint, from, to, unit, move }) => {
     const spec = setpoints[setpoint];
-    return `<li><span>${escape(spec?.label ?? setpoint)}</span><strong>${quantity(from)} → ${quantity(to)} ${escape(unit ?? spec?.unit ?? '')}</strong></li>`;
+    const label = spec?.label ?? setpoint;
+    const target = label.endsWith('목표') ? label : `${label} 목표`;
+    const rate = Number.isFinite(move) ? move : from > 0 ? (to - from) / from : NaN;
+    const direction = to < from ? '감소' : to > from ? '증가' : '유지';
+    const change = Number.isFinite(rate) && rate !== 0 ? `${percentage.format(Math.abs(rate))} ${direction}` : direction;
+    return `<li><span>${escape(target)} · ${change}</span><strong>${quantity(from)} → ${quantity(to)} ${escape(unit ?? spec?.unit ?? '')}</strong></li>`;
   }).join('')}</ul>` : '<p>현재 설정값 유지</p>';
 }
 
