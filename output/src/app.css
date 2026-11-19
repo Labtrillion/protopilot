@@ -319,12 +319,12 @@ dialog::backdrop { background: var(--surface); }
 .inspect-stream b { font-weight: 500; overflow-wrap: anywhere; }
 .inspect-stream small { display: block; margin-top: 0.17rem; }
 
-/* Orthogonal Fig. 1 diagram. */
+/* Process diagram projected from the 3D overview. */
 .diagram { position: absolute; inset: 0; overflow: auto; scrollbar-width: thin; }
 .pfd-svg { display: block; width: 100%; min-width: 755px; height: 100%; min-height: 318px; }
 .stage[data-view="2d"] .orbit-hint { display: none; }
 .pfd-stream { --display-pipe: var(--pipe); }
-.pfd-stream .pipe-sleeve { stroke: var(--stage); stroke-width: 7; }
+.pfd-stream .pipe-sleeve { stroke: var(--stage); stroke-width: 4.5; }
 .pfd-stream path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .pipe-hit { stroke: transparent; stroke-width: 16px; pointer-events: stroke; }
 .pipe-line { stroke: var(--display-pipe); stroke-width: 2; }
@@ -338,7 +338,7 @@ dialog::backdrop { background: var(--surface); }
 .pfd-junctions circle { fill: var(--equipment-line); stroke: var(--line); stroke-width: 1; }
 .pfd-samples path { fill: none; stroke: var(--process-liquid); stroke-width: 1.4; stroke-dasharray: 3 3; }
 .pfd-symbol { fill: var(--equipment-fill); stroke: var(--equipment-line); stroke-width: 1.5; cursor: pointer; }
-.pfd-symbol path, .pfd-symbol circle { fill: none; pointer-events: all; }
+.pfd-symbol path { fill: none; pointer-events: all; }
 .pfd-symbol.selected { stroke: var(--focus); stroke-width: 2.5; }
 .pfd-symbol.in-alarm { stroke: var(--warning); stroke-width: 2.4; }
 .pfd-port rect { fill: var(--surface); stroke: var(--control-line); stroke-width: 1.2; }

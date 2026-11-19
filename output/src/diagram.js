@@ -25,7 +25,7 @@ function atArea(area, elevation) {
 
 function svgPath(path) {
   const point = (vector) => project(vector).map((n) => n.toFixed(2)).join(' ');
-  return `M${point(path.curves[0].v1 ?? path.curves[0].v0)}` + path.curves.map((curve) =>
+  return `M${point(path.getPoint(0))}` + path.curves.map((curve) =>
     curve.type === 'LineCurve3' ? `L${point(curve.v2)}` : `Q${point(curve.v1)} ${point(curve.v2)}`).join('');
 }
 
@@ -137,7 +137,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
   const portsMarkup = portEnds.map(([id, name, atStart]) => {
     const [x, y] = project(streamPaths.get(id).getPoint(atStart ? 0 : 1));
     const width = name.length > 4 ? 59 : 33;
-    const left = atStart && id !== 'ST' || id === 'CWR';
+    const left = (atStart && id !== 'ST') || id === 'CWR';
     return `<g class="pfd-port" transform="translate(${left ? x - width : x} ${y})">
       ${rect(0, -8, width, 16, 3)}<text x="${width / 2}" y="4">${name}</text></g>`;
   }).join('');
@@ -229,8 +229,9 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
       if (reset) host.scrollLeft = 0;
       else if (anchorsByArea.has(area) && !host.hidden) {
         const valve = valves.find(([id]) => `XMV(${id})` === tag);
-        const [x] = valve ? valve.slice(1) : anchorsByArea.get(area);
-        const center = x / WIDTH * svg.clientWidth;
+        const x = valve?.[1] ?? anchorsByArea.get(area)[0];
+        const scale = Math.min(svg.clientWidth / WIDTH, svg.clientHeight / HEIGHT);
+        const center = svg.clientWidth / 2 + (x - WIDTH / 2) * scale;
         host.scrollLeft = Math.max(0, center - host.clientWidth / 2);
       }
     },
