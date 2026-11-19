@@ -161,8 +161,8 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 }
 #inspector-sp-value { color: var(--text); font: 650 0.74rem var(--mono); }
 .inspector-content { flex: 1; margin-top: 0.32rem; padding: 0 0.65rem 0.5rem; }
-.inspector-content, .alarm-items, .table-scroll { overflow: auto; min-height: 0; scrollbar-width: thin; }
-.inspector-content:focus-visible, .alarm-items:focus-visible, .table-scroll:focus-visible { outline-offset: -2px; }
+.inspector-content, .table-scroll { overflow: auto; min-height: 0; scrollbar-width: thin; }
+.inspector-content:focus-visible, .table-scroll:focus-visible { outline-offset: -2px; }
 .inspector-label { display: flex; align-items: center; gap: 0.52rem; padding: 0.44rem 0 0.61rem; color: var(--muted); font-size: 0.83rem; }
 .inspector-label code { color: var(--text); font: 600 0.76rem var(--mono); }
 .inspect-tags { border-top: 1px solid var(--line-soft); }
@@ -176,7 +176,6 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .inspect-stream { display: grid; grid-template-columns: 2.7rem minmax(0, 1fr); gap: 0.25rem; margin-bottom: 0.41rem; font-size: 0.75rem; }
 
 .subtle-count { color: var(--muted); font: 0.78rem var(--mono); }
-.subtle-count.alarming { color: var(--warning); }
 .exports a { padding-inline: 0.50rem; font: 600 0.78rem var(--mono); }
 .telemetry-toolbar { display: flex; padding: 0.46rem 0.65rem 0; flex: none; }
 .channel-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
@@ -212,35 +211,18 @@ tr.alarm-row :is(.numeric > span, .channel-state) { color: var(--warning); }
 .channel-state { color: var(--subtext); font-size: 0.76rem; overflow-wrap: anywhere; }
 .empty-cell { padding-block: 1.5rem; color: var(--muted); text-align: center; }
 
-.alarms-panel { display: flex; flex-direction: column; }
-.setpoint-control { flex: none; padding: 0.4rem 0.62rem 0.2rem; border-top: 1px solid var(--line); }
-.setpoint-readout { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.16rem 0.45rem; }
-.setpoint-readout label { font-size: 0.82rem; font-weight: 650; }
-.setpoint-readout output { font: 650 0.8rem var(--mono); white-space: nowrap; }
-#setpoint-slider { display: block; width: 100%; height: 1.85rem; margin: 0; border: 0; background: transparent; accent-color: var(--tracked); }
-.alarm-toolbar { padding: 0.32rem 0.62rem; border-block: 1px solid var(--line); flex: none; }
-.alarm-toolbar .segments { display: inline-flex; }
-.alarm-items { height: clamp(142px, 24vh, 360px); padding: 0.48rem 0.62rem; }
-.alarm-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 5.4rem; height: 100%; gap: 0.42rem; color: var(--muted); text-align: center; padding: 0.35rem; }
-.alarm-empty svg { width: 2.15rem; height: 2.15rem; padding: 0.47rem; }
-.alarm-empty b { color: var(--text); }
-.alarm-footer { flex: none; display: flex; gap: 0.35rem; padding: 0.46rem 0.62rem; border-top: 1px solid var(--line); flex-wrap: wrap; }
-.alarm-footer button { font-size: 0.82rem; }
-.event { --event-color: var(--subtext); border: 1px solid var(--line); border-radius: 5px; margin-bottom: 0.47rem; }
-.event.warning { --event-color: var(--warning); }
-.event.trip { --event-color: var(--danger); }
-.event.clear { --event-color: var(--ok); }
-.event-head { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font: 0.72rem var(--mono); }
-.event-kind { color: var(--event-color); font: 700 0.78rem sans-serif; }
-.event-open { display: grid; justify-content: stretch; gap: 0.26rem; width: 100%; padding: 0.57rem 0.67rem; border: 0; background: transparent; white-space: normal; text-align: left; }
-.event-open:focus-visible { outline-offset: -2px; }
-.event-title { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
-.event-title svg { width: 0.93rem; }
-.event-detail { color: var(--subtext); font: 0.75rem var(--mono); line-height: 1.4; }
-.event-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0 0.67rem 0.52rem; }
-.event-actions:empty { display: none; }
-.event-actions button { padding: 0.14rem 0.5rem; font-size: 0.76rem; }
-.event-actions .alarm-study { color: var(--tracked); border-color: var(--tracked); }
+.setpoint-panel { display: flex; flex-direction: column; }
+.setpoint-control {
+  flex: 1; display: grid; align-content: center; gap: 0.28rem;
+  padding: 1rem 0.85rem; border-top: 1px solid var(--line);
+}
+.setpoint-control label { color: var(--subtext); font-size: 0.87rem; font-weight: 650; }
+.setpoint-control output { font: 650 1.5rem var(--mono); line-height: 1.35; }
+#setpoint-slider {
+  display: block; width: 100%; height: var(--control-size); margin: 0;
+  border: 0; background: transparent; accent-color: var(--tracked); touch-action: pan-y;
+}
+.setpoint-bounds { display: flex; justify-content: space-between; color: var(--muted); font: 0.75rem var(--mono); }
 
 dialog {
   --dialog-gutter: clamp(1rem, 4vmin, 2rem);
@@ -310,7 +292,6 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .model-tag b { font-size: 0.69rem; }
   .model-tag small { font-size: 0.63rem; }
   .table-scroll { height: 20rem; }
-  .alarm-items { height: 16.4rem; }
 }
 @media (max-width: 440px) {
   .top-actions { margin: 0; width: 100%; }
@@ -405,7 +386,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .response-values small { font: 0.70rem var(--mono); color: var(--muted); }
 .response-chart-wrap { height: clamp(150px, 30vh, 290px); border: 1px solid var(--line-soft); }
 #response-chart { display: block; width: 100%; height: 100%; }
-.controller-panel { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); color: var(--subtext); font-size: 0.8rem; }
+.controller-panel { padding-top: 0.45rem; border-top: 1px solid var(--line); color: var(--subtext); font-size: 0.87rem; }
 @media (max-width: 480px) {
   .top-actions { flex-wrap: wrap; gap: 0.35rem; }
 }
@@ -414,6 +395,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 #protection-state.protection-active { color: var(--warning); font-weight: 700; }
 #controller-options { display: flex; flex-wrap: wrap; gap: 0.5rem 0.8rem; margin-block: 0.5rem; }
 #controller-options label { display: flex; align-items: center; gap: 0.25rem; }
+#controller-options input { width: auto; min-height: auto; padding: 0; }
 #controller-detail { margin: 0; line-height: 1.5; }
 #controller-detail:empty { display: none; }
 #scenario-dialog a { text-decoration: underline; text-underline-offset: 0.2em; }
@@ -479,10 +461,8 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .inspector { max-height: none; }
   .stage { flex: 1; min-height: 0; height: auto; }
   .pfd-svg { min-width: 0; min-height: 0; }
-  .alarms-panel { overflow-y: auto; }
-  .alarm-items { min-height: 4rem; }
-  .table-scroll, .alarm-items { height: auto; flex: 1; }
-  .inspector-content, .alarm-items, .table-scroll { overscroll-behavior: contain; }
+  .table-scroll { height: auto; flex: 1; }
+  .inspector-content, .table-scroll { overscroll-behavior: contain; }
   .response-chart-wrap { height: auto; flex: 1; min-height: 0; }
   .topbar { min-width: 0; }
 }
@@ -495,11 +475,10 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 @media (max-width: 600px), (pointer: coarse) {
   :root { --control-size: 3.39rem; --map-tag-size: 2.77rem; }
   .topbar { flex-wrap: wrap; }
-  #setpoint-slider { height: var(--control-size); }
   .dialog-fields select, .dialog-fields input { min-height: var(--control-size); }
 }
 
-/* Interior part tags, alarm return point, sensor test and channel scope. */
+/* Interior part tags, sensor test and channel scope. */
 .interior-tools {
   position: absolute; z-index: 5; inset: 0.45rem auto auto 0.45rem; max-width: calc(100% - 0.9rem);
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.65rem;
@@ -518,7 +497,6 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .model-part.tracked { border-color: var(--tracked); z-index: 2; }
 .model-part.tracked small { color: var(--tracked); }
 .model-part:focus-visible { z-index: 4; }
-#active-tab[data-new] { color: var(--warning); }
 .channel-scope { grid-column: 1 / -1; justify-self: start; }
 .channel-scope button { padding: 0.2rem 0.55rem; font-size: 0.78rem; }
 tr.tested-row:not(.alarm-row) .numeric > span, tr.tested-row .channel-state { color: var(--warning); }

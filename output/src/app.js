@@ -3,10 +3,8 @@ import { mountPlantView } from './plant-view.js';
 import { mountResponse } from './response.js';
 import { mountSetpointSlider, setupControls } from './controls.js';
 import { mountScenario } from './scenario.js';
-import { mountAlarmResponse } from './alarm-response.js';
 import {
-  byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderRows,
-  unacknowledgedAlarms,
+  byId, elapsed, icon, initIcons, option, renderInspector, renderRows,
 } from './ui.js';
 
 // Representative closed loop per unit; used only when the server defines it for that unit.
@@ -22,9 +20,8 @@ const connection = byId('connection');
 const pageId = crypto.randomUUID();
 let plantView, openControls, status, noticeTimer, pageRecorded = false;
 let circuit = '', setpoints = [], telemetryView = 'values';
-let focusedArea = 'plant', selection, alarmTab = 'active', connected = false;
-let seenAlarms = new Set(), visibleChannels = [];
-let channelScope = 'primary', returnPoint = null, explicitTag = '';
+let focusedArea = 'plant', selection, connected = false;
+let visibleChannels = [], channelScope = 'primary', explicitTag = '';
 
 const response = mountResponse(trackSetpoint);
 const updateSetpointSlider = mountSetpointSlider((id, value) => {
@@ -33,7 +30,6 @@ const updateSetpointSlider = mountSetpointSlider((id, value) => {
     if (status.run === runId && activeSetpoint()?.id === id) trackSetpoint(id);
   });
 });
-const alarmResponse = mountAlarmResponse(request);
 const scenario = mountScenario(request, async (body) => {
   try {
     return await command(body);
@@ -42,7 +38,6 @@ const scenario = mountScenario(request, async (body) => {
     else throw error;
   }
 }, () => {
-  clearReturn();
   explicitTag = '';
   follow({ kind: 'channel', item: channels.get('XMEAS(7)') });
   focus('plant', '', true);
@@ -168,11 +163,10 @@ function trackSetpoint(id, jump = false) {
   }
 }
 
-function note(message, level = 'ok', alarmId = '') {
+function note(message, level = 'ok') {
   const box = byId('notice');
   box.textContent = message;
   box.dataset.level = level;
-  box.dataset.alarmId = alarmId;
   box.hidden = false;
   clearTimeout(noticeTimer);
   noticeTimer = setTimeout(() => { box.hidden = true; }, 4500);
@@ -201,70 +195,6 @@ function filter() {
   renderChannels();
 }
 
-// Return point for alarm investigation: the first original position survives consecutive alarm visits.
-function snapshot() {
-  return {
-    area: focusedArea, selection, view: telemetryView, loop: response.selected(), scope: channelScope, explicitTag,
-    filters: ['search', 'channel-group', 'channel-area'].map((id) => [id, byId(id).value]),
-    plant: plantView?.snapshot(),
-  };
-}
-
-function renderReturn() {
-  const button = byId('return-back');
-  button.hidden = !returnPoint;
-  if (!returnPoint) return;
-  const tag = tagForSelection(returnPoint.selection);
-  byId('return-label').textContent = `이전 위치로 돌아가기 · ${AREAS[returnPoint.area].code}${tag ? ` · ${tag}` : ''}`;
-  button.title = `${AREAS[returnPoint.area].name}, ${returnPoint.view === 'response' ? 'SP 응답' : '채널'} 보기, ${returnPoint.plant?.view === '2d' ? '2D' : '3D'}${returnPoint.plant?.flags.internals ? ' 내부' : ''} 화면으로 복원`;
-}
-
-function rememberReturn(saved = snapshot()) {
-  returnPoint ??= saved;
-  renderReturn();
-}
-
-function clearReturn() {
-  returnPoint = null;
-  renderReturn();
-}
-
-function restoreReturn() {
-  const saved = returnPoint;
-  if (!saved) return;
-  returnPoint = null;
-  focusedArea = saved.area;
-  select.value = saved.area;
-  if (saved.selection) follow(saved.selection);
-  plantView?.focus(saved.area, false, tagForSelection(saved.selection));
-  plantView?.restore(saved.plant);
-  for (const [id, value] of saved.filters) byId(id).value = value;
-  channelScope = saved.scope;
-  explicitTag = saved.explicitTag;
-  showTelemetry(saved.view, saved.loop);
-  filter();
-  inspector();
-  renderReturn();
-  // The return button hides itself, so keyboard focus moves to the unit selector.
-  select.focus({ preventScroll: true });
-  note('알람 조사 전 위치로 돌아왔습니다.');
-}
-
-// Alarm investigation is always a user action: an alarm item or the pressure test button.
-function investigate(area, tag, saved) {
-  rememberReturn(saved);
-  if (tag) plantView?.reveal(tag);
-  focus(area, tag);
-}
-
-function markNewAlarm(on) {
-  const tab = byId('active-tab');
-  const show = on && alarmTab !== 'active';
-  if (tab.hasAttribute('data-new') === show) return;
-  tab.toggleAttribute('data-new', show);
-  tab.textContent = show ? '미확인 알람 · 새 알람' : '미확인 알람';
-}
-
 function renderConnection() {
   scenario.update(status, connected);
   const kind = !connected || status?.error ? 'offline' : status?.shutdown.terminated ? 'trip' : status?.running ? 'live' : 'paused';
@@ -274,9 +204,6 @@ function renderConnection() {
   run.disabled = !connected || !!status?.error || !!status?.shutdown.terminated;
   reset.disabled = !connected;
   byId('open-controls').disabled = !connected;
-  byId('pressure-test').disabled = !connected;
-  byId('cooling-demo').disabled = !connected;
-  byId('clear-test').disabled = !connected;
   byId('tab-response').disabled = !setpoints.length;
   response.enable(connected);
 }
@@ -287,36 +214,17 @@ function receive(next) {
   const sampled = runChanged || previous?.sample !== next.sample;
   status = next;
   connected = true;
-  if (runChanged) {
-    recentReadings.length = 0;
-    seenAlarms = new Set();
-  }
+  if (runChanged) recentReadings.length = 0;
   if (sampled) {
     recentReadings.push(next.values);
     if (recentReadings.length > TREND_LENGTH) recentReadings.shift();
-  }
-  const pending = unacknowledgedAlarms(status);
-  const newAlarm = pending.filter((alarm) => !seenAlarms.has(alarm.id)).sort((a, b) => b.id - a.id)[0];
-  seenAlarms = new Set(status.alarms.map((alarm) => alarm.id));
-  const notice = byId('notice');
-  if (!notice.hidden && notice.dataset.alarmId && !pending.some((alarm) => String(alarm.id) === notice.dataset.alarmId)) {
-    notice.hidden = true;
-  }
-  if (!pending.length) markNewAlarm(false);
-  if (newAlarm) {
-    // Incoming alarms notify only; the user's unit, SP, tracking, interior and filters stay as they are.
-    markNewAlarm(true);
-    const code = AREAS[newAlarm.area]?.code;
-    note(`${code ? `${code} · ` : ''}${newAlarm.label} — 알람 항목을 선택하면 해당 설비로 이동합니다.`, newAlarm.kind === 'trip' ? 'danger' : 'warning', newAlarm.id);
   }
   renderConnection();
   byId('clock').textContent = elapsed(status.time_hours);
   if (previous?.running !== status.running) run.innerHTML = status.running ? `${icon('pause')} 일시정지` : `${icon('play')} 실행`;
   if (document.activeElement !== speed) speed.value = status.speed;
-  byId('clear-test').hidden = !('XMEAS(7)' in status.offsets);
   renderChannels();
   inspector();
-  renderAlarms(status, alarmTab, channels);
   plantView?.update(status);
   response.update(status);
 }
@@ -359,7 +267,6 @@ function selectTag(tag, navigate = false) {
 function attachEvents() {
   run.addEventListener('click', () => doCommand({ op: 'run', enabled: !status.running }));
   reset.addEventListener('click', () => doCommand({ op: 'reset' }, () => {
-    clearReturn();
     explicitTag = '';
     follow({ kind: 'channel', item: channels.get('XMEAS(7)') });
     focus('plant', '', true);
@@ -368,11 +275,9 @@ function attachEvents() {
   speed.addEventListener('change', () => doCommand({ op: 'speed', value: +speed.value }));
   byId('open-controls').addEventListener('click', () => openControls());
   byId('overview').addEventListener('click', () => {
-    clearReturn();
     plantView.circuit('', false);
     focus('plant', '', true);
   });
-  byId('return-back').addEventListener('click', restoreReturn);
   byId('tab-values').addEventListener('click', () => {
     showTelemetry('values');
     refresh();
@@ -404,45 +309,6 @@ function attachEvents() {
     const row = event.target.closest('tr[data-tag]');
     if (row) selectTag(row.dataset.tag);
   });
-  for (const [id, tab] of [['active-tab', 'active'], ['history-tab', 'history']]) {
-    byId(id).addEventListener('click', () => {
-      alarmTab = tab;
-      if (tab === 'active') markNewAlarm(false);
-      byId('active-tab').setAttribute('aria-pressed', tab === 'active');
-      byId('history-tab').setAttribute('aria-pressed', tab === 'history');
-      renderAlarms(status, alarmTab, channels);
-    });
-  }
-  byId('events').addEventListener('click', (event) => {
-    const compare = event.target.closest('[data-response-alarm]');
-    if (compare && connected) {
-      const id = Number(compare.dataset.responseAlarm);
-      const alarm = status.alarms.find((item) => item.id === id) ?? status.events.find((item) => item.id === id);
-      if (alarm) alarmResponse.open(status.run, alarm);
-      return;
-    }
-    const item = event.target.closest('[data-event-area]');
-    if (item) investigate(item.dataset.eventArea, item.dataset.eventTag);
-    const ack = event.target.closest('[data-ack]');
-    if (ack) doCommand({ op: 'ack', id: +ack.dataset.ack });
-  });
-  byId('cooling-demo').addEventListener('click', () => doCommand({ op: 'cooling_demo' }, () => {
-    clearReturn();
-    byId('active-tab').click();
-    investigate('reactor', 'XMEAS(9)');
-    note('냉각 이상 데모를 시작했습니다. 알람의 대응 비교를 누르세요.');
-  }));
-  byId('pressure-test').addEventListener('click', () => {
-    const saved = snapshot();
-    doCommand({ op: 'pressure_test' }, () => {
-      plantView?.showPressure();
-      investigate('reactor', 'XMEAS(7)', saved);
-    });
-  });
-  // Clears the pressure alarm test (XMEAS(7)) only, without moving the investigation view.
-  byId('clear-test').addEventListener('click', () => doCommand({ op: 'offset', id: 'XMEAS(7)', value: 0 }, () => {
-    note('반응기 압력 센서 시험을 해제했습니다.');
-  }));
 }
 
 async function poll() {
@@ -486,7 +352,6 @@ select.innerHTML = Object.entries(AREAS).map(([key, area]) => option(key, key ==
 select.value = focusedArea;
 byId('channel-area').insertAdjacentHTML('beforeend', Object.entries(AREAS).filter(([key]) => key !== 'plant').map(([key, area]) => option(key, area.name)).join(''));
 inspector();
-renderAlarms(status, alarmTab, channels);
 attachEvents();
 plantView = mountPlantView({
   selectArea: focus,

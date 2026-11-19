@@ -45,6 +45,7 @@ export function mountScenario(request, command, onReplay) {
 
   open.addEventListener('click', () => {
     form.reset();
+    render();
     error.hidden = true;
     dialog.showModal();
     if (byId('recording-archive').open) archive.refresh();

@@ -5,6 +5,7 @@ export function mountSetpointSlider(apply) {
   const slider = byId('setpoint-slider');
   const label = byId('setpoint-label');
   const output = byId('setpoint-value');
+  const min = byId('setpoint-min'), max = byId('setpoint-max');
   let loop, run, current;
   let available = false, editing = false, pending = null;
 
@@ -52,7 +53,9 @@ export function mountSetpointSlider(apply) {
   return function update(nextLoop, status, connected) {
     if (nextLoop !== loop) {
       loop = nextLoop;
-      label.textContent = loop ? `${loop.label} SP` : 'SP 목표';
+      label.textContent = loop ? `${loop.label} SP` : '설정값';
+      min.textContent = loop ? reading(loop.min) : '';
+      max.textContent = loop ? reading(loop.max) : '';
       if (loop) {
         slider.min = loop.min;
         slider.max = loop.max;

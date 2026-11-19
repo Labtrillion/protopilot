@@ -31,7 +31,6 @@
             <button id="view-3d" type="button" data-icon="box" aria-pressed="true">3D 모델</button>
             <button id="view-2d" type="button" data-icon="diagram" aria-pressed="false">2D 공정도</button>
           </div>
-          <button id="return-back" type="button" class="return-back" data-icon="reset" hidden><span id="return-label">이전 위치로 돌아가기</span></button>
           <button id="overview" type="button" data-icon="scan">전체 보기</button>
         </div>
       </div>
@@ -80,33 +79,15 @@
         </div>
         <div id="inspector-content" class="inspector-content" role="region" tabindex="0" aria-label="선택한 설비의 계측 태그와 배관"></div>
       </aside>
-      <section class="panel alarms-panel" aria-labelledby="alarms-title">
+      <section class="panel setpoint-panel" aria-labelledby="setpoint-title">
         <div class="panel-head">
-          <div class="heading-inline"><span data-icon="bell"></span><h2 id="alarms-title">알람 및 이벤트</h2><span id="alarm-count" class="subtle-count">0</span></div>
+          <div class="heading-inline"><span data-icon="sliders"></span><h2 id="setpoint-title">SP 목표</h2></div>
         </div>
         <div class="setpoint-control">
-          <div class="setpoint-readout">
-            <label id="setpoint-label" for="setpoint-slider">SP 목표</label>
-            <output id="setpoint-value" for="setpoint-slider" aria-live="off">—</output>
-          </div>
+          <label id="setpoint-label" for="setpoint-slider">설정값</label>
+          <output id="setpoint-value" for="setpoint-slider" aria-live="off">—</output>
           <input id="setpoint-slider" type="range" disabled>
-        </div>
-        <div class="alarm-toolbar">
-          <div class="segments" role="group" aria-label="알람 보기">
-            <button id="active-tab" type="button" aria-pressed="true">미확인 알람</button>
-            <button id="history-tab" type="button" aria-pressed="false">이벤트 이력</button>
-          </div>
-        </div>
-        <details id="controller-panel" class="controller-panel">
-          <summary>제어 옵션 <span id="protection-state"></span></summary>
-          <div id="controller-options"></div>
-          <p id="controller-detail"></p>
-        </details>
-        <div id="events" class="alarm-items" role="region" tabindex="0" aria-label="알람 또는 이벤트 목록"></div>
-        <div class="alarm-footer">
-          <button type="button" id="cooling-demo" data-icon="bolt" disabled title="새 실행에서 반응기 냉각 이상을 재현합니다">냉각 이상 데모</button>
-          <button type="button" id="pressure-test" data-icon="bolt" disabled>압력 알람 테스트</button>
-          <button type="button" id="clear-test" hidden disabled>센서 시험 해제</button>
+          <div class="setpoint-bounds" aria-hidden="true"><span id="setpoint-min"></span><span id="setpoint-max"></span></div>
         </div>
       </section>
     </div>
@@ -181,6 +162,11 @@
       <div class="dialog-fields">
         <a href="/api/scenario">현재 시나리오 JSON 저장</a>
         <p class="adjust-info">시작 조건과 조작 이력을 저장합니다. 불러오면 초기 상태에서 일시정지된 새 실행이 생성됩니다.</p>
+        <details class="controller-panel">
+          <summary>제어 옵션 <span id="protection-state"></span></summary>
+          <div id="controller-options"></div>
+          <p id="controller-detail"></p>
+        </details>
         <label>저장한 시나리오<input id="scenario-file" type="file" accept=".json,application/json" required></label>
         <p id="scenario-error" role="alert" hidden></p>
         <details id="recording-archive" class="recording-archive">
@@ -202,20 +188,6 @@
       </div>
       <div class="dialog-actions"><button type="submit" id="load-scenario" class="solid">불러와 재실행 준비</button></div>
     </form>
-  </dialog>
-  <dialog id="alarm-response-dialog" aria-labelledby="alarm-response-title">
-    <div class="dialog-head">
-      <div>
-        <p id="alarm-response-context" class="context-label"></p>
-        <h2 id="alarm-response-title">알람 대응 비교</h2>
-      </div>
-      <button id="close-alarm-response" type="button" class="icon-button" data-icon="close" aria-label="알람 대응 비교 닫기" autofocus></button>
-    </div>
-    <div class="dialog-fields alarm-response-fields">
-      <p id="alarm-response-status" role="status"></p>
-      <button id="retry-alarm-response" type="button" hidden>다시 시도</button>
-      <div id="alarm-response-result" hidden></div>
-    </div>
   </dialog>
   <div id="notice" class="notice" role="status" hidden></div>
   <script type="module" src="/app.js"></script>
