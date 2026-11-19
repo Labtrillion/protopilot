@@ -70,7 +70,7 @@ def evaluate_alternatives(point, handoff, state, *, timeout):
     best = baseline
     best_score = baseline_score
     for alternative in selection["selected"]:
-        changes = [*baseline_changes, alternative]
+        changes = [*baseline_changes, *alternative["changes"]]
         report, score = run_branch(runner, snapshot, alternative["id"], changes, policy)
         result["evaluated"].append(report)
         if score is None:

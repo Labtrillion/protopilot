@@ -1,4 +1,5 @@
 import json
+from collections import Counter
 from math import isclose
 from threading import RLock
 from types import SimpleNamespace
@@ -7,7 +8,7 @@ from unittest.mock import Mock
 from server.app import ConsoleHandler
 from server.plant import Plant
 from server.scenario import STEP_HOURS
-from sop_ranking.score_selection import select_candidates
+from sop_ranking.score_selection import build_candidates, select_candidates
 
 
 def test_console_evaluates_only_candidates_covering_ninety_percent(tmp_path, monkeypatch):
@@ -31,8 +32,13 @@ def test_console_evaluates_only_candidates_covering_ninety_percent(tmp_path, mon
             answers = {name: {"type": "noul", "noul": scores.get(name, 0.1)} for name in questions}
         elif qtype == "score":
             score_questions.extend(sorted(questions))
-            assert locked.isdisjoint(name.split(":")[0] for name in questions)
-            assert {name.split(":")[1] for name in questions} == {"decrease_10pct", "increase_10pct"}
+            for name, question in questions.items():
+                moves = [part.split(":") for part in name.split("+")]
+                setpoints = {setpoint for setpoint, _ in moves}
+                assert len(moves) == len(setpoints) == 2
+                assert locked.isdisjoint(setpoints)
+                assert all(direction in {"decrease_10pct", "increase_10pct"} for _, direction in moves)
+                assert all(setpoint in question["instructions"] for setpoint in setpoints)
             ratings = dict(zip(score_questions, [1.8, 1.2, 0.6, 0.4]))
             answers = {name: {"type": "score", "score": ratings.get(name, 0)} for name in questions}
         elif "first" in questions:
@@ -53,10 +59,13 @@ def test_console_evaluates_only_candidates_covering_ninety_percent(tmp_path, mon
     assert [case["id"] for case in feature2["evaluated"]] == [score_questions[i] for i in (2, 0, 1)]
     for case in feature2["evaluated"]:
         assert {change["setpoint"] for change in case["changes"][:2]} == locked
-        alternative = case["changes"][2]
-        assert alternative["setpoint"] not in locked
-        assert abs(alternative["move"]) == 0.10
-        assert isclose(alternative["to"], alternative["from"] * (1 + alternative["move"]), abs_tol=1e-6)
+        additions = case["changes"][2:]
+        assert len(additions) == 2
+        assert len({change["setpoint"] for change in additions}) == 2
+        for change in additions:
+            assert change["setpoint"] not in locked
+            assert abs(change["move"]) == 0.10
+            assert isclose(change["to"], change["from"] * (1 + change["move"]), abs_tol=1e-6)
         assert {"cost_per_m3", "tracking_accuracy", "production_loss_m3"} <= case.keys()
     assert plant.sim.snapshot().model_bytes == before
     trace = json.loads((tmp_path / "agent-trace.jsonl").read_text())
@@ -70,7 +79,10 @@ def test_zero_scores_select_no_candidates(monkeypatch):
     }
     state = {
         "plant": {}, "operating_procedures": [],
-        "setpoints": {"pressure": {"setpoint": 100, "limits": [0, 200], "unit": "kPa"}},
+        "setpoints": {
+            "pressure": {"setpoint": 100, "limits": [0, 200], "unit": "kPa"},
+            "level": {"setpoint": 50, "limits": [0, 100], "unit": "%"},
+        },
     }
 
     def reply(context, questions, **kwargs):
@@ -92,15 +104,28 @@ def test_only_in_range_ten_percent_movements_are_scored(monkeypatch):
         "setpoints": {
             "pressure": {"setpoint": 100, "limits": [0, 200], "unit": "kPa"},
             "level": {"setpoint": 50, "limits": [45, 54], "unit": "%"},
+            "temperature": {"setpoint": 100, "limits": [90, 109], "unit": "C"},
             "zero": {"setpoint": 0, "limits": [0, 100], "unit": "%"},
         },
     }
 
     def reply(context, questions, **kwargs):
-        assert list(questions) == ["level:decrease_10pct"]
-        return {"level:decrease_10pct": {"type": "score", "score": 1}}
+        candidate_id = "level:decrease_10pct+temperature:decrease_10pct"
+        assert list(questions) == [candidate_id]
+        return {candidate_id: {"type": "score", "score": 1}}
 
     monkeypatch.setattr("sop_ranking.score_selection.zoro_decide", reply)
     result = select_candidates(handoff, state, timeout=5, request_id="test")
-    assert result["selected"][0]["to"] == 45
+    assert [change["to"] for change in result["selected"][0]["changes"]] == [45, 90]
     assert result["coverage"] == 1
+
+
+def test_six_setpoints_produce_sixty_directional_pairs():
+    setpoints = {f"setpoint_{i}": {"setpoint": 50, "limits": [0, 100], "unit": "%"} for i in range(6)}
+    candidates = build_candidates(setpoints, set())
+    directions = Counter()
+    for candidate in candidates.values():
+        first, second = candidate["changes"]
+        assert first["setpoint"] != second["setpoint"]
+        directions[(first["setpoint"], second["setpoint"], first["move"], second["move"])] += 1
+    assert len(candidates) == len(directions) == 60
