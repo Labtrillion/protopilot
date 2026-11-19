@@ -5,7 +5,7 @@ const KIND_LABELS = {
   warning: '경고', trip: '트립', clear: '복구', ack: '확인', protection: '보호 제어', change: '변경',
 };
 
-function renderEvent(event) {
+function renderEvent(event, analyzable) {
   const area = AREAS[event.area];
   const details = [area?.code, event.tag, event.source].filter(Boolean).join(' · ');
   const content = `<span class="event-meta" data-kind="${escape(event.kind)}">
@@ -14,12 +14,14 @@ function renderEvent(event) {
     </span>
     <span class="event-label">${escape(event.label)}</span>
     ${details ? `<span class="event-context">${escape(details)}</span>` : ''}`;
+  const zoro = analyzable
+    ? `<button class="event-zoro" type="button" data-zoro-id="${escape(event.id)}">Zoro 대응 검토</button>` : '';
   return `<li>${area && event.area !== 'plant'
     ? `<button class="event-entry" type="button" data-event-id="${escape(event.id)}" title="${escape(area.name)} 보기">${content}</button>`
-    : `<div class="event-entry">${content}</div>`}</li>`;
+    : `<div class="event-entry">${content}</div>`}${zoro}</li>`;
 }
 
-export function mountEventMonitor(selectEvent) {
+export function mountEventMonitor(selectEvent, analyzeAlarm) {
   const content = byId('event-monitor-content');
   const message = content.querySelector('.monitor-message');
   const list = content.querySelector('.event-list');
@@ -31,11 +33,14 @@ export function mountEventMonitor(selectEvent) {
   function render(resetScroll = false) {
     const alarmMode = mode === 'alarms';
     const current = status?.[mode] ?? [];
-    const key = JSON.stringify([status?.run, mode, current]);
+    const checkpoints = new Set(status?.response_events ?? []);
+    const key = JSON.stringify([status?.run, mode, current, [...checkpoints]]);
     if (renderKey !== key) {
       const focusedId = document.activeElement?.dataset.eventId;
       entries = current.slice().sort((a, b) => b.id - a.id);
-      list.innerHTML = entries.map(renderEvent).join('');
+      // Only alarms with a stored checkpoint can be branched; the agent compares responses from that state.
+      list.innerHTML = entries.map((entry) => renderEvent(entry,
+        alarmMode && analyzeAlarm && entry.kind === 'warning' && checkpoints.has(entry.id))).join('');
       list.hidden = !entries.length;
       if (focusedId) list.querySelector(`[data-event-id="${focusedId}"]`)?.focus({ preventScroll: true });
       renderKey = key;
@@ -59,6 +64,11 @@ export function mountEventMonitor(selectEvent) {
     render(true);
   });
   list.addEventListener('click', (event) => {
+    const zoro = event.target.closest('button[data-zoro-id]');
+    if (zoro) {
+      analyzeAlarm(status.run, entries.find(({ id }) => id === Number(zoro.dataset.zoroId)));
+      return;
+    }
     const button = event.target.closest('button[data-event-id]');
     if (button) selectEvent(entries.find(({ id }) => id === Number(button.dataset.eventId)));
   });

@@ -1177,11 +1177,11 @@
         "note": "PRESET, Loop::increment, Override::step, Scheme::run"
       },
       "team_sop": {
-        "file": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json",
+        "file": "rag_jiyeon/legacy/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json",
         "version": "1.0"
       },
       "studio_md": {
-        "file": "zoro-rag/STUDIO.md",
+        "file": "rag_jiyeon/legacy/STUDIO.md",
         "section": "Zoro 입력, 출력, 실행 경계"
       },
       "downs_vogel": {

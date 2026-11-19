@@ -442,7 +442,7 @@ from zoro_agent.alarm_adapter import adapt_alarm_event  # noqa: E402
 from zoro_agent.benchmark import (  # noqa: E402
     RunScore, TrackedVariable, beats, closeness, evaluation_spec, read_studio_csv, score_timeseries, select_case)
 
-RAG_DIR = Path(__file__).resolve().parents[1] / "zoro-rag"
+RAG_DIR = Path(__file__).resolve().parents[1] / "rag_jiyeon" / "legacy"
 
 
 def rs(rid, acc, upm, ok=True, vol=100.0):
@@ -452,7 +452,7 @@ def rs(rid, acc, upm, ok=True, vol=100.0):
                     failed_gates=[] if ok else ["final_window_inside"])
 
 
-@pytest.mark.skipif(not (RAG_DIR / "validation").exists(), reason="zoro-rag 검증 CSV 없음")
+@pytest.mark.skipif(not (RAG_DIR / "validation").exists(), reason="이전 RAG의 검증 CSV 없음")
 def test_cost_matches_rag_studio_eval(sc):
     ref = json.loads((RAG_DIR / "validation" / "measured_results.json").read_text(encoding="utf-8"))
     for name in ("nominal", "cooling_step", "cooling_combined"):
@@ -577,3 +577,36 @@ def test_jiyeon_rag_output_drives_agent():
     assert used and used <= {e["evidence_id"] for e in raw["evidence"]}
     for r in client.requests:
         assert find_forbidden_keys(r.model_dump()) == []
+
+
+def test_http_client_uses_systemone_then_falls_back(monkeypatch):
+    import io
+    import urllib.error
+    from zoro_agent import zoro as zmod
+    sc = load_scenario(SCEN)
+    req = build_zoro_request(AgentState.from_inputs(sc.event, sc.rag),
+                             build_options(AgentState.from_inputs(sc.event, sc.rag), sc.catalog, sc.policy,
+                                           {"sensor_query"}), sc.catalog, sc.policy)
+    seen = []
+
+    class Resp(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(r, timeout):
+        seen.append((r.full_url, json.loads(r.data)))
+        if r.full_url.endswith("/v1/systemone") and len(seen) == 1:
+            raise urllib.error.HTTPError(r.full_url, 404, "nf", {}, None)
+        return Resp(json.dumps({"answers": {QUESTION_ID: {"type": "choice", "choice": "X", "confidence": 1,
+                                                          "probabilities": {"X": 1}}}}).encode())
+
+    monkeypatch.setattr(zmod.urllib.request, "urlopen", fake_urlopen)
+    client = zmod.HttpZoroClient(zmod.ZoroHttpConfig(base_url="http://h", api_key=None, timeout_s=1,
+                                                     reasoning=False, model_label="zoro-1"))
+    raw = client.decide(req, "R1")
+    assert [u for u, _ in seen] == ["http://h/v1/systemone", "http://h/v1/decide"]
+    assert seen[0][1]["model"] == "zoro-1" and "questions" in seen[0][1] and "request" in seen[1][1]
+    assert raw.endpoint == "http://h/v1/decide" and raw.client_kind == "real"

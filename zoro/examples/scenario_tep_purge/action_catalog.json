@@ -16,7 +16,7 @@
       "max_rate_per_h": null,
       "min_wait_s": 1800,
       "values_status": "example",
-      "source": "기본값·경로: zoro-rag SOP tep-studio-closed-loop v1.0 S05, STUDIO.md(set_setpoint(19, value)). 범위·변경폭·대기는 예시"
+      "source": "기본값·경로: rag_jiyeon/legacy SOP tep-studio-closed-loop v1.0 S05, STUDIO.md(set_setpoint(19, value)). 범위·변경폭·대기는 예시"
     }
   ],
   "cases": [

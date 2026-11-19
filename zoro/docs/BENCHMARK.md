@@ -12,7 +12,7 @@
 ## 1. 지표
 
 ### 비용 — USD/m³ (낮을수록 좋음)
-- Downs & Vogel (1993) 표 9의 네 운전비(퍼지 손실, 제품 손실, 압축기 동력, 스팀)를 표본 시각 기준 사다리꼴 적분합니다. 식은 `zoro-rag/studio_eval.py` 와 같습니다. 검증 CSV 3개로 대조했고 **총비용·m³당 비용·생산량이 상대오차 1e-9 이내로 일치**합니다(`test_cost_matches_rag_studio_eval`).
+- Downs & Vogel (1993) 표 9의 네 운전비(퍼지 손실, 제품 손실, 압축기 동력, 스팀)를 표본 시각 기준 사다리꼴 적분합니다. 식은 `rag_jiyeon/legacy/studio_eval.py` 와 같습니다. 검증 CSV 3개로 대조했고 **총비용·m³당 비용·생산량이 상대오차 1e-9 이내로 일치**합니다(`test_cost_matches_rag_studio_eval`).
 - 총액이 아니라 **생산량당 비용**으로 비교합니다. 정책 간 생산량이 최대 1% 다를 수 있으므로(STUDIO.md 짝비교 조건), 총액으로 비교하면 감산만으로 1% 절감처럼 보일 수 있습니다.
 
 ### 정확도 — tracking accuracy (0~1, 높을수록 좋음)

@@ -1,4 +1,6 @@
-# Zoro TEP 증상 기반 진단 검색
+# 이전 Zoro RAG · TEP 증상 기반 진단 검색
+
+이전 검색기와 Studio 평가 자료입니다. 외란 번호와 정의는 상위 RAG의 [공용 IDV 카탈로그](../zoro_rag_knowledge/05_Disturbance_knowledge/idv_catalog.json)와 [외란 가이드](../zoro_rag_knowledge/03_Control_and_Variables/TEP_Disturbance_Knowledge.md)를 사용합니다.
 
 관측한 증상과 계측 태그로 공정 문헌과 정성적 진단 가이드 6개를 조회한다. 입력에는 해당 시점까지 관측된 이력만 전달한다. 공개 문헌에 등장하는 외란 번호와 실습 조건은 과거 사례의 속성이다.
 

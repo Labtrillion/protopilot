@@ -4,6 +4,7 @@ import { mountResponse } from './response.js';
 import { mountSetpointControls, setupControls } from './controls.js';
 import { mountScenario } from './scenario.js';
 import { mountEventMonitor } from './event-monitor.js';
+import { mountZoroAgent } from './zoro-agent.js';
 import {
   byId, elapsed, icon, initIcons, option, renderPipeDetails, renderRows,
 } from './ui.js';
@@ -26,9 +27,10 @@ let focusedArea = 'plant', selection, connected = false;
 let visibleChannels = [], channelScope = 'primary', explicitTag = '';
 
 const response = mountResponse(trackSetpoint);
+const zoroAgent = mountZoroAgent(request);
 const eventMonitor = mountEventMonitor(({ area, tag }) => {
   focus(area, channels.has(tag) ? tag : '');
-});
+}, (run, alarm) => zoroAgent.open(run, alarm));
 let latestSetpointChange = 0;
 const setpointControls = mountSetpointControls((id, value) => {
   const change = ++latestSetpointChange;

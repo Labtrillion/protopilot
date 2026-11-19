@@ -233,24 +233,35 @@ class ZoroHttpConfig:
 
 
 class HttpZoroClient:
-    """trida-stack decide 서버(POST /v1/decide) 호출."""
+    """trida-stack decide 서버 호출: POST /v1/systemone, 이전 서버면 /v1/decide."""
 
     kind: Literal["real", "fake"] = "real"
 
     def __init__(self, config: ZoroHttpConfig):
         self.config = config
 
-    def decide(self, request: ZoroRequest, request_id: str) -> ZoroRawResponse:
-        url = f"{self.config.base_url}/v1/decide"
-        payload = {"request": request.model_dump(mode="json"), "reasoning": self.config.reasoning}
+    def _post(self, url: str, payload: dict, request_id: str) -> dict:
         headers = {"Content-Type": "application/json", "X-Request-Id": request_id}
         if self.config.api_key:
             headers["Authorization"] = f"Bearer {self.config.api_key}"
         req = urllib.request.Request(url, json.dumps(payload).encode(), headers, method="POST")
+        with urllib.request.urlopen(req, timeout=self.config.timeout_s) as resp:
+            return json.loads(resp.read().decode())
+
+    def decide(self, request: ZoroRequest, request_id: str) -> ZoroRawResponse:
+        """POST /v1/systemone (현재 계약). 서버가 404/405 면 이전 /v1/decide 로 한 번 더 보낸다."""
+        body_req = request.model_dump(mode="json")
+        url = f"{self.config.base_url}/v1/systemone"
         t0 = time.perf_counter()
         try:
-            with urllib.request.urlopen(req, timeout=self.config.timeout_s) as resp:
-                body = json.loads(resp.read().decode())
+            try:
+                body = self._post(url, {"model": self.config.model_label, **body_req,
+                                        "reasoning": self.config.reasoning}, request_id)
+            except urllib.error.HTTPError as e:
+                if e.code not in (404, 405):
+                    raise
+                url = f"{self.config.base_url}/v1/decide"
+                body = self._post(url, {"request": body_req, "reasoning": self.config.reasoning}, request_id)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
             raise ZoroClientError(f"Zoro 호출 실패: {e}") from e
         return ZoroRawResponse(

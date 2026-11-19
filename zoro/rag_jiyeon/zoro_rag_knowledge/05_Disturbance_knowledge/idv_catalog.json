@@ -191,7 +191,7 @@
       "page": 250
     },
     "apmonitor": {
-      "name_ko": "Stripper steam heat transfer",
+      "name_ko": "스트리퍼 스팀 열전달",
       "name_en": "Stripper steam heat transfer",
       "type": "random",
       "source": {
@@ -213,7 +213,7 @@
       "page": 250
     },
     "apmonitor": {
-      "name_ko": "Reactor heat transfer",
+      "name_ko": "반응기 열전달",
       "name_en": "Reactor heat transfer",
       "type": "random",
       "source": {
@@ -235,7 +235,7 @@
       "page": 250
     },
     "apmonitor": {
-      "name_ko": "Condenser heat transfer",
+      "name_ko": "응축기 열전달",
       "name_en": "Condenser heat transfer",
       "type": "random",
       "source": {
@@ -257,7 +257,7 @@
       "page": 250
     },
     "apmonitor": {
-      "name_ko": "Recycle, separator, stripper and steam valve sticking",
+      "name_ko": "재순환·분리기·스트리퍼·스팀 밸브 고착",
       "name_en": "Recycle, separator, stripper and steam valve sticking",
       "type": "sticking",
       "source": {
@@ -279,7 +279,7 @@
       "page": 250
     },
     "apmonitor": {
-      "name_ko": "Reactor-to-separator flow",
+      "name_ko": "반응기에서 분리기로 가는 유량",
       "name_en": "Reactor-to-separator flow",
       "type": "random",
       "source": {

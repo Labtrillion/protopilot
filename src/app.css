@@ -648,3 +648,16 @@ tr.selected-row:not(.alarm-row, .tested-row) .channel-state { color: var(--track
 .response-values .response-test b { color: var(--warning); }
 .response-values .response-test span:last-child { margin-top: 0.12rem; color: var(--warning); font: 0.72rem var(--mono); }
 button:disabled, button[aria-pressed]:disabled { cursor: default; color: var(--disabled-text); background: var(--surface); border-color: var(--line); }
+
+/* Zoro decision agent: alarm entry action and result dialog */
+.event-zoro { display: block; margin: 0 0.7rem 0.55rem auto; padding: 0.25rem 0.6rem; font-size: 0.76rem; }
+#zoro-agent-dialog { --dialog-width: 880px; }
+.zoro-agent-body { display: grid; gap: 0.9rem; padding: 1rem 1.2rem; }
+.zoro-agent-body section { display: grid; gap: 0.4rem; }
+.zoro-agent-body h3 { margin: 0; font-size: 0.95rem; }
+.zoro-agent-body ul, .zoro-agent-body ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.2rem; font-size: 0.86rem; }
+#zoro-agent-status[data-error] { color: var(--danger); }
+.study-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.study-table th, .study-table td { padding: 0.35rem 0.45rem; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: top; }
+.study-note { color: var(--muted); font-size: 0.78rem; }
+.danger-text { color: var(--danger); }

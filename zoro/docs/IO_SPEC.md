@@ -96,7 +96,7 @@ loop:
 
 ### A-3a 대응 case 와 허용 설정값 (`ActionCatalog.setpoints`, `.cases`)
 
-TEP Studio 계약(`zoro-rag/STUDIO.md` "Zoro 입력, 출력, 실행 경계")에 맞춘 구조입니다. Zoro 는 **hold 또는 propose_setpoint** 를 내고, 하위 P·PI 제어와 보호 기능은 그대로 둔 채 **상위 목표만** 바꿉니다. Zoro-1 은 선택형 모델이므로 숫자를 만들지 않습니다. 목표값은 모두 여기 등록된 case 에서 나오고, Zoro 는 그중 무엇을 시험·권고할지 고릅니다.
+TEP Studio 계약(`rag_jiyeon/legacy/STUDIO.md` "Zoro 입력, 출력, 실행 경계")에 맞춘 구조입니다. Zoro 는 **hold 또는 propose_setpoint** 를 내고, 하위 P·PI 제어와 보호 기능은 그대로 둔 채 **상위 목표만** 바꿉니다. Zoro-1 은 선택형 모델이므로 숫자를 만들지 않습니다. 목표값은 모두 여기 등록된 case 에서 나오고, Zoro 는 그중 무엇을 시험·권고할지 고릅니다.
 
 `SetpointSpec` (감독기 허용 조작 목록 = STUDIO 의 `allowed_actions`)
 

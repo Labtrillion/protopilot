@@ -168,6 +168,13 @@
       <div class="dialog-actions"><button id="adjust-release" type="button">기본값 복원</button><button type="submit" id="adjust-apply" class="solid">적용하고 설비 보기</button></div>
     </form>
   </dialog>
+  <dialog id="zoro-agent-dialog" aria-labelledby="zoro-agent-title">
+    <div class="dialog-head"><div><div id="zoro-agent-context" class="context-label"></div><h2 id="zoro-agent-title">Zoro 대응 검토</h2></div>
+      <button id="close-zoro-agent" type="button" class="icon-button" data-icon="close" aria-label="Zoro 대응 검토 닫기"></button>
+    </div>
+    <div class="zoro-agent-body"><p id="zoro-agent-status" role="status"></p><div id="zoro-agent-result" hidden></div></div>
+    <div class="dialog-actions"><button id="retry-zoro-agent" type="button" hidden>다시 시도</button></div>
+  </dialog>
   <dialog id="scenario-dialog" aria-labelledby="scenario-title">
     <form id="scenario-form">
       <div class="dialog-head"><h2 id="scenario-title">라이브 시나리오</h2>
