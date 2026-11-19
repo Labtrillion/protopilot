@@ -13,6 +13,7 @@ from dataclasses import asdict, replace
 from hashlib import sha256
 from pathlib import Path
 
+import numpy as np
 from tep_studio import TennesseeEastmanProcess
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,7 +29,8 @@ from zoro_agent.sim_tools import BranchOutcome, SimulationError, SimulationToolk
 from zoro_agent.tools import ToolExecutor  # noqa: E402
 from zoro_agent.zoro import FakeZoroClient, HttpZoroClient, ZoroHttpConfig  # noqa: E402
 
-from .alarm_response import find_sop  # noqa: E402
+from .alarm_response import branch_summary, find_sop, step_cost  # noqa: E402
+from .alarm_rules import AlarmMonitor, describe  # noqa: E402
 from .assistant import append_trace  # noqa: E402
 from .catalog import CHANNELS, SETPOINTS  # noqa: E402
 from .plant import control_action  # noqa: E402
@@ -61,6 +63,9 @@ class CheckpointRunner:
         self.checkpoints = checkpoints
 
     def run(self, snapshot, case, horizon_s):
+        """Branch from the alarm checkpoint and meter it the way feat/setpoint-decision does: TEP internal operating
+        cost per control step (`step_cost`), produced volume and production loss (`branch_summary`), and alarm
+        minutes from an AlarmMonitor copied at the alarm (true-value channel)."""
         checkpoint = self.checkpoints.get(snapshot)
         if checkpoint is None:
             raise SimulationError(f"알람 체크포인트 {snapshot} 없음", recoverable=False)
@@ -74,16 +79,24 @@ class CheckpointRunner:
         sim = TennesseeEastmanProcess()
         sim.restore(checkpoint.native)
         controller = deepcopy(checkpoint.controller)
+        reference = float(controller.setpoints.production_rate)  # same loss reference for every branch
         measurements = checkpoint.measurements.copy()
+        monitor = checkpoint.monitor.copy() if checkpoint.monitor is not None else AlarmMonitor(checkpoint.limits)
+        offsets = checkpoint.offsets or {}
         times, samples, applied, shutdown = [0.0], [measurement_tags(measurements)], [], None
+        rows, protected_steps, cost = [measurements], 0, 0.0
         try:
             for step in range(round(horizon_s / 3600 / STEP_HOURS)):
                 if step in schedule:
                     controller.setpoints = replace(controller.setpoints, **schedule[step])
                     applied.append({"time_s": step * STEP_HOURS * 3600, **schedule[step]})
-                action, _, _ = control_action(controller, measurements, sim.time, checkpoint.manual)
+                action, control, _ = control_action(controller, measurements, sim.time, checkpoint.manual)
                 result = sim.advance(action, control_interval=STEP_HOURS, disturbances=checkpoint.idv)
                 measurements = result.measurements
+                rows.append(measurements)
+                protected_steps += int(any(control.overrides_active.values()))
+                cost += step_cost(result)
+                monitor.update(sim.time, measurements, offsets, controller.setpoints, STEP_HOURS)
                 terminated = result.shutdown_status["terminated"]
                 if (step + 1) % SAMPLE_EVERY == 0 or terminated:
                     times.append((step + 1) * STEP_HOURS * 3600)
@@ -95,6 +108,8 @@ class CheckpointRunner:
             raise SimulationError(f"이 조건에서 분기를 계산할 수 없습니다: {error}") from error
         finally:
             sim.kernel.close()
+        summary = branch_summary(np.asarray(rows), protected_steps, shutdown, cost=cost, reference=reference,
+                                 horizon_hours=horizon_s / 3600, alarm=monitor.summary())
         return BranchOutcome(
             times_s=times, samples=samples, tripped=shutdown is not None,
             trip_message=shutdown.get("message") if shutdown else None, applied_changes=applied,
@@ -102,6 +117,10 @@ class CheckpointRunner:
             # Same id for every branch of this checkpoint; it does not reveal which disturbances are active.
             disturbance_profile_id="checkpoint:" + sha256(checkpoint.native.model_bytes).hexdigest()[:12],
             seed=int(checkpoint.seed),
+            operating_cost_usd=summary["operating_cost"], produced_m3=summary["produced_m3"],
+            production_loss_m3=summary["production_loss_m3"], alarm_minutes=summary["alarm_minutes"],
+            observed_alarm_minutes=summary["observed_alarm_minutes"],
+            alarm_minutes_by_rule=summary["alarm_minutes_by_rule"],
         )
 
 
@@ -125,8 +144,37 @@ class PlantObserver:
         return observations, time_s
 
 
-def event_from_checkpoint(run_id, alarm_id, checkpoint):
-    time_s = checkpoint.native.time * 3600
+# AlarmMonitor condition type -> EventInput alarm condition (threshold rules are split by side).
+MONITOR_CONDITIONS = {"rate": "rate", "deviation": "deviation"}
+
+
+def monitor_event_alarms(monitor):
+    """Active alarms on the monitor's observed channel (live limits + enabled alarm-rules.json rules): the same
+    alarm engine feat/setpoint-decision gives Zoro-1. Whether an alarm came from a sensor test is not said."""
+    alarms = []
+    for rule_id, hit in monitor.active["observed"].items():
+        rule = hit["rule"]
+        tag = rule.get("tag")
+        if tag not in CHANNELS:
+            continue
+        kind = rule["condition"]["type"]
+        if kind == "threshold":
+            condition = "high" if "above" in hit.get("problem", "") else "low"
+        else:
+            condition = MONITOR_CONDITIONS.get(kind, "other")
+        info = describe(rule, hit, monitor.time_hours)
+        limit = hit.get("limit")
+        alarms.append(Alarm(
+            alarm_id=rule_id, sensor_id=tag, condition=condition, raised_at_s=hit["since_hours"] * 3600, active=True,
+            message=f"{info.get('label') or tag}: {info.get('problem')}",
+            threshold=float(limit) if isinstance(limit, (int, float)) and condition in ("high", "low") else None,
+            unit=CHANNELS[tag]["unit"],
+        ))
+    return alarms
+
+
+def console_event_alarms(checkpoint):
+    """Fallback for checkpoints without a monitor: the console alarm list at the checkpoint."""
     alarms = {}
     for alarm in (*checkpoint.related_alarms, checkpoint.alarm):
         if alarm.get("kind") != "warning" or alarm.get("side") not in ("high", "low"):
@@ -136,6 +184,13 @@ def event_from_checkpoint(run_id, alarm_id, checkpoint):
             raised_at_s=alarm["time_hours"] * 3600, active=True, message=alarm["label"],
             threshold=alarm["limit"], unit=CHANNELS[alarm["tag"]]["unit"],
         )
+    return list(alarms.values())
+
+
+def event_from_checkpoint(run_id, alarm_id, checkpoint):
+    time_s = checkpoint.native.time * 3600
+    alarms = (monitor_event_alarms(checkpoint.monitor) if checkpoint.monitor is not None
+              else console_event_alarms(checkpoint))
     observations = [
         Observation(sensor_id=tag, value=float(value), unit=CHANNELS[tag]["unit"], measured_at_s=time_s, quality="good")
         for tag, value in checkpoint.observed.items()
@@ -144,7 +199,7 @@ def event_from_checkpoint(run_id, alarm_id, checkpoint):
     setpoints = asdict(checkpoint.controller.setpoints)
     return EventInput(
         event_id=f"{run_id}-A{alarm_id}", state_version=0, sim_time_s=time_s,
-        snapshot_id=snapshot_id(run_id, alarm_id), alarms=list(alarms.values()), observations=observations,
+        snapshot_id=snapshot_id(run_id, alarm_id), alarms=alarms, observations=observations,
         active_setpoints=[ActiveSetpoint(setpoint_id=key, value=float(value), unit=SETPOINTS[key][1], since_s=None)
                           for key, value in setpoints.items() if key in SETPOINTS],
     )

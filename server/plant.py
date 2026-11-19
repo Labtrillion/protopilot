@@ -4,7 +4,7 @@ import math
 from collections import deque
 from copy import copy, deepcopy
 from uuid import UUID
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass, field, replace
 
 import numpy as np
 from tep_studio import RickerMultiLoopController, TEP_SCHEMA, TennesseeEastmanProcess
@@ -49,6 +49,10 @@ class AlarmCheckpoint:
     observed: dict
     cooling_trend: tuple
     related_alarms: tuple
+    # AlarmMonitor copy at the alarm (counters at zero) and the sensor offsets then active: the agent reads its
+    # alarms from the monitor's observed channel and branches keep counting alarm minutes from here.
+    monitor: object = None
+    offsets: dict = field(default_factory=dict)
 
 
 def control_action(controller, measurements, time, manual):
@@ -289,7 +293,7 @@ class Plant:
             self.alarm_checkpoints[alarm["id"]] = AlarmCheckpoint(
                 self.recording.id, self.step, self.seed, dict(alarm), snapshot, controller,
                 self.measurements.copy(), self.manual.copy(), self.idv.copy(), self.limits.copy(),
-                observed, tuple(self.cooling_trend), related,
+                observed, tuple(self.cooling_trend), related, self.alarm_monitor.copy(), dict(self.offsets),
             )
         while len(self.alarm_checkpoints) > self.events.maxlen:
             active_ids = {alarm["id"] for alarm in self.active.values()}
