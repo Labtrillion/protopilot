@@ -1,11 +1,16 @@
 import * as T from 'three';
 import { readColor } from './palette.js';
+import { VESSEL_CAPS } from './layout.js';
 
 export const v3 = (coordinates) => new T.Vector3(...coordinates);
 const material = (color, roughness = 0.55, metalness = 0.18) =>
   new T.MeshStandardMaterial({ color, roughness, metalness });
 
 export const steel = material(0xa4a9ae, 0.59, 0.28);
+const levelShell = new T.MeshStandardMaterial({
+  color: readColor('--equipment-fill'), roughness: 0.55, metalness: 0.12,
+  transparent: true, opacity: 0.36, depthWrite: false,
+});
 export const lightSteel = material(0xbfc4c9, 0.62, 0.22);
 export const edge = material(0x596067, 0.60, 0.20);
 export const dark = material(0x454b51, 0.74);
@@ -99,14 +104,19 @@ function sightGlass(group, radius, bottom, height) {
   return { fill, bottom, height };
 }
 
-export function vessel(group, spec) {
+export function vessel(group, spec, showsLevel) {
   const { radius, bottom, top, deck, seams, agitator = false } = spec;
   plinth(group, radius * 2 + 0.98, radius * 2 + 0.77);
   const casing = [
     cylinder(group, radius, top - bottom, [0, (top + bottom) / 2, 0], steel, true, 48),
-    dome(group, radius, radius * 0.42, [0, top, 0], true),
-    dome(group, radius, radius * 0.37, [0, bottom, 0], false),
+    dome(group, radius, radius * VESSEL_CAPS.upper, [0, top, 0], true),
+    dome(group, radius, radius * VESSEL_CAPS.lower, [0, bottom, 0], false),
   ];
+  const shellMaterial = showsLevel ? levelShell : steel;
+  for (const shell of casing) {
+    shell.material = shellMaterial;
+    shell.renderOrder = 3;
+  }
   for (const h of [bottom + 0.03, top - 0.035, ...seams]) ring(group, radius + 0.018, 0.031, h);
   if (deck) {
     railing(group, radius + 0.36, deck);
@@ -118,7 +128,7 @@ export function vessel(group, spec) {
     box(group, [0.24, bottom - 0.10, 0.24], [x, bottom / 2 + 0.11, z], edge, true);
     box(group, [0.43, 0.07, 0.36], [x, 0.21, z], dark);
   }
-  cylinder(group, radius * 0.24, 0.17, [0, top + radius * 0.42 + 0.08, 0], edge);
+  cylinder(group, radius * 0.24, 0.17, [0, top + radius * VESSEL_CAPS.upper + 0.08, 0], edge);
   if (agitator) {
     cylinder(group, 0.31, 0.69, [0, top + 1.0, 0], instrumentHousing, true);
     for (let i = 0; i < 6; i++) ring(group, 0.32, 0.021, top + 0.72 + i * 0.105, edge);
@@ -131,7 +141,7 @@ export function vessel(group, spec) {
     const y = bottom + 0.18 + Math.min(1.44, top - bottom - 0.35) * fraction;
     box(group, [0.11,0.018,0.013], [radius*0.56+0.143,y,radius*0.90+0.075], lightSteel);
   }
-  return { needle, casing, ...sightGlass(group, radius, bottom + 0.18, Math.min(1.44, top - bottom - 0.35)) };
+  return { needle, casing, shellMaterial, ...sightGlass(group, radius, bottom + 0.18, Math.min(1.44, top - bottom - 0.35)) };
 }
 
 export function condenser(group) {

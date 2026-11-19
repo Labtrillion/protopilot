@@ -1,4 +1,4 @@
-import { AREAS, CORE_PRESSURES, FEED_TAGS, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
+import { AREAS, CORE_PRESSURES, FEED_TAGS, LEVEL_TAGS, MEDIA, STREAMS, codeFor, levelFraction, levelReading, streamMatchesTag } from './topology.js';
 import { ANCHORS, BODIES, BOUNDARY_PORTS, FEEDS, FLOW_READOUTS, JUNCTIONS, ROUTES, SAMPLES, VALVES, VIEWBOX } from './schematic.js';
 import { flowReading, pressureReading } from './ui.js';
 import { mountDiagramPreview } from './diagram-preview.js';
@@ -9,11 +9,6 @@ const METERS = [
   ['05', 554, 112], ['06', 222, 300], ['07', 357, 128], ['08', 693, 67],
   ['09', 819, 131], ['10', 824, 266], ['11', 976, 428], ['12', 371, 384], ['13', 517, 316],
 ];
-const LEVELS = {
-  reactor: { tag: 8, body: BODIES.reactor, datum: 354, range: 65 },
-  separator: { tag: 12, body: BODIES.separator, datum: 278, range: 42 },
-  stripper: { tag: 15, body: BODIES.stripper, datum: 379, range: 41 },
-};
 const symbol = (area, shape) => `<g class="pfd-symbol" data-symbol="${area}">${shape}</g>`;
 const rect = (x,y,w,h,r = 4) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/>`;
 const path = (d) => `<path d="${d}"/>`;
@@ -28,13 +23,24 @@ const ports = [
 ];
 const anchors = Object.entries(ANCHORS);
 
+function levelVessel(area, markings) {
+  const body = BODIES[area];
+  const [x, y, w, h] = body;
+  const bottom = y + h;
+  return symbol(area, `${vessel(...body)}<g class="pfd-level" data-level="${area}" clip-path="url(#level-clip-${area})" aria-hidden="true">
+    <rect x="${x}" y="${bottom}" width="${w}" height="0"/>
+    <line class="pfd-level-surface" x1="${x}" x2="${x + w}" y1="${bottom}" y2="${bottom}" hidden/>
+    <line class="pfd-level-goal" x1="${x}" x2="${x + w}" y1="${bottom}" y2="${bottom}" hidden/>
+    </g>${path(markings)}`);
+}
+
 function equipment() {
   return [
-    symbol('reactor', vessel(...BODIES.reactor) + path('M294 231v100m-17-15h34m-31 16h28M334 285h-29q-13 0-13 9t13 8h14q9 0 9 8v9h10')),
+    levelVessel('reactor', 'M294 231v100m-17-15h34m-31 16h28M334 285h-29q-13 0-13 9t13 8h14q9 0 9 8v9h10'),
     symbol('condenser', rect(...BODIES.condenser,15) + path('M423 146v38m98-38v38m-91-24h82m-82 9h82')),
-    symbol('separator', vessel(...BODIES.separator) + path('M701 254h56m-55 3h54M697 234h27v13')),
+    levelVessel('separator', 'M701 254h56m-55 3h54M697 234h27v13'),
     symbol('compressor', pump(604,76) + path('M562 76h21m42 0h20m-28-15 12-7v44l-12-7')),
-    symbol('stripper', vessel(...BODIES.stripper) + path('M859 285h62m0 10h-62m0 10h62m0 10h-62m3 39h56')),
+    levelVessel('stripper', 'M859 285h62m0 10h-62m0 10h62m0 10h-62m3 39h56'),
     symbol('reboiler', vessel(...BODIES.reboiler) + path('M960 302h26m-26 6h26m-26 6h26m-26 6h26m-26 6h26m-26 6h26')),
     symbol('pump_sep', pump(771,327)), symbol('pump_prod', pump(945,414)),
     symbol('gc_feed', rect(...BODIES.gc_feed)), symbol('gc_purge', rect(...BODIES.gc_purge)),
@@ -67,12 +73,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
     return `<g class="pfd-unit" role="button" tabindex="0" data-area="${id}" aria-pressed="false" aria-label="${code} ${name}" transform="translate(${x} ${y})">
       <title>${name}</title>${target}<rect class="pfd-chip" x="-22" y="-12" width="44" height="17" rx="3"/><text y="0">${code}</text></g>`;
   }).join('');
-  const levelClips = Object.entries(LEVELS).map(([id, { body }]) => `<clipPath id="level-clip-${id}">${vessel(...body)}</clipPath>`).join('');
-  const levelLayers = Object.entries(LEVELS).map(([id, { body, datum }]) => {
-    const [x, , w] = body;
-    return `<g class="pfd-level" data-level="${id}" clip-path="url(#level-clip-${id})" aria-hidden="true">
-      <rect x="${x}" y="${datum}" width="${w}" height="0"/><line x1="${x + 4}" x2="${x + w - 4}" y1="${datum}" y2="${datum}"/></g>`;
-  }).join('');
+  const levelClips = Object.keys(LEVEL_TAGS).map((id) => `<clipPath id="level-clip-${id}">${vessel(...BODIES[id])}</clipPath>`).join('');
   const readouts = anchors.filter(([id]) => id in CORE_PRESSURES).map(([id, [x, y]]) =>
     `<text class="pfd-pressure" data-pressure="${id}" x="${x + 32}" y="${y - 8}"><tspan>—</tspan><tspan class="pfd-pressure-unit" dx="5">kPa(g)</tspan><tspan class="pfd-pressure-state" dx="7"></tspan></text>`
   ).join('');
@@ -84,7 +85,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
     <defs>${arrows}${levelClips}</defs>${lines}
     <g class="pfd-samples">${path(samples)}</g>
     <g class="pfd-junctions">${JUNCTIONS.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3"/>`).join('')}</g>
-    ${equipment()}${levelLayers}${valves}${portsMarkup}${meterMarkup}${labels}${readouts}${flowReadouts}</svg>`;
+    ${equipment()}${valves}${portsMarkup}${meterMarkup}${labels}${readouts}${flowReadouts}</svg>`;
   const svg = host.firstElementChild;
   const preview = mountDiagramPreview(host, svg, drawPreview);
   const targets = [...svg.querySelectorAll('.pfd-hit')];
@@ -136,8 +137,14 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
     activate(event.target);
   });
   const levelByArea = [...svg.querySelectorAll('[data-level]')].map((node) => ({
-    area: node.dataset.level, rect: node.querySelector('rect'), line: node.querySelector('line'),
+    area: node.dataset.level, fill: node.querySelector('rect'),
+    surface: node.querySelector('.pfd-level-surface'), goal: node.querySelector('.pfd-level-goal'),
   }));
+  function levelLine(line, y, visible) {
+    line.toggleAttribute('hidden', !visible);
+    line.setAttribute('y1', y);
+    line.setAttribute('y2', y);
+  }
   const flowByStream = new Map([...svg.querySelectorAll('[data-flow-reading]')].map((node) => [node.dataset.flowReading, node]));
   const linesById = new Map([...svg.querySelectorAll('.pfd-stream')].map((line) => [line.dataset.stream, line]));
   const feedPorts = new Map([...svg.querySelectorAll('.pfd-port[data-feed-tag]')].map((port) => [port.dataset.feedTag, port]));
@@ -202,16 +209,15 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
         const area = node.dataset.area ?? node.dataset.symbol;
         node.classList.toggle('in-alarm', status.alarms.some((alarm) => alarm.area === area));
       }
-      const normalized = (value) => Math.max(0, Math.min(100, value ?? 0)) / 100;
-      for (const { area, rect, line } of levelByArea) {
-        const { tag, datum, range } = LEVELS[area];
-        const channel = codeFor(tag);
-        const fill = range * normalized(status.native_values[channel] ?? status.values[channel]);
-        rect.setAttribute('height', fill);
-        rect.setAttribute('y', datum - fill);
-        const y = datum - range * normalized(status.setpoints[`${area}_level`]);
-        line.setAttribute('y1', y);
-        line.setAttribute('y2', y);
+      for (const { area, fill, surface, goal } of levelByArea) {
+        const [, y, , height] = BODIES[area];
+        const bottom = y + height;
+        const filled = height * levelFraction(levelReading(status, area));
+        const target = status.setpoints[`${area}_level`];
+        fill.setAttribute('height', filled);
+        fill.setAttribute('y', bottom - filled);
+        levelLine(surface, bottom - filled, filled > 0);
+        levelLine(goal, bottom - height * levelFraction(target), Number.isFinite(target));
       }
       for (const node of svg.querySelectorAll('.pfd-pressure')) {
         const tag = codeFor(CORE_PRESSURES[node.dataset.pressure]);

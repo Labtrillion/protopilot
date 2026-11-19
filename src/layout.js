@@ -21,11 +21,12 @@ export function scenePoint([x, y], elevation) {
 }
 
 export const VESSELS = {
-  reactor: { radius: 1.47, bottom: 0.9, top: 5.28, deck: 4.35, seams: [2.5, 3.65], agitator: true, levelTag: 8 },
-  separator: { radius: 1.19, bottom: 0.84, top: 4.55, deck: 3.4, seams: [2.31], levelTag: 12 },
-  stripper: { radius: 1.04, bottom: 0.83, top: 7.22, deck: 4.45, seams: [1.85, 3.36, 5.56, 6.4], levelTag: 15 },
+  reactor: { radius: 1.47, bottom: 0.9, top: 5.28, deck: 4.35, seams: [2.5, 3.65], agitator: true },
+  separator: { radius: 1.19, bottom: 0.84, top: 4.55, deck: 3.4, seams: [2.31] },
+  stripper: { radius: 1.04, bottom: 0.83, top: 7.22, deck: 4.45, seams: [1.85, 3.36, 5.56, 6.4] },
   reboiler: { radius: 0.38, bottom: 0.51, top: 2.93, seams: [1.25, 2.24] },
 };
+export const VESSEL_CAPS = { upper: 0.42, lower: 0.37 };
 
 function vesselLayout(area, { radius, top, bottom }) {
   const [x, y, w, h] = BODIES[area];
@@ -36,12 +37,12 @@ function vesselLayout(area, { radius, top, bottom }) {
   const cap = (factor, s) => Math.hypot(projectedDepth, cosPitch * radius * factor * s);
   // Fit the projected cylinder and its two ellipsoid caps to the drawn body.
   let sy = (h / pixelsPerUnit - 2 * projectedDepth) / cylinder;
-  for (let i = 0; i < 8; i++) sy = (h / pixelsPerUnit - cap(0.42, sy) - cap(0.37, sy)) / cylinder;
-  const position = scenePoint([x + w / 2, y + cap(0.42, sy) * pixelsPerUnit], top * sy).setY(0);
+  for (let i = 0; i < 8; i++) sy = (h / pixelsPerUnit - cap(VESSEL_CAPS.upper, sy) - cap(VESSEL_CAPS.lower, sy)) / cylinder;
+  const position = scenePoint([x + w / 2, y + cap(VESSEL_CAPS.upper, sy) * pixelsPerUnit], top * sy).setY(0);
   const domeY = (factor) => cosPitch * (radius * factor * sy) ** 2 / cap(factor, sy);
   return {
     position, scale: [sx, sy, sz],
-    topPort: top * sy + domeY(0.42), bottomPort: bottom * sy - domeY(0.37),
+    topPort: top * sy + domeY(VESSEL_CAPS.upper), bottomPort: bottom * sy - domeY(VESSEL_CAPS.lower),
   };
 }
 

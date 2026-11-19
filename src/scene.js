@@ -1,7 +1,7 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { AREAS, CORE_PRESSURES, FEED_TAGS, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
+import { AREAS, CORE_PRESSURES, FEED_TAGS, LEVEL_TAGS, MEDIA, STREAMS, codeFor, levelFraction, levelReading, streamMatchesTag } from './topology.js';
 import { buildInternals } from './internals.js';
 import { EQUIPMENT_LAYOUT, FEED_OFFSETS, FLOW_POINTS, LABEL_POINTS, OVERVIEW, PORTS_3D, ROUTES_3D, SAMPLE_ROUTES_3D,
   VESSELS, pipePath, scenePoint, valvePosition } from './layout.js';
@@ -101,7 +101,7 @@ function buildEquipment(scene) {
     return [tag, skid];
   }));
   for (const [area, spec] of Object.entries(VESSELS)) {
-    sight[area] = { tag: spec.levelTag, ...geo.vessel(models[area], spec) };
+    sight[area] = geo.vessel(models[area], spec, area in LEVEL_TAGS);
   }
   sight.condenser = geo.condenser(models.condenser);
   for (const area of ['product', 'purge']) geo.terminal(models[area], EQUIPMENT_LAYOUT[area].terminalHeight);
@@ -694,13 +694,14 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       annotationsDirty = true;
     }
     alertAreas = nextAlerts;
-    for (const { tag, fill, bottom, height: max } of Object.values(sight)) {
-      if (!tag) continue;
-      const channel = codeFor(tag);
-      const level = Math.max(0.005, Math.min(1, (status.native_values[channel] ?? status.values[channel] ?? 0) / 100));
+    for (const area of Object.keys(LEVEL_TAGS)) {
+      const { fill, bottom, height: max } = sight[area];
+      const level = levelFraction(levelReading(status, area));
+      fill.visible = level > 0;
       fill.scale.y = max * level;
       fill.position.y = bottom + max * level / 2;
     }
+    internal.update(status);
   }
 
   function animateCamera(dt) {
@@ -732,7 +733,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   }
 
   function animateProcess(dt) {
-    internal.animate(data, dt, showInternals && data?.running && !motionReduced);
+    if (showInternals && data?.running && !motionReduced) internal.animate(data, dt);
     for (const line of streams) {
       const { def, path, length, markers, material, color, valve, flanges } = line;
       const tag = codeFor(def.tag);

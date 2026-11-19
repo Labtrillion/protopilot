@@ -30,7 +30,8 @@
   --process-mixed: #777e85;
   --pipe-muted: #a7aeb4;
   --flow-marker: #f4f5f6;
-  --level-fill: #a5adb4;
+  --level-fill: #6e9fba;
+  --level-surface: #3f6f8a;
   --plot-sp: #465461;
   --equipment-fill: #cdd1d5;
   --equipment-line: #636d76;
@@ -544,8 +545,9 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .telemetry-panel > .panel-head { padding-inline: 0.53rem; }
   .response-values b { font-size: 0.87rem; }
 }
-.pfd-level rect { fill: var(--level-fill); }
-.pfd-level line { stroke: var(--plot-sp); stroke-width: 1.4px; stroke-dasharray: 4 3; }
+.pfd-level rect { fill: var(--level-fill); stroke: none; }
+.pfd-level-surface { stroke: var(--level-surface); stroke-width: 1.5px; }
+.pfd-level-goal { stroke: var(--plot-sp); stroke-width: 1.4px; stroke-dasharray: 4 3; }
 .pfd-flow-reading {
   display: none; fill: var(--subtext); font: 650 10px var(--mono); text-anchor: end;
   paint-order: stroke; stroke: var(--stage); stroke-width: 4px; stroke-linejoin: round;

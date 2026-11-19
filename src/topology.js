@@ -68,6 +68,17 @@ export const CORE_PRESSURES = {
   reactor: 7, separator: 13, stripper: 16,
 };
 
+export const LEVEL_TAGS = { reactor: 8, separator: 12, stripper: 15 };
+
+export function levelReading(status, area) {
+  const tag = codeFor(LEVEL_TAGS[area]);
+  return status?.native_values?.[tag] ?? status?.values?.[tag];
+}
+
+export function levelFraction(percent) {
+  return Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) / 100 : 0;
+}
+
 // Instruments mounted on interior parts of the 3D vessels: [tag, part name].
 export const INTERIOR_PARTS = {
   reactor: [['XMEAS(8)', '액면'], ['XMV(12)', '교반기'], ['XMEAS(21)', '냉각 코일']],

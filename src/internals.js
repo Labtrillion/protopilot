@@ -1,18 +1,13 @@
 import * as T from 'three';
 import { steel, edge, lightSteel, hardware, box, rod, v3 } from './geometry.js';
-import { CORE_PRESSURES, INTERIOR_PARTS, codeFor } from './topology.js';
-import { INTERNAL_NOZZLES } from './layout.js';
+import { CORE_PRESSURES, INTERIOR_PARTS, LEVEL_TAGS, codeFor, levelReading } from './topology.js';
+import { INTERNAL_NOZZLES, VESSELS } from './layout.js';
 import { readColor } from './palette.js';
+import { mountVesselLevel } from './vessel-level.js';
 
 const glass = new T.MeshPhysicalMaterial({
   color: readColor('--surface'), roughness: 0.55, metalness: 0.15,
   transparent: true, opacity: 0.11, depthWrite: false, side: T.FrontSide,
-});
-const liquid = new T.MeshStandardMaterial({
-  color: readColor('--process-liquid'), transparent: true, opacity: 0.52, depthWrite: false, roughness: 0.32,
-});
-const surface = new T.MeshStandardMaterial({
-  color: readColor('--process-liquid'), transparent: true, opacity: 0.8, depthWrite: false, roughness: 0.28,
 });
 const water = new T.MeshStandardMaterial({
   color: readColor('--process-water'), metalness: 0.32, roughness: 0.28,
@@ -20,7 +15,6 @@ const water = new T.MeshStandardMaterial({
 const steam = new T.MeshStandardMaterial({
   color: readColor('--process-steam'), metalness: 0.29, roughness: 0.28,
 });
-const goalMaterial = new T.LineDashedMaterial({ color: readColor('--plot-sp'), toneMapped: false, dashSize: 0.14, gapSize: 0.085 });
 const limit = (value) => T.MathUtils.clamp(value, 0, 1);
 
 function pipe(group, points, material, radius = 0.055, segments = 48) {
@@ -65,36 +59,6 @@ function trayStack(group) {
   }
 }
 
-function inventory(group, radius, bottom, height) {
-  const body = new T.Mesh(new T.CylinderGeometry(radius, radius, 1, 54, 1, true), liquid);
-  const top = new T.Mesh(new T.CircleGeometry(radius, 54), surface);
-  top.rotation.x = -Math.PI / 2;
-  const line = new T.LineLoop(new T.BufferGeometry().setFromPoints(
-    Array.from({ length: 79 }, (_, i) => {
-      const angle = i / 79 * Math.PI * 2;
-      return new T.Vector3(radius * 1.06 * Math.cos(angle), 0, radius * 1.06 * Math.sin(angle));
-    }),
-  ), goalMaterial);
-  line.computeLineDistances();
-  // Label anchor rides on the liquid surface at the left rim.
-  const anchor = new T.Object3D();
-  anchor.position.set(-radius * 0.72, bottom, radius * 0.5);
-  group.add(body, top, line, anchor);
-  return {
-    shown: null, target: null, anchor,
-    draw(pv, goal, dt) {
-      this.shown = this.shown === null ? pv : T.MathUtils.lerp(this.shown, pv, 1 - Math.exp(-8 * dt));
-      const filled = Math.max(0.003, limit(this.shown / 100)) * height;
-      body.scale.y = filled;
-      body.position.y = bottom + filled / 2;
-      top.position.y = bottom + filled;
-      anchor.position.y = bottom + filled;
-      line.visible = Number.isFinite(goal);
-      if (line.visible) line.position.y = bottom + limit(goal / 100) * height;
-    },
-  };
-}
-
 export function buildInternals(groups, equipment) {
   const interiors = {};
   for (const key of Object.keys(equipment)) {
@@ -119,11 +83,9 @@ export function buildInternals(groups, equipment) {
   }
   coil(interiors.reboiler, 5, ...INTERNAL_NOZZLES.reboilerSteam, 0.26, steam, 0.8);
   rod(interiors.reboiler, ...INTERNAL_NOZZLES.reboilerProcess, 0.073, edge);
-  const levels = {
-    reactor: { tag: 8, meter: inventory(interiors.reactor, 1.32, 0.95, 2.56) },
-    separator: { tag: 12, meter: inventory(sep, 1.075, 0.89, 1.96) },
-    stripper: { tag: 15, meter: inventory(interiors.stripper, 0.94, 0.86, 1.60) },
-  };
+  const levels = Object.entries(LEVEL_TAGS).map(([area, tag]) => ({
+    area, tag: codeFor(tag), meter: mountVesselLevel(groups[area], interiors[area], VESSELS[area]),
+  }));
   const fixedAnchor = (group, position) => {
     const anchor = new T.Object3D();
     anchor.position.set(...position);
@@ -132,11 +94,9 @@ export function buildInternals(groups, equipment) {
   };
   // Anchors sit on the modeled parts: shaft above the top impeller and the outer coil turn.
   const anchors = {
-    'XMEAS(8)': levels.reactor.meter.anchor,
+    ...Object.fromEntries(levels.map(({ tag, meter }) => [tag, meter.anchor])),
     'XMV(12)': fixedAnchor(interiors.reactor, [0, 4.02, 0]),
     'XMEAS(21)': fixedAnchor(interiors.reactor, [1.07, (coilIn[1] + coilOut[1]) / 2, 0.35]),
-    'XMEAS(12)': levels.separator.meter.anchor,
-    'XMEAS(15)': levels.stripper.meter.anchor,
   };
   const parts = Object.entries(INTERIOR_PARTS).flatMap(([area, list]) =>
     list.map(([tag, name]) => ({ area, tag, name, anchor: anchors[tag] })));
@@ -148,27 +108,24 @@ export function buildInternals(groups, equipment) {
         const on = enabled && (!only || only === key);
         interior.visible = on;
         for (const shell of equipment[key].casing) {
-          shell.material = on ? glass : steel;
+          shell.material = on ? glass : equipment[key].shellMaterial ?? steel;
           shell.castShadow = !on;
         }
       }
       return Object.keys(interiors).filter((key) => interiors[key].visible);
     },
     visible(area) { return Boolean(interiors[area]?.visible); },
-    animate(status, dt, moving) {
-      if (!status) return;
-      for (const [key, { meter, tag }] of Object.entries(levels)) {
-        const channel = codeFor(tag);
-        const pv = status.native_values[channel] ?? status.values[channel];
-        if (Number.isFinite(pv)) meter.draw(pv, status.setpoints[`${key}_level`], dt);
-        const pressureTag = codeFor(CORE_PRESSURES[key]);
+    update(status) {
+      for (const { area, meter } of levels) {
+        meter.draw(levelReading(status, area), status.setpoints[`${area}_level`]);
+        const pressureTag = codeFor(CORE_PRESSURES[area]);
         const p = status.values[pressureTag];
-        if (Number.isFinite(p)) equipment[key].needle.rotation.z = 2.18 - limit(p / 3800) * 4.36;
+        if (Number.isFinite(p)) equipment[area].needle.rotation.z = 2.18 - limit(p / 3800) * 4.36;
       }
-      if (moving) {
-        const rpm = 150 + (status.actuators?.['XMV(12)'] ?? status.values['XMV(12)'] ?? 50);
-        rotor.rotation.y += dt * rpm * Math.PI / 120;
-      }
+    },
+    animate(status, dt) {
+      const rpm = 150 + (status.actuators?.['XMV(12)'] ?? status.values['XMV(12)'] ?? 50);
+      rotor.rotation.y += dt * rpm * Math.PI / 120;
     },
   };
 }
