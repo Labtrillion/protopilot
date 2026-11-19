@@ -5,17 +5,17 @@ export const v3 = (coordinates) => new T.Vector3(...coordinates);
 const material = (color, roughness = 0.55, metalness = 0.18) =>
   new T.MeshStandardMaterial({ color, roughness, metalness });
 
-export const steel = material(0xa6aeb9, 0.48, 0.60);
-export const lightSteel = material(0xc0c8d2, 0.49, 0.50);
-export const edge = material(0x596573, 0.52, 0.42);
-export const dark = material(0x303943, 0.74);
+export const steel = material(0xa4a9ae, 0.59, 0.28);
+export const lightSteel = material(0xbfc4c9, 0.62, 0.22);
+export const edge = material(0x596067, 0.60, 0.20);
+export const dark = material(0x454b51, 0.74);
 export const base = material(readColor('--equipment-fill'), 0.81);
-export const gold = material(0x9b927d);
-const valveColor = material(0x6b7179);
-const black = material(0x20262e);
-const dialFace = material(0xe3e8ed, 0.57, 0.06);
-const pointerRed = material(0xbd5947, 0.41, 0.25);
-const instrumentHousing = material(0x535e6c);
+export const hardware = material(0x777e85);
+const valveColor = material(0x666d74);
+const black = material(0x30363c);
+const dialFace = material(readColor('--surface'), 0.57, 0.06);
+const dialPointer = material(readColor('--text'), 0.55, 0.20);
+const instrumentHousing = material(0x575e65);
 const display = new T.MeshBasicMaterial({ color: readColor('--process-liquid'), toneMapped: false });
 const UP = new T.Vector3(0, 1, 0);
 
@@ -73,23 +73,23 @@ function gauge(group, position, scale = 1) {
   const needle = new T.Group();
   gauge.add(needle);
   needle.position.z = 0.070;
-  rod(needle, [0, -0.018, 0], [0, 0.090, 0], 0.008, pointerRed, 6);
-  rod(gauge, [0, -0.12, 0], [0, -0.27, 0], 0.037, gold);
+  rod(needle, [0, -0.018, 0], [0, 0.090, 0], 0.008, dialPointer, 6);
+  rod(gauge, [0, -0.12, 0], [0, -0.27, 0], 0.037, hardware);
   return needle;
 }
 function railing(group, radius, height) {
   ring(group, radius, 0.11, height, edge);
-  ring(group, radius, 0.044, height + 0.51, gold);
-  ring(group, radius, 0.032, height + 0.29, gold);
+  ring(group, radius, 0.044, height + 0.51, hardware);
+  ring(group, radius, 0.032, height + 0.29, hardware);
   for (let i = 0; i < 14; i++) {
     const angle = i / 14 * Math.PI * 2;
     const x = radius * Math.cos(angle), z = radius * Math.sin(angle);
-    rod(group, [x, height, z], [x, height + 0.51, z], 0.035, gold, 6);
+    rod(group, [x, height, z], [x, height + 0.51, z], 0.035, hardware, 6);
   }
 }
 function ladder(group, height, x, z) {
-  for (const offset of [-0.2, 0.2]) rod(group, [x + offset, 0.34, z], [x + offset, height + 0.34, z], 0.044, gold, 8);
-  for (let y = 0.43; y < height + 0.18; y += 0.25) rod(group, [x - 0.2, y, z], [x + 0.2, y, z], 0.031, gold, 6);
+  for (const offset of [-0.2, 0.2]) rod(group, [x + offset, 0.34, z], [x + offset, height + 0.34, z], 0.044, hardware, 8);
+  for (let y = 0.43; y < height + 0.18; y += 0.25) rod(group, [x - 0.2, y, z], [x + 0.2, y, z], 0.031, hardware, 6);
 }
 function sightGlass(group, radius, bottom, height) {
   const x = radius * 0.56, z = radius * 0.90;
@@ -150,7 +150,7 @@ export function condenser(group) {
     for (let i = 0; i < 10; i++) {
       const angle = i / 10 * Math.PI * 2;
       const y = 3.43 + Math.cos(angle) * 0.65, z = Math.sin(angle) * 0.65;
-      rod(group, [x, y, z], [x + 0.11 * sign, y, z], 0.039, gold, 6);
+      rod(group, [x, y, z], [x + 0.11 * sign, y, z], 0.039, hardware, 6);
     }
   }
   gauge(group, [0.23, 3.76, 0.75]);
@@ -189,7 +189,7 @@ export function feeds(group) {
       rod(skid, [x, 0.83, 0], [x + 0.07, 0.83, 0], 0.543, edge, 30);
     }
     for (const x of [-0.73, 0.67]) box(skid, [0.22, 0.36, 0.73], [x, 0.35, 0], edge);
-    rod(skid, [0.96, 0.8, 0], [1.5, 0.8, 0], 0.14, gold);
+    rod(skid, [0.96, 0.8, 0], [1.5, 0.8, 0], 0.14, hardware);
     gauge(skid, [-0.36, 1.57, 0.15], 0.74);
     box(skid, [0.28, 0.13, 0.04], [0.12 + index * 0.06, 0.9, 0.52], dark);
   }
@@ -202,7 +202,7 @@ export function analyzer(group) {
   box(group, [0.39, 0.26, 0.032], [0, 1.2, 0.286], dark);
   box(group, [0.28, 0.12, 0.011], [0, 1.22, 0.307], display);
   for (let i = 0; i < 4; i++) box(group, [0.45, 0.023, 0.02], [0, 0.58 + i * 0.062, 0.285], dark);
-  rod(group, [0.22, 1.55, 0], [0.22, 1.84, 0], 0.042, gold);
+  rod(group, [0.22, 1.55, 0], [0.22, 1.84, 0], 0.042, hardware);
 }
 
 export function terminal(group, y) {
@@ -219,9 +219,9 @@ export function controlValve(group, point, tangent, number) {
   rod(valve, [-0.24, 0, 0], [0.24, 0, 0], 0.175, valveColor, 12);
   for (const x of [-0.19, 0.14]) rod(valve, [x, 0, 0], [x + 0.06, 0, 0], 0.19, edge, 12);
   for (const x of [-0.10,0.10]) rod(valve, [x,0.10,0], [x,0.46,0], 0.023, lightSteel, 8);
-  const stem = box(valve, [0.087,0.12,0.073], [0,0.27,0], pointerRed);
+  const stem = box(valve, [0.087,0.12,0.073], [0,0.27,0], dialPointer);
   valve.userData.stem = stem;
-  cylinder(valve, 0.21, 0.13, [0, 0.46, 0], gold, false, 20);
+  cylinder(valve, 0.21, 0.13, [0, 0.46, 0], hardware, false, 20);
   return valve;
 }
 

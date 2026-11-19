@@ -1,10 +1,10 @@
 import * as T from 'three';
-import { steel, edge, lightSteel, gold, box, rod, v3 } from './geometry.js';
+import { steel, edge, lightSteel, hardware, box, rod, v3 } from './geometry.js';
 import { CORE_PRESSURES, INTERIOR_PARTS, codeFor } from './topology.js';
 import { readColor } from './palette.js';
 
 const glass = new T.MeshPhysicalMaterial({
-  color: 0xd1d9e3, roughness: 0.30, metalness: 0.30,
+  color: readColor('--surface'), roughness: 0.55, metalness: 0.15,
   transparent: true, opacity: 0.11, depthWrite: false, side: T.FrontSide,
 });
 const liquid = new T.MeshStandardMaterial({
@@ -44,7 +44,7 @@ function agitator(group) {
     blade.rotation.y = y;
     box(blade, [1.36, 0.08, 0.12], [0,y,0], edge);
     for (const x of [-0.52, 0.52]) {
-      const paddle = box(blade, [0.29, 0.10, 0.37], [x,y,0], gold);
+      const paddle = box(blade, [0.29, 0.10, 0.37], [x,y,0], hardware);
       paddle.rotation.x = 0.35;
     }
     rotor.add(blade);
@@ -55,7 +55,7 @@ function agitator(group) {
 function trayStack(group) {
   const plate = new T.CylinderGeometry(0.89, 0.89, 0.037, 40);
   for (const [index, y] of [2.98,3.48,3.98,4.48,4.98,5.48].entries()) {
-    const tray = new T.Mesh(plate, index % 2 ? edge : gold);
+    const tray = new T.Mesh(plate, index % 2 ? edge : hardware);
     tray.position.y = y;
     group.add(tray);
     const x = index % 2 ? 0.60 : -0.60;

@@ -95,7 +95,7 @@ function buildEquipment(scene) {
     const g = groups[key];
     const endpoint = geo.v3(tap).sub(g.position).toArray();
     g.add(new T.Mesh(new T.TubeGeometry(pathFor([[0.22,1.84,0],[0.22,2.04,0],[endpoint[0],2.04,endpoint[2]],endpoint]), 20, 0.028, 6),
-      geo.gold));
+      geo.hardware));
   }
   return { groups, sight };
 }
@@ -220,8 +220,8 @@ export function mountScene(container, host, select, pick = () => {}) {
   renderer.domElement.style.touchAction = 'pan-y';
   controls.update();
 
-  scene.add(new T.HemisphereLight(0xf2f6fc, 0x727983, 2.27));
-  const key = new T.DirectionalLight(0xffffff, 2.55);
+  scene.add(new T.HemisphereLight(0xffffff, 0x777777, 1.68));
+  const key = new T.DirectionalLight(0xffffff, 1.65);
   key.position.set(-10, 24, 13);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
@@ -232,7 +232,7 @@ export function mountScene(container, host, select, pick = () => {}) {
   key.shadow.camera.far = 67;
   key.shadow.normalBias = 0.08;
   scene.add(key);
-  const rim = new T.DirectionalLight(0xe3ebf6, 1.05);
+  const rim = new T.DirectionalLight(0xffffff, 0.65);
   rim.position.set(8, 6, -12);
   scene.add(rim);
 
@@ -253,7 +253,7 @@ export function mountScene(container, host, select, pick = () => {}) {
   });
   for (const button of sized.keys()) labelSizes.observe(button);
   const ports = makePortLabels(host);
-  const selectionColor = readColor('--accent');
+  const selectionColor = readColor('--focus');
   const warningColor = readColor('--warning');
   const trackedColor = new T.Color(readColor('--tracked'));
   const mutedPipeColor = new T.Color(readColor('--pipe-muted'));
