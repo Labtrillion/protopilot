@@ -640,11 +640,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       if (label.value.textContent !== value) label.value.textContent = value;
       if (label.state.textContent !== state) label.state.textContent = state;
       const title = `${value} kPa(g)${state ? ` · ${state}` : ''}${alarm ? ` · ${alarm.label}` : ''}`;
-      if (label.value.parentElement.title !== title) {
-        label.value.parentElement.title = title;
-        label.listReading.textContent = `${value} kPa(g)${state ? ` · ${state}` : ''}`;
-        label.listReading.title = title;
-      }
+      if (label.value.parentElement.title !== title) label.value.parentElement.title = title;
       label.el.classList.toggle('pressure-alarm', Boolean(alarm));
     }
     const nextAlerts = new Set(status.alarms.map(({ area }) => area));
@@ -806,7 +802,6 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       showPressure = enabled;
       annotationsDirty = true;
       host.classList.toggle('show-pressure', enabled);
-      tagList.classList.toggle('show-pressure', enabled);
       for (const area of Object.keys(CORE_PRESSURES)) {
         const { el } = labels[area];
         if (enabled) el.setAttribute('aria-describedby', `model-pressure-${area} model-pressure-state-${area}`);

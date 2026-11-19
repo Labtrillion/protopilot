@@ -6,12 +6,8 @@ export function populateAnnotationList(host, items) {
     const caption = document.createElement('span');
     caption.textContent = item.caption;
     entry.append(caption);
-    if (item.value || item.def) {
+    if (item.def) {
       item.listReading = document.createElement('small');
-      if (item.value) {
-        item.listReading.className = 'tag-list-pressure';
-        item.listReading.textContent = '— kPa(g)';
-      }
       entry.append(item.listReading);
     }
     if (clickable) {

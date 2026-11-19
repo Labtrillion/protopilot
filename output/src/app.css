@@ -211,7 +211,6 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .tag-list-entry small { color: var(--subtext); font: 0.69rem var(--mono); white-space: nowrap; }
 .tag-list-entry.tracked, .tag-list-entry:is([aria-pressed=true], [aria-current=true]) { border-color: var(--tracked); color: var(--tracked); }
 .tag-list-entry.in-alarm { border-color: var(--warning); color: var(--warning); }
-.model-tag-list:not(.show-pressure) .tag-list-pressure { display: none; }
 .model-labels > * { inset: 0 auto auto 0; inline-size: max-content; }
 .model-labels > :not([data-placed]) { visibility: hidden; }
 .model-labels > [data-leader]::after {

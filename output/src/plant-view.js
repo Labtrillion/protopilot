@@ -111,7 +111,7 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
   toggle(flows, 'flows', (enabled) => { scene?.flow(enabled); diagram.flow(enabled); });
   toggle(pressure, 'pressure', applyPressure);
   toggle(tags, 'tags', (enabled) => {
-    tags.title = enabled ? '3D 태그 가리기' : '3D 태그 표시';
+    tags.title = enabled ? '태그 가리기' : '태그 표시';
     scene?.tags(enabled);
     renderInterior();
     renderTagList();
