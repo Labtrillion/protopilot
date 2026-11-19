@@ -1,0 +1,3 @@
+[submodule "vendor/trida-stack"]
+	path = vendor/trida-stack
+	url = https://github.com/trillion-labs/trida-stack.git

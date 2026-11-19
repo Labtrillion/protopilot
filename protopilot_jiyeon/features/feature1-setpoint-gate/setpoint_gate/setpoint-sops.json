@@ -1,0 +1,41 @@
+{
+  "name": "example_sop_v0",
+  "note": "EXAMPLE operating procedures written for a first RAG test. Not an authoritative SOP. General rules are always retrieved; conditional rules are retrieved from observable symptoms only (no disturbance identity).",
+  "rules": [
+    {
+      "id": "GEN-1", "title": "Normal operation: hold", "always": true,
+      "text": "If no alarm is active, no protection override is active, reactor pressure is below 2800 kPa and not rising faster than 20 kPa/h, and no controller MV command is saturated at 0 % or 100 %, HOLD. The Mode-1 setpoints are the economically optimized operating point; do not move any setpoint without a specific abnormal symptom."
+    },
+    {
+      "id": "GEN-2", "title": "Change discipline", "always": true,
+      "text": "Change at most one or two setpoints per decision and in small steps (production_rate at most 5 % of its initial value, other setpoints at most 2 %). After a change, wait at least 1 h (4 decisions) to see its effect before changing the same setpoint again, unless an alarm appears or worsens."
+    },
+    {
+      "id": "ECO-1", "title": "Reactor pressure setpoint and cost", "always": true,
+      "text": "Keep the reactor_pressure setpoint at its initial value (about 2705 kPa). A lower reactor pressure raises operating cost (more purge loss and compressor work). Lower it only when measured pressure approaches 2850 kPa and production cuts have not stopped the rise."
+    },
+    {
+      "id": "LVL-1", "title": "Level setpoints are inventory buffers", "always": true,
+      "text": "Reactor (75 %), separator (50 %) and stripper (50 %) level setpoints are inventory buffers with no steady-state economic benefit. Keep them at their initial values. Never set the separator or stripper level setpoint below 40 %: low levels remove the buffer against upsets and risk the 0 % trip."
+    },
+    {
+      "id": "COMP-1", "title": "Composition and temperature setpoints", "always": true,
+      "text": "Keep ya, yac and reactor_temperature setpoints at their initial values unless a reactor temperature alarm is active or reactor-feed composition has drifted for more than 1 h."
+    },
+    {
+      "id": "PRESS-1", "title": "High or rising reactor pressure",
+      "trigger": "reactor pressure > 2800 kPa and rising, or a reactor pressure alarm, or the high-pressure override active",
+      "text": "Reduce the production_rate setpoint by 5 % of its initial value. If pressure is still rising after 1 h, reduce by another 5 %. Do not change level, temperature or composition setpoints for this symptom. Lowering production is the primary lever for reactor pressure."
+    },
+    {
+      "id": "FEEDA-1", "title": "Loss of A feed",
+      "trigger": "A feed flow near zero while the A feed valve command is at 100 %",
+      "text": "The A feed is lost. Reactor pressure will rise over the next several hours. Reduce the production_rate setpoint early, by 10-15 % of its initial value, before pressure alarms appear. Hold all other setpoints."
+    },
+    {
+      "id": "RESTORE-1", "title": "Restore production",
+      "trigger": "production_rate setpoint below its initial value",
+      "text": "When reactor pressure is below 2750 kPa and stable for 2 h with no alarm and no override, raise production_rate back toward its initial value in steps of 5 %. Otherwise hold the reduced production."
+    }
+  ]
+}

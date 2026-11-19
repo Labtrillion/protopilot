@@ -1,0 +1,290 @@
+{
+  "state": {
+    "event": {
+      "event_id": "EVT-TEP-0001",
+      "state_version": 0,
+      "sim_time_s": 21600.0,
+      "time_basis": "simulation_seconds",
+      "snapshot_id": "SNAP-TEP-0001-T21600"
+    },
+    "active_alarms": [
+      {
+        "alarm_id": "ALM-XMEAS7-H",
+        "sensor_id": "XMEAS(7)",
+        "condition": "high",
+        "raised_at_s": 21240.0,
+        "active": true,
+        "priority": "high",
+        "message": "반응기 압력 높음 (가상, 경보값은 예시)",
+        "threshold": 2895.0,
+        "unit": "kPa(g)",
+        "raw_tag": "PIR100"
+      }
+    ],
+    "active_setpoints": [
+      {
+        "setpoint_id": "SETPT(19)",
+        "value": 13.823,
+        "unit": "mol%",
+        "since_s": 0.0
+      }
+    ],
+    "actual_observations": {
+      "note": "실제 공정 측정값(최신)",
+      "latest": [
+        {
+          "sensor_id": "XMEAS(7)",
+          "value": 2846.0,
+          "unit": "kPa(g)",
+          "measured_at_s": 21590.0,
+          "age_s": 10.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMEAS(13)",
+          "value": 2742.0,
+          "unit": "kPa(g)",
+          "measured_at_s": 21590.0,
+          "age_s": 10.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMEAS(10)",
+          "value": 0.31,
+          "unit": "kscmh",
+          "measured_at_s": 21590.0,
+          "age_s": 10.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMV(6)",
+          "value": 36.2,
+          "unit": "%",
+          "measured_at_s": 21590.0,
+          "age_s": 10.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMEAS(9)",
+          "value": 120.41,
+          "unit": "degC",
+          "measured_at_s": 21590.0,
+          "age_s": 10.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMEAS(30)",
+          "value": 13.79,
+          "unit": "mol%",
+          "measured_at_s": 20100.0,
+          "age_s": 1500.0,
+          "quality": "good",
+          "freshness": "fail",
+          "sample_id": "PURGE-0112"
+        }
+      ]
+    },
+    "information_gaps": [
+      {
+        "item": "퍼지 분석 최신 시료",
+        "reason": "분석값이 1500 s 째 갱신되지 않음",
+        "sensor_id": "XMEAS(30)"
+      }
+    ],
+    "safety_checks": [
+      {
+        "check_id": "SC-PRESSURE-OVERRIDE-INACTIVE",
+        "description": "분리기 압력 우선 제어 비작동 (S05)",
+        "status": "pass",
+        "source": "external_rule_engine (example)",
+        "evaluated_at_s": 21590.0
+      },
+      {
+        "check_id": "SC-PRODUCT-QUALITY-IN-SPEC",
+        "description": "제품 G/(G+H) 45–55%, D+E+F ≤ 2 mol% (팀 기준, 예시)",
+        "status": "unknown",
+        "source": "external_rule_engine (example)",
+        "evaluated_at_s": null
+      }
+    ],
+    "sop_evidence": [
+      {
+        "evidence_id": "EV:team-sop/tep-studio-closed-loop/S05#p1",
+        "doc_id": "tep-studio-closed-loop",
+        "doc_version": "1.0",
+        "clause": "S05 procedure 1",
+        "excerpt": "정상 경로는 퍼지 B 조성 XMEAS(30) → CONTRL19 → CONTRL6 유량 목표 → XMEAS(10)·XMV(6)이다. 목표 B는 13.823 mol%다."
+      },
+      {
+        "evidence_id": "EV:team-sop/tep-studio-closed-loop/S08#p2",
+        "doc_id": "tep-studio-closed-loop",
+        "doc_version": "1.0",
+        "clause": "S08 procedure 2",
+        "excerpt": "SOP 단독은 기존 목표를 유지한다. Zoro 시험에서도 같은 하위 제어기를 유지하며, 연결된 감독기가 승인한 상위 설정값 후보만 기록·적용한다. 바꿀 근거가 부족하면 현재 목표를 유지한다."
+      },
+      {
+        "evidence_id": "EV:team-sop/tep-studio-closed-loop/S04#c1",
+        "doc_id": "tep-studio-closed-loop",
+        "doc_version": "1.0",
+        "clause": "S04 constraints",
+        "excerpt": "원료·퍼지 분석기는 6분 간격으로 이전 시료를 보고한다. 같은 값이 반복되는 3분 로그 두 행을 독립적인 조성 변화로 세지 않는다."
+      },
+      {
+        "evidence_id": "EV:team-sop/tep-studio-closed-loop/S08#c1",
+        "doc_id": "tep-studio-closed-loop",
+        "doc_version": "1.0",
+        "clause": "S08 constraints",
+        "excerpt": "Studio 평가에는 Downs & Vogel 표 9의 기준 환산을 적용한다. 경제 조정에도 생산 목표·품질 규격·제어 보호 설정은 고정한다."
+      }
+    ],
+    "rag_unresolved": [
+      {
+        "topic": "퍼지 B 목표 변경 폭",
+        "detail": "검색된 SOP에 상위 목표 변경 폭·변화율의 정량 기준이 없음 — 감독기 허용값 확인 필요",
+        "evidence_ids": [
+          "EV:team-sop/tep-studio-closed-loop/S08#p2"
+        ]
+      },
+      {
+        "topic": "원인 확정",
+        "detail": "검색 결과만으로 압력 상승 원인을 확정할 수 없음",
+        "evidence_ids": []
+      }
+    ],
+    "history": [],
+    "virtual_experiments": {
+      "note": "시뮬레이션 예측값(가상). 실제 관측 아님. 시각은 run 시작 기준 [s]",
+      "runs": [],
+      "comparison": null,
+      "case_selection": null
+    },
+    "unavailable_options": [
+      {
+        "option_id": "UNMAPPED:XMV(6) 100% 수동 개방",
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      {
+        "option_id": "SIM_HOLD",
+        "status": "deferred",
+        "reason": "input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "SIM_SP19_UP050",
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "SIM_SP19_DN050",
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "SIM_SP19_UP100",
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "SIM_SP19_DN100",
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "SIM_SP19_UP150",
+        "status": "excluded",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      {
+        "option_id": "SIM_SP19_DN150",
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "SIM_SP19_UP200",
+        "status": "excluded",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      {
+        "option_id": "SIM_SP19_DN200",
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "SIM_CHANGE_PRODUCTION_TARGET",
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_HOLD",
+        "status": "deferred",
+        "reason": "run_succeeded=fail: 기준 실험 결과 없음; case_selection=fail: 심슨(기준) 점수 없음; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_UP050",
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_DN050",
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_UP100",
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_DN100",
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_UP150",
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_DN150",
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_UP200",
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_DN200",
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      }
+    ],
+    "budget_remaining": {
+      "decisions": 16,
+      "tool_calls": 12,
+      "simulations": 10
+    }
+  },
+  "questions": {
+    "next_action": {
+      "type": "choice",
+      "instructions": "현재 사건 상태, 실제 관측, 가상 실험 결과와 이전 판단 이력을 보고 다음 분석 또는 권고 행동 하나를 선택하라. criteria 에 있는 선택지만 고를 수 있다.",
+      "criteria": {
+        "QUERY_PURGE_ANALYZER": "퍼지 분석기 B 조성 XMEAS(30) 최신 시료 조회 | 목적: 새 퍼지 시료 확인 (같은 값 반복은 새 시료 아님) | 근거: EV:team-sop/tep-studio-closed-loop/S04#c1",
+        "QUERY_LOOP_RELATIONS": "CONTRL19 상·하위 루프 및 압력 우선 제어 관계 조회",
+        "REQUEST_HUMAN_REVIEW": "현재까지의 근거·불확실성을 정리해 운영자 검토 요청 (설정값은 유지)"
+      }
+    }
+  }
+}

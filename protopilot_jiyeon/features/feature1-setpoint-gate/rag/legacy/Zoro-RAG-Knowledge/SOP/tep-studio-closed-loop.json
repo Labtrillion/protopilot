@@ -1,0 +1,224 @@
+{
+  "sop_id": "tep-studio-closed-loop",
+  "version": "1.0",
+  "title": "TEP Studio 폐루프 운전 SOP",
+  "source_url": "https://github.com/jkitchin/tep-rust/blob/0735ad3b5bb7fdd367a8a31da1db8a209dac2a15/crates/tepsim-control/src/lib.rs",
+  "preconditions": [
+    "CMU TEP-Rust Studio 표준 운전점과 Braatz 폐루프를 사용하는 시뮬레이션에 적용한다."
+  ],
+  "constraints": [
+    "하위 P·PI 제어 및 내장 보호 기능을 계속 실행한다."
+  ],
+  "stop_conditions": [
+    "시뮬레이터 트립 시 운전을 종료하고 시각·원인을 보존한다."
+  ],
+  "steps": [
+    {
+      "step_id": "S01",
+      "title": "폐루프 기동과 운전 조건 고정",
+      "preconditions": [
+        "새 Studio 운전을 시작한다."
+      ],
+      "procedure": [
+        "closed loop와 a trip ends the run을 켠다. 표준 시험은 Euler, 1초 적분, 180스텝마다 기록으로 시작한다. 두 정책에 같은 시드·초기 상태·외란·강제 IDV(12) 설정을 적용한다.",
+        "기본 설정값과 단위를 기록한다. 운전 중 SOP 단독 정책의 상위 설정값은 초기값으로 유지한다. 시뮬레이터가 매 제어 주기에 밸브를 갱신한다."
+      ],
+      "constraints": [
+        "계측과 조작 이력만 정책에 전달한다. 시험 배정과 외란 정답은 평가기가 보관한다."
+      ],
+      "stop_conditions": [
+        "설정이나 태그 단위가 다르면 실행을 보류한다."
+      ],
+      "references": [
+        {
+          "id": "studio",
+          "section": "Run / closed loop, time step and trip"
+        },
+        {
+          "id": "studio-control",
+          "section": "Scheme::step; FAST, COMPOSITION, QUALITY"
+        }
+      ]
+    },
+    {
+      "step_id": "S02",
+      "title": "반응기 온도 편차와 냉각 응답",
+      "preconditions": [
+        "XMEAS(9)가 120.40 °C에서 벗어나거나 진동한다."
+      ],
+      "procedure": [
+        "CONTRL18이 반응기 온도 오차로 CONTRL10의 냉각수 출구 온도 목표를 갱신하도록 둔다. CONTRL10은 XMEAS(21)을 읽어 XMV(10)을 조정한다.",
+        "XMEAS(9), XMEAS(21), XMV(10), XMEAS(7)을 같은 시간축으로 확인한다. 밸브가 움직인 뒤 온도 오차가 줄어드는지 기록한다."
+      ],
+      "constraints": [
+        "하위 출구 온도 목표 94.599 °C는 기동 초기값이다. 상위 루프가 운전 중 갱신한다."
+      ],
+      "stop_conditions": [
+        "트립이면 종료한다. 밸브 포화와 온도 이탈이 계속되면 미복귀로 표시하고 경제 조정을 보류한다."
+      ],
+      "references": [
+        {
+          "id": "studio-control",
+          "section": "PRESET CONTRL18 and CONTRL10"
+        }
+      ]
+    },
+    {
+      "step_id": "S03",
+      "title": "반응기·분리기·스트리퍼 액위와 제품 유량",
+      "preconditions": [
+        "액위나 제품 유량이 달라진다."
+      ],
+      "procedure": [
+        "반응기 XMEAS(8) 75%는 CONTRL17 → CONTRL4 → 총 공급 XMV(4), 분리기 XMEAS(12) 50%는 CONTRL7 → XMV(7), 스트리퍼 XMEAS(15) 50%는 CONTRL8 → XMV(8) 경로를 확인한다.",
+        "제품 유량 XMEAS(17) 목표 22.949 m³/h는 CONTRL11을 통해 응축기 냉각수 XMV(11)에 작용한다. 유량과 세 액위를 함께 기록한다."
+      ],
+      "constraints": [
+        "액위 단위는 %이고 허용편차는 퍼센트포인트다. XMV(8)은 제품 유량 설정기가 아니라 스트리퍼 액위 루프의 출력이다."
+      ],
+      "stop_conditions": [
+        "트립·필수 계측 누락 시 평가를 보류한다."
+      ],
+      "references": [
+        {
+          "id": "studio-control",
+          "section": "PRESET CONTRL7, 8, 11, 17"
+        }
+      ]
+    },
+    {
+      "step_id": "S04",
+      "title": "원료 유량과 지연된 조성 신호",
+      "preconditions": [
+        "원료 유량이나 원료 분석기 값이 변한다."
+      ],
+      "procedure": [
+        "D·E·A 및 혼합 공급 XMEAS(2,3,1,4)는 각각 CONTRL1–4와 XMV(1–4)로 추종한다. 재순환 유량 XMEAS(5)는 CONTRL5와 XMV(5)로 추종한다.",
+        "원료 분석 A·D·E(XMEAS(23,26,27))가 갱신되면 CONTRL13·14·15가 각각 CONTRL3·1·2의 목표를 보정한다. 최신 분석 시각과 연속 유량의 변화를 함께 읽는다."
+      ],
+      "constraints": [
+        "원료·퍼지 분석기는 6분 간격으로 이전 시료를 보고한다. 같은 값이 반복되는 3분 로그 두 행을 독립적인 조성 변화로 세지 않는다."
+      ],
+      "stop_conditions": [
+        "새 시료가 없으면 조성 원인 판단을 보류하고 하위 유량 제어는 유지한다."
+      ],
+      "references": [
+        {
+          "id": "studio-control",
+          "section": "PRESET CONTRL1–5 and 13–15"
+        },
+        {
+          "id": "manca",
+          "section": "PDF p. 14 (printed p. 12) / sampling and dead time"
+        }
+      ]
+    },
+    {
+      "step_id": "S05",
+      "title": "퍼지 변화와 분리기 압력 우선 제어",
+      "preconditions": [
+        "퍼지 유량·밸브 또는 분리기 압력이 변한다."
+      ],
+      "procedure": [
+        "정상 경로는 퍼지 B 조성 XMEAS(30) → CONTRL19 → CONTRL6 유량 목표 → XMEAS(10)·XMV(6)이다. 목표 B는 13.823 mol%다.",
+        "CONTRL6은 분리기 압력 XMEAS(13) ≥2950 kPa(g)이면 퍼지를 100%로 고정하고 2633.7 아래에서 해제한다. ≤2300이면 0%로 고정하고 2633.7 위에서 해제한다. 경계 비교는 Studio의 단정도 상수 구현을 따른다.",
+        "압력·퍼지 유량·밸브·퍼지 조성을 시간순으로 기록하고 내장 우선 제어와 해제를 그대로 따른다."
+      ],
+      "constraints": [
+        "트립 감시에 쓰는 반응기 압력 XMEAS(7)과 퍼지 우선 제어에 쓰는 분리기 압력 XMEAS(13)을 구분한다. CONTRL22는 실행 목록에 없다."
+      ],
+      "stop_conditions": [
+        "압력 우선 제어 중에는 경제 조정을 보류한다. 트립 시 종료한다."
+      ],
+      "references": [
+        {
+          "id": "studio-control",
+          "section": "Override::step; Scheme::run; CONTRL6 and CONTRL19"
+        }
+      ]
+    },
+    {
+      "step_id": "S06",
+      "title": "제품 조성·스트리퍼 온도·스팀",
+      "preconditions": [
+        "제품 E 조성, 스트리퍼 온도 또는 스팀 유량이 달라진다."
+      ],
+      "procedure": [
+        "제품 E XMEAS(38)의 0.83570 mol% 목표를 CONTRL20이 추종한다. CONTRL20 → CONTRL16(스트리퍼 온도 XMEAS(18)) → CONTRL9(스팀 유량 XMEAS(19)) → XMV(9) 경로를 확인한다.",
+        "제품 분석 XMEAS(37–41)은 15분 간격으로 이전 시료를 보고한다. 제품 D·E·F와 G/H, 스팀 유량의 변화를 최신 시료 시각에 맞춰 비교한다."
+      ],
+      "constraints": [
+        "65.731 °C와 230.31 kg/h는 하위 루프의 기동 목표다. 제품 E·온도 루프가 운전 중 각각 갱신할 수 있다."
+      ],
+      "stop_conditions": [
+        "시료가 오래되었거나 품질 한계 밖이면 경제 조정을 보류한다."
+      ],
+      "references": [
+        {
+          "id": "studio-control",
+          "section": "PRESET CONTRL9, 16, 20"
+        },
+        {
+          "id": "manca",
+          "section": "PDF p. 14 (printed p. 12) / product analyser"
+        }
+      ]
+    },
+    {
+      "step_id": "S07",
+      "title": "알람 전파와 목표 복귀 판정",
+      "preconditions": [
+        "한 개 이상 계측에서 이탈이 관측된다."
+      ],
+      "procedure": [
+        "먼저 벗어난 계측과 후속 알람, 대응 밸브와 새 시료의 도착 순서를 기록한다. 원인 후보는 확인 가능한 관측 근거와 함께 남긴다.",
+        "프로젝트 판정은 반응기 온도 120.40±0.50 °C와 세 액위 75/50/50±5 %p를 함께 본다. 실제 이탈 뒤 네 변수가 1시간 연속 범위 안이면 관측 복귀, 처음부터 범위 안이면 유지로 기록한다. 마지막 2시간도 따로 확인한다.",
+        "온도 미세 추종은 별도로 ±0.10 °C를 사용한다. 마지막 이탈 뒤 다시 진입한 시각과 그 뒤의 지속시간을 기록한다."
+      ],
+      "constraints": [
+        "허용폭과 관찰 시간은 팀 시험 기준이다. Manca 보고서 PDF 9–10, 28–29쪽의 원인·전파·회복 지연 및 알람 활성/해제 구분을 적용한다."
+      ],
+      "stop_conditions": [
+        "셀 수 있는 시료가 부족하거나 트립이면 복귀 성공으로 기록하지 않는다."
+      ],
+      "references": [
+        {
+          "id": "manca",
+          "section": "PDF pp. 9–10, 28–29 (printed pp. 7–8, 26–27)"
+        },
+        {
+          "id": "evaluation",
+          "section": "Studio project bands and persistence tests"
+        }
+      ]
+    },
+    {
+      "step_id": "S08",
+      "title": "안정 운전 중 네 비용과 Zoro 비교",
+      "preconditions": [
+        "운전 로그에서 비용과 생산·품질을 함께 읽을 수 있다."
+      ],
+      "procedure": [
+        "퍼지 XMEAS(10,29–36), 제품 XMEAS(17,37–39), 압축기 XMEAS(20), 스팀 XMEAS(19)에서 네 가지 비용률을 계산한다. 시간 적분한 비용과 단위 생산량당 비용을 기록한다.",
+        "SOP 단독은 기존 목표를 유지한다. Zoro 시험에서도 같은 하위 제어기를 유지하며, 연결된 감독기가 승인한 상위 설정값 후보만 기록·적용한다. 바꿀 근거가 부족하면 현재 목표를 유지한다.",
+        "양쪽의 트립·목표 유지·생산량·품질·압력 조건을 확인한 후 같은 외란의 누적 비용 차이와 네 항목 기여를 비교한다."
+      ],
+      "constraints": [
+        "Studio 평가에는 Downs & Vogel 표 9의 기준 환산을 적용한다. 경제 조정에도 생산 목표·품질 규격·제어 보호 설정은 고정한다."
+      ],
+      "stop_conditions": [
+        "트립·시료 누락·제약 위반이면 그 쌍의 절감 판정을 보류한다."
+      ],
+      "references": [
+        {
+          "id": "downs",
+          "section": "Table 9 / benchmark operating costs"
+        },
+        {
+          "id": "evaluation",
+          "section": "Studio paired gates and observed cost window"
+        }
+      ]
+    }
+  ]
+}

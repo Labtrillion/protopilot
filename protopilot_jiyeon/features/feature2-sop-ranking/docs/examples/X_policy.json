@@ -1,0 +1,111 @@
+{
+  "schema_version": "agent_policy.v0",
+  "label": "EXAMPLE — 데모용 예시 수치. 실제 공정에서 검증된 기준 아님",
+  "freshness": {
+    "default_max_age_s": 300,
+    "per_sensor_max_age_s": {
+      "XMEAS(30)": 720
+    }
+  },
+  "recommendation": {
+    "baseline_action_id": "SIM_HOLD",
+    "min_candidate_runs": 2,
+    "required_safety_checks": [
+      "SC-PRESSURE-OVERRIDE-INACTIVE"
+    ],
+    "advisory_safety_checks": [
+      "SC-PRODUCT-QUALITY-IN-SPEC"
+    ],
+    "required_fresh_sensors": [
+      "XMEAS(30)",
+      "XMEAS(7)"
+    ],
+    "require_alarm_recovery": true,
+    "block_if_limit_exceedance": true,
+    "require_rag_evidence": true
+  },
+  "budget": {
+    "max_decisions": 16,
+    "max_tool_calls": 12,
+    "max_simulations": 10,
+    "max_wall_time_s": 120
+  },
+  "benchmark": {
+    "label": "EXAMPLE — 벤치마크 수치는 예시 설정. 근거는 docs/BENCHMARK.md",
+    "values_status": "example",
+    "tracked": [
+      {
+        "tag": "XMEAS(7)",
+        "setpoint": 2705.0,
+        "unit": "kPa(g)",
+        "hi": 2895.0,
+        "lo": null,
+        "weight": 1.0,
+        "source": "목표: Downs & Vogel 기본 운전점 / 상한: STUDIO.md 데모 기준 2895"
+      },
+      {
+        "tag": "XMEAS(9)",
+        "setpoint": 120.4,
+        "unit": "degC",
+        "hi": 120.9,
+        "lo": 119.9,
+        "weight": 1.0,
+        "source": "목표·폭: SOP S07 프로젝트 판정 폭(팀 기준)"
+      },
+      {
+        "tag": "XMEAS(8)",
+        "setpoint": 75.0,
+        "unit": "%",
+        "hi": 80.0,
+        "lo": 70.0,
+        "weight": 1.0,
+        "source": "목표·폭: SOP S07 프로젝트 판정 폭(팀 기준)"
+      },
+      {
+        "tag": "XMEAS(12)",
+        "setpoint": 50.0,
+        "unit": "%",
+        "hi": 55.0,
+        "lo": 45.0,
+        "weight": 1.0,
+        "source": "목표·폭: SOP S07 프로젝트 판정 폭(팀 기준)"
+      },
+      {
+        "tag": "XMEAS(15)",
+        "setpoint": 50.0,
+        "unit": "%",
+        "hi": 55.0,
+        "lo": 45.0,
+        "weight": 1.0,
+        "source": "목표·폭: SOP S07 프로젝트 판정 폭(팀 기준)"
+      }
+    ],
+    "reference_setpoints": {
+      "XMEAS(13)": 2633.7,
+      "XMEAS(17)": 22.949
+    },
+    "alarm_weight": 2.0,
+    "horizon_s": 14400,
+    "final_window_s": 3600,
+    "production_ratio_min": 0.99,
+    "g_mass_pct_range": [
+      45,
+      55
+    ],
+    "max_def_mol_pct": 2.0,
+    "vs_baseline": {
+      "cost_rel": 0.01,
+      "acc_abs": 0.03
+    },
+    "vs_incumbent": {
+      "cost_rel": 0.005,
+      "acc_abs": 0.02
+    },
+    "non_inferiority": {
+      "cost_rel": 0.005,
+      "acc_abs": 0.01
+    },
+    "patience": 4,
+    "max_cases": 8
+  }
+}

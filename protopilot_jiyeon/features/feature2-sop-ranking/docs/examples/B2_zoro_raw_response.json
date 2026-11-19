@@ -1,0 +1,28 @@
+{
+  "request_id": "EVT-TEP-0001-D03-ZQ",
+  "client_kind": "fake",
+  "model": "fake-zoro",
+  "endpoint": null,
+  "received_at": "2026-11-19T12:18:11.231953Z",
+  "latency_ms": 0.0,
+  "body": {
+    "answers": {
+      "next_action": {
+        "type": "choice",
+        "choice": "SIM_HOLD",
+        "confidence": 0.7,
+        "probabilities": {
+          "SIM_HOLD": 0.7,
+          "SIM_SP19_UP050": 0.0375,
+          "SIM_SP19_DN050": 0.0375,
+          "SIM_SP19_UP100": 0.0375,
+          "SIM_SP19_DN100": 0.0375,
+          "SIM_SP19_DN150": 0.0375,
+          "SIM_SP19_DN200": 0.0375,
+          "QUERY_LOOP_RELATIONS": 0.0375,
+          "REQUEST_HUMAN_REVIEW": 0.0375
+        }
+      }
+    }
+  }
+}

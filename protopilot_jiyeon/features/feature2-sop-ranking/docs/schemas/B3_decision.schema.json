@@ -1,0 +1,705 @@
+{
+  "$defs": {
+    "ControllerStep": {
+      "additionalProperties": false,
+      "description": "Studio 제어 코드로 계산한 하위 루프 즉시 변화 (측정값이 아직 그대로라는 가정).",
+      "properties": {
+        "loop": {
+          "title": "Loop",
+          "type": "string"
+        },
+        "control": {
+          "enum": [
+            "P",
+            "PI"
+          ],
+          "title": "Control",
+          "type": "string"
+        },
+        "period_s": {
+          "title": "Period S",
+          "type": "integer"
+        },
+        "target": {
+          "description": "SETPT(n) 또는 XMV(n)",
+          "title": "Target",
+          "type": "string"
+        },
+        "immediate_delta": {
+          "title": "Immediate Delta",
+          "type": "number"
+        },
+        "integral_per_run": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "오차가 유지될 때 실행 1회당 추가 변화. P 전용이면 null",
+          "title": "Integral Per Run"
+        },
+        "value_before": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "XMV 의 현재 관측값. null = 미제공",
+          "title": "Value Before"
+        },
+        "value_after": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value After"
+        }
+      },
+      "required": [
+        "loop",
+        "control",
+        "period_s",
+        "target",
+        "immediate_delta",
+        "integral_per_run"
+      ],
+      "title": "ControllerStep",
+      "type": "object"
+    },
+    "DecisionValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        },
+        "errors": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Errors",
+          "type": "array"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "allowed_option_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowed Option Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "valid",
+        "allowed_option_ids"
+      ],
+      "title": "DecisionValidation",
+      "type": "object"
+    },
+    "EvaluationSpec": {
+      "additionalProperties": false,
+      "description": "모든 case run 을 같은 기준으로 채점하도록 시뮬레이션 요청에 붙이는 평가 명세.",
+      "properties": {
+        "policy_label": {
+          "title": "Policy Label",
+          "type": "string"
+        },
+        "values_status": {
+          "enum": [
+            "example",
+            "agreed"
+          ],
+          "title": "Values Status",
+          "type": "string"
+        },
+        "horizon_s": {
+          "title": "Horizon S",
+          "type": "number"
+        },
+        "final_window_s": {
+          "title": "Final Window S",
+          "type": "number"
+        },
+        "tracked": {
+          "items": {
+            "$ref": "#/$defs/TrackedVariable"
+          },
+          "title": "Tracked",
+          "type": "array"
+        },
+        "untracked_alarm_tags": {
+          "default": [],
+          "description": "목표값이 없어 정확도에서 빠진 경보 태그",
+          "items": {
+            "type": "string"
+          },
+          "title": "Untracked Alarm Tags",
+          "type": "array"
+        },
+        "production_ratio_min": {
+          "title": "Production Ratio Min",
+          "type": "number"
+        },
+        "g_mass_pct_range": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "G Mass Pct Range",
+          "type": "array"
+        },
+        "max_def_mol_pct": {
+          "title": "Max Def Mol Pct",
+          "type": "number"
+        }
+      },
+      "required": [
+        "policy_label",
+        "values_status",
+        "horizon_s",
+        "final_window_s",
+        "tracked",
+        "production_ratio_min",
+        "g_mass_pct_range",
+        "max_def_mol_pct"
+      ],
+      "title": "EvaluationSpec",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref_type": {
+          "enum": [
+            "rag_evidence",
+            "run",
+            "comparison",
+            "observation",
+            "safety_check",
+            "policy_check"
+          ],
+          "title": "Ref Type",
+          "type": "string"
+        },
+        "ref_id": {
+          "title": "Ref Id",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "ref_type",
+        "ref_id"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "ResolvedSetpointChange": {
+      "additionalProperties": false,
+      "description": "시뮬레이터/감독기로 그대로 전달되는 변경 한 건.",
+      "properties": {
+        "setpoint_id": {
+          "title": "Setpoint Id",
+          "type": "string"
+        },
+        "scheme_index": {
+          "title": "Scheme Index",
+          "type": "integer"
+        },
+        "loop_id": {
+          "title": "Loop Id",
+          "type": "string"
+        },
+        "controlled_tag": {
+          "title": "Controlled Tag",
+          "type": "string"
+        },
+        "from_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "변경 전 값. null = 현재값 미제공",
+          "title": "From Value"
+        },
+        "from_source": {
+          "enum": [
+            "active_setpoint",
+            "unknown"
+          ],
+          "title": "From Source",
+          "type": "string"
+        },
+        "target_value": {
+          "title": "Target Value",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "apply_at_s": {
+          "title": "Apply At S",
+          "type": "number"
+        },
+        "ramp_rate_per_h": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ramp Rate Per H"
+        },
+        "allowed_min": {
+          "title": "Allowed Min",
+          "type": "number"
+        },
+        "allowed_max": {
+          "title": "Allowed Max",
+          "type": "number"
+        },
+        "controller_response": {
+          "default": [],
+          "description": "tep_control.cascade_response 계산. 현재값을 모르면 빈 목록",
+          "items": {
+            "$ref": "#/$defs/ControllerStep"
+          },
+          "title": "Controller Response",
+          "type": "array"
+        }
+      },
+      "required": [
+        "setpoint_id",
+        "scheme_index",
+        "loop_id",
+        "controlled_tag",
+        "from_value",
+        "from_source",
+        "target_value",
+        "unit",
+        "apply_at_s",
+        "ramp_rate_per_h",
+        "allowed_min",
+        "allowed_max"
+      ],
+      "title": "ResolvedSetpointChange",
+      "type": "object"
+    },
+    "SelectionDistribution": {
+      "additionalProperties": false,
+      "properties": {
+        "meaning": {
+          "const": "action_selection_distribution",
+          "default": "action_selection_distribution",
+          "title": "Meaning",
+          "type": "string"
+        },
+        "note": {
+          "default": "모델의 행동 선택 분포. 안전 확률·회복 확률·정답률이 아님",
+          "title": "Note",
+          "type": "string"
+        },
+        "probabilities": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Probabilities",
+          "type": "object"
+        },
+        "confidence": {
+          "title": "Confidence",
+          "type": "number"
+        }
+      },
+      "required": [
+        "probabilities",
+        "confidence"
+      ],
+      "title": "SelectionDistribution",
+      "type": "object"
+    },
+    "SimulatorCase": {
+      "additionalProperties": false,
+      "description": "ToolRequest 로 시뮬레이터 어댑터에 넘기는 case.",
+      "properties": {
+        "case_id": {
+          "title": "Case Id",
+          "type": "string"
+        },
+        "policy": {
+          "enum": [
+            "hold",
+            "propose_setpoint"
+          ],
+          "title": "Policy",
+          "type": "string"
+        },
+        "setpoint_changes": {
+          "items": {
+            "$ref": "#/$defs/ResolvedSetpointChange"
+          },
+          "title": "Setpoint Changes",
+          "type": "array"
+        },
+        "other_setpoints": {
+          "const": "unchanged",
+          "default": "unchanged",
+          "title": "Other Setpoints",
+          "type": "string"
+        },
+        "lower_loops_and_protection": {
+          "const": "unchanged",
+          "default": "unchanged",
+          "title": "Lower Loops And Protection",
+          "type": "string"
+        },
+        "values_status": {
+          "enum": [
+            "example",
+            "agreed"
+          ],
+          "title": "Values Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "case_id",
+        "policy",
+        "setpoint_changes",
+        "values_status"
+      ],
+      "title": "SimulatorCase",
+      "type": "object"
+    },
+    "ToolRequest": {
+      "additionalProperties": false,
+      "description": "에이전트 → 백엔드/도구. 인자는 등록된 args_template 으로만 구성된다.",
+      "properties": {
+        "tool_request_id": {
+          "title": "Tool Request Id",
+          "type": "string"
+        },
+        "decision_id": {
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "state_version": {
+          "description": "요청을 만든 시점의 상태 버전",
+          "title": "State Version",
+          "type": "integer"
+        },
+        "action_id": {
+          "title": "Action Id",
+          "type": "string"
+        },
+        "tool_name": {
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "case": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SimulatorCase"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "simulation 일 때 시뮬레이터에 넘길 대응 case"
+        },
+        "args": {
+          "additionalProperties": true,
+          "title": "Args",
+          "type": "object"
+        },
+        "evaluation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvaluationSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "simulation 채점 명세. 모든 case 에 동일"
+        },
+        "snapshot_id": {
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "issued_sim_time_s": {
+          "title": "Issued Sim Time S",
+          "type": "number"
+        }
+      },
+      "required": [
+        "tool_request_id",
+        "decision_id",
+        "event_id",
+        "state_version",
+        "action_id",
+        "tool_name",
+        "args",
+        "snapshot_id",
+        "issued_sim_time_s"
+      ],
+      "title": "ToolRequest",
+      "type": "object"
+    },
+    "TrackedVariable": {
+      "additionalProperties": false,
+      "properties": {
+        "tag": {
+          "description": "예: XMEAS(7)",
+          "title": "Tag",
+          "type": "string"
+        },
+        "setpoint": {
+          "description": "정확도 기준값(목표)",
+          "title": "Setpoint",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "hi": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "상한 경보 임계값. null = 상한 없음",
+          "title": "Hi"
+        },
+        "lo": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "하한 경보 임계값. null = 하한 없음",
+          "title": "Lo"
+        },
+        "weight": {
+          "default": 1.0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "source": {
+          "description": "목표·임계값 출처",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tag",
+        "setpoint",
+        "unit",
+        "hi",
+        "lo",
+        "source"
+      ],
+      "title": "TrackedVariable",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "원본 응답을 검증·변환한 내부 결정.",
+  "properties": {
+    "decision_id": {
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "event_id": {
+      "title": "Event Id",
+      "type": "string"
+    },
+    "state_version": {
+      "title": "State Version",
+      "type": "integer"
+    },
+    "request_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Request Id"
+    },
+    "decided_by": {
+      "enum": [
+        "zoro",
+        "policy"
+      ],
+      "title": "Decided By",
+      "type": "string"
+    },
+    "client_kind": {
+      "anyOf": [
+        {
+          "enum": [
+            "real",
+            "fake"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Client Kind"
+    },
+    "decision_kind": {
+      "enum": [
+        "tool_call",
+        "recommendation",
+        "human_review"
+      ],
+      "title": "Decision Kind",
+      "type": "string"
+    },
+    "selected_option_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "검증 통과한 선택. 거부 시 null",
+      "title": "Selected Option Id"
+    },
+    "model_choice_raw": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "모델이 실제로 고른 값(거부된 경우 포함)",
+      "title": "Model Choice Raw"
+    },
+    "action_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Action Id"
+    },
+    "tool_request": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ToolRequest"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "evidence_refs": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "selection_distribution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SelectionDistribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "validation": {
+      "$ref": "#/$defs/DecisionValidation"
+    }
+  },
+  "required": [
+    "decision_id",
+    "event_id",
+    "state_version",
+    "request_id",
+    "decided_by",
+    "client_kind",
+    "decision_kind",
+    "selected_option_id",
+    "action_id",
+    "validation"
+  ],
+  "title": "Decision",
+  "type": "object"
+}

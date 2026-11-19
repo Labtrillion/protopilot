@@ -1,0 +1,62 @@
+{
+  "format": "protopilot-scenario-1",
+  "id": "s5-shift-plan-mismatch",
+  "title": "시나리오 5. 교대 후 생산계획과 실제 생산 목표가 어긋난 상황",
+  "duration_min": 360,
+  "initial_speed": 240,
+  "events": [
+    {
+      "at_min": 30,
+      "op": "setpoint",
+      "id": "production_rate",
+      "value": 25.2,
+      "note": "이전 계획(증산 +10%)이 제어기에 남음"
+    }
+  ],
+  "context": {
+    "shift_change_min": 60,
+    "approved_plan": {
+      "production_rate": 22.95,
+      "approved_at_min": 0,
+      "note": "증산 일정 연기"
+    },
+    "setpoint_change_log": [
+      {
+        "at_min": 30,
+        "tag": "production_rate",
+        "value": 25.2,
+        "by": "이전 교대"
+      }
+    ]
+  },
+  "agent": {
+    "trigger": {
+      "after_min": 60,
+      "on": "first_alarm"
+    },
+    "candidates": [
+      "keep_current",
+      "return_to_approved"
+    ]
+  },
+  "assumptions": [
+    "증산 폭 +10% (22.95 -> 25.2 m3/h)",
+    "alarm_limits는 기본 시드에서 정상 운전 12시간 동안 알람이 0건인 범위 바로 바깥에 둔 데모 기준",
+    "증산 뒤 내려가는 스트리퍼 액위(하한 35), 반응기 냉각수 출구 온도(하한 94.1), 분리기 액위(하한 43)로 알람을 낸다",
+    "반응기 압력은 증산 뒤에도 정상 범위(최고 2709)라 기준으로 쓰지 않는다"
+  ],
+  "alarm_limits": {
+    "XMEAS(15)": [
+      35.0,
+      60.0
+    ],
+    "XMEAS(21)": [
+      94.1,
+      null
+    ],
+    "XMEAS(12)": [
+      43.0,
+      56.0
+    ]
+  }
+}

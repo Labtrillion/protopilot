@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "description": "동은 모듈의 기준/A/B 비교 결과(선택 입력). 에이전트는 자체 조건 검사와 AND 로 결합한다.",
+  "properties": {
+    "comparison_id": {
+      "title": "Comparison Id",
+      "type": "string"
+    },
+    "baseline_run_id": {
+      "title": "Baseline Run Id",
+      "type": "string"
+    },
+    "run_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Run Ids",
+      "type": "array"
+    },
+    "comparable": {
+      "title": "Comparable",
+      "type": "boolean"
+    },
+    "reasons_not_comparable": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons Not Comparable",
+      "type": "array"
+    }
+  },
+  "required": [
+    "comparison_id",
+    "baseline_run_id",
+    "run_ids",
+    "comparable"
+  ],
+  "title": "ExternalComparison",
+  "type": "object"
+}

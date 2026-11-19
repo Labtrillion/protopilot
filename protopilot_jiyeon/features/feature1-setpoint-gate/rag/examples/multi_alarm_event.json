@@ -1,0 +1,11 @@
+{
+  "event_id": "DEMO-EVT-0002",
+  "source": "synthetic_demo_fixture",
+  "alarms": [
+    {"alarm_id": "REACTOR_PRESSURE_HIGH", "tag": "XMEAS(7)", "severity": "warning"},
+    {"alarm_id": "PURGE_RATE_DEVIATION", "tag": "XMEAS(10)", "severity": "warning"}
+  ],
+  "process_state": {},
+  "simulation_context": {}
+}
+

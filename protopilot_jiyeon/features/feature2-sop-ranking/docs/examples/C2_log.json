@@ -1,0 +1,2291 @@
+[
+  {
+    "seq": 1,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 0,
+    "stage": "input_received",
+    "summary": "사건·RAG 입력 수신",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "alarms": [
+        "ALM-XMEAS7-H"
+      ],
+      "rag_candidates": [
+        [
+          "QUERY_PURGE_ANALYZER",
+          "QUERY_PURGE_ANALYZER",
+          "exact"
+        ],
+        [
+          "SIM_HOLD",
+          "SIM_HOLD",
+          "exact"
+        ],
+        [
+          "SIM_SP19_UP050",
+          "SIM_SP19_UP050",
+          "exact"
+        ],
+        [
+          "purge_b_setpoint_dn050",
+          "SIM_SP19_DN050",
+          "alias"
+        ],
+        [
+          "SIM_SP19_UP100",
+          "SIM_SP19_UP100",
+          "exact"
+        ],
+        [
+          "SIM_SP19_DN100",
+          "SIM_SP19_DN100",
+          "exact"
+        ],
+        [
+          "SIM_SP19_UP150",
+          "SIM_SP19_UP150",
+          "exact"
+        ],
+        [
+          "SIM_SP19_DN150",
+          "SIM_SP19_DN150",
+          "exact"
+        ],
+        [
+          "SIM_SP19_UP200",
+          "SIM_SP19_UP200",
+          "exact"
+        ],
+        [
+          "SIM_SP19_DN200",
+          "SIM_SP19_DN200",
+          "exact"
+        ],
+        [
+          "SIM_CHANGE_PRODUCTION_TARGET",
+          "SIM_CHANGE_PRODUCTION_TARGET",
+          "exact"
+        ],
+        [
+          "XMV(6) 100% 수동 개방",
+          null,
+          "unmapped"
+        ]
+      ],
+      "rag_warnings": [
+        "후보 'XMV(6) 100% 수동 개방': 등록 행동과 매핑되지 않음 (임의 매핑 안 함)"
+      ]
+    },
+    "sim_time_s": 21600.0,
+    "logged_at": "2026-11-19T12:18:11.222008Z"
+  },
+  {
+    "seq": 2,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 0,
+    "stage": "options_built",
+    "summary": "선택지 3개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_HOLD": {
+        "status": "deferred",
+        "reason": "input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "SIM_SP19_UP050": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "SIM_SP19_UP100": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1500s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "deferred",
+        "reason": "run_succeeded=fail: 기준 실험 결과 없음; case_selection=fail: 심슨(기준) 점수 없음; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1500s > 720s)"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21600.0,
+    "logged_at": "2026-11-19T12:18:11.225000Z"
+  },
+  {
+    "seq": 3,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 0,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D01",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "QUERY_PURGE_ANALYZER",
+        "QUERY_LOOP_RELATIONS",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21600.0,
+    "logged_at": "2026-11-19T12:18:11.226006Z"
+  },
+  {
+    "seq": 4,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 0,
+    "stage": "model_selected",
+    "summary": "선택 QUERY_PURGE_ANALYZER (tool_call)",
+    "decision_id": "EVT-TEP-0001-D01",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "QUERY_PURGE_ANALYZER": 0.7,
+        "QUERY_LOOP_RELATIONS": 0.15,
+        "REQUEST_HUMAN_REVIEW": 0.15
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21600.0,
+    "logged_at": "2026-11-19T12:18:11.226418Z"
+  },
+  {
+    "seq": 5,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 0,
+    "stage": "tool_started",
+    "summary": "sensor_query(QUERY_PURGE_ANALYZER) 시작",
+    "decision_id": "EVT-TEP-0001-D01",
+    "tool_request_id": "EVT-TEP-0001-D01-T1",
+    "run_id": null,
+    "data": {
+      "args": {
+        "event_id": "EVT-TEP-0001",
+        "sensor_ids": [
+          "XMEAS(30)"
+        ]
+      }
+    },
+    "sim_time_s": 21600.0,
+    "logged_at": "2026-11-19T12:18:11.226450Z"
+  },
+  {
+    "seq": 6,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 0,
+    "stage": "tool_succeeded",
+    "summary": "sensor_query → succeeded [가상]",
+    "decision_id": "EVT-TEP-0001-D01",
+    "tool_request_id": "EVT-TEP-0001-D01-T1",
+    "run_id": null,
+    "data": {
+      "error": null
+    },
+    "sim_time_s": 21600.0,
+    "logged_at": "2026-11-19T12:18:11.226762Z"
+  },
+  {
+    "seq": 7,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "stage": "state_updated",
+    "summary": "상태 v0→v1, 정보 갱신=False",
+    "decision_id": "EVT-TEP-0001-D01",
+    "tool_request_id": "EVT-TEP-0001-D01-T1",
+    "run_id": null,
+    "data": {
+      "notes": [
+        "XMEAS(30): 기존과 같은/더 오래된 측정(measured_at 20100s) → 갱신 아님",
+        "조회는 성공했으나 새 측정값 없음 → 정보 갱신 실패"
+      ],
+      "updated_sensors": [],
+      "comparison": null
+    },
+    "sim_time_s": 21660.0,
+    "logged_at": "2026-11-19T12:18:11.226838Z"
+  },
+  {
+    "seq": 8,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "stage": "options_built",
+    "summary": "선택지 3개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_HOLD": {
+        "status": "deferred",
+        "reason": "input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "SIM_SP19_UP050": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "SIM_SP19_UP100": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "condition:COND_PURGE_ANALYZER_FRESH=fail: XMEAS(30): 오래된 값 (age 1560s > 720s); input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "deferred",
+        "reason": "run_succeeded=fail: 기준 실험 결과 없음; case_selection=fail: 심슨(기준) 점수 없음; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2; input_fresh:XMEAS(30)=fail: XMEAS(30): 오래된 값 (age 1560s > 720s)"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21660.0,
+    "logged_at": "2026-11-19T12:18:11.228968Z"
+  },
+  {
+    "seq": 9,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D02",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "QUERY_PURGE_ANALYZER",
+        "QUERY_LOOP_RELATIONS",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21660.0,
+    "logged_at": "2026-11-19T12:18:11.229448Z"
+  },
+  {
+    "seq": 10,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "stage": "model_selected",
+    "summary": "선택 QUERY_PURGE_ANALYZER (tool_call)",
+    "decision_id": "EVT-TEP-0001-D02",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "QUERY_PURGE_ANALYZER": 0.7,
+        "QUERY_LOOP_RELATIONS": 0.15,
+        "REQUEST_HUMAN_REVIEW": 0.15
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21660.0,
+    "logged_at": "2026-11-19T12:18:11.229600Z"
+  },
+  {
+    "seq": 11,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "stage": "tool_started",
+    "summary": "sensor_query(QUERY_PURGE_ANALYZER) 시작",
+    "decision_id": "EVT-TEP-0001-D02",
+    "tool_request_id": "EVT-TEP-0001-D02-T1",
+    "run_id": null,
+    "data": {
+      "args": {
+        "event_id": "EVT-TEP-0001",
+        "sensor_ids": [
+          "XMEAS(30)"
+        ]
+      }
+    },
+    "sim_time_s": 21660.0,
+    "logged_at": "2026-11-19T12:18:11.229611Z"
+  },
+  {
+    "seq": 12,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "stage": "tool_succeeded",
+    "summary": "sensor_query → succeeded [가상]",
+    "decision_id": "EVT-TEP-0001-D02",
+    "tool_request_id": "EVT-TEP-0001-D02-T1",
+    "run_id": null,
+    "data": {
+      "error": null
+    },
+    "sim_time_s": 21660.0,
+    "logged_at": "2026-11-19T12:18:11.229661Z"
+  },
+  {
+    "seq": 13,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "stage": "state_updated",
+    "summary": "상태 v1→v2, 정보 갱신=True",
+    "decision_id": "EVT-TEP-0001-D02",
+    "tool_request_id": "EVT-TEP-0001-D02-T1",
+    "run_id": null,
+    "data": {
+      "notes": [
+        "XMEAS(30): 새 측정 반영 value=13.81 mol% @ 21780s"
+      ],
+      "updated_sensors": [
+        "XMEAS(30)"
+      ],
+      "comparison": null
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.229714Z"
+  },
+  {
+    "seq": 14,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "stage": "options_built",
+    "summary": "선택지 9개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "excluded",
+        "reason": "query_needed=fail: 대상 센서가 모두 최신"
+      },
+      "SIM_HOLD": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP050": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_DN050": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP100": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_DN100": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "deferred",
+        "reason": "run_succeeded=fail: 기준 실험 결과 없음; case_selection=fail: 심슨(기준) 점수 없음"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 심슨(기준) 점수 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); baseline_run=fail: 기준 실험(SIM_HOLD) 없음; min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.231652Z"
+  },
+  {
+    "seq": 15,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D03",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "SIM_HOLD",
+        "SIM_SP19_UP050",
+        "SIM_SP19_DN050",
+        "SIM_SP19_UP100",
+        "SIM_SP19_DN100",
+        "SIM_SP19_DN150",
+        "SIM_SP19_DN200",
+        "QUERY_LOOP_RELATIONS",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.231920Z"
+  },
+  {
+    "seq": 16,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "stage": "model_selected",
+    "summary": "선택 SIM_HOLD (tool_call)",
+    "decision_id": "EVT-TEP-0001-D03",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "SIM_HOLD": 0.7,
+        "SIM_SP19_UP050": 0.0375,
+        "SIM_SP19_DN050": 0.0375,
+        "SIM_SP19_UP100": 0.0375,
+        "SIM_SP19_DN100": 0.0375,
+        "SIM_SP19_DN150": 0.0375,
+        "SIM_SP19_DN200": 0.0375,
+        "QUERY_LOOP_RELATIONS": 0.0375,
+        "REQUEST_HUMAN_REVIEW": 0.0375
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.232115Z"
+  },
+  {
+    "seq": 17,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "stage": "tool_started",
+    "summary": "run_simulation(SIM_HOLD) 시작",
+    "decision_id": "EVT-TEP-0001-D03",
+    "tool_request_id": "EVT-TEP-0001-D03-T1",
+    "run_id": null,
+    "data": {
+      "args": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "horizon_s": 14400,
+        "composition_sample_id": "PURGE-0117"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.232140Z"
+  },
+  {
+    "seq": 18,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "stage": "tool_succeeded",
+    "summary": "run_simulation → succeeded [가상]",
+    "decision_id": "EVT-TEP-0001-D03",
+    "tool_request_id": "EVT-TEP-0001-D03-T1",
+    "run_id": null,
+    "data": {
+      "error": null
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.232309Z"
+  },
+  {
+    "seq": 19,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "stage": "state_updated",
+    "summary": "상태 v2→v3, 정보 갱신=True",
+    "decision_id": "EVT-TEP-0001-D03",
+    "tool_request_id": "EVT-TEP-0001-D03-T1",
+    "run_id": "RUN-001-SIM_HOLD",
+    "data": {
+      "notes": [
+        "[가상 예측] 실험 RUN-001-SIM_HOLD 결과·후속 영향 반영"
+      ],
+      "updated_sensors": [],
+      "comparison": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "baseline_run_id": "RUN-001-SIM_HOLD",
+        "comparable_run_ids": [],
+        "not_comparable": {},
+        "metric_deltas": {},
+        "comparable": false
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.232372Z"
+  },
+  {
+    "seq": 20,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "stage": "options_built",
+    "summary": "선택지 8개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "excluded",
+        "reason": "query_needed=fail: 대상 센서가 모두 최신"
+      },
+      "SIM_HOLD": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP050": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_DN050": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP100": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_DN100": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 0/2"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.240174Z"
+  },
+  {
+    "seq": 21,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D04",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "SIM_SP19_UP050",
+        "SIM_SP19_DN050",
+        "SIM_SP19_UP100",
+        "SIM_SP19_DN100",
+        "SIM_SP19_DN150",
+        "SIM_SP19_DN200",
+        "QUERY_LOOP_RELATIONS",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.241040Z"
+  },
+  {
+    "seq": 22,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "stage": "model_selected",
+    "summary": "선택 SIM_SP19_UP050 (tool_call)",
+    "decision_id": "EVT-TEP-0001-D04",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "SIM_SP19_UP050": 0.7,
+        "SIM_SP19_DN050": 0.0429,
+        "SIM_SP19_UP100": 0.0429,
+        "SIM_SP19_DN100": 0.0429,
+        "SIM_SP19_DN150": 0.0429,
+        "SIM_SP19_DN200": 0.0429,
+        "QUERY_LOOP_RELATIONS": 0.0429,
+        "REQUEST_HUMAN_REVIEW": 0.0429
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.241300Z"
+  },
+  {
+    "seq": 23,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "stage": "tool_started",
+    "summary": "run_simulation(SIM_SP19_UP050) 시작",
+    "decision_id": "EVT-TEP-0001-D04",
+    "tool_request_id": "EVT-TEP-0001-D04-T1",
+    "run_id": null,
+    "data": {
+      "args": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "horizon_s": 14400,
+        "composition_sample_id": "PURGE-0117"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.241313Z"
+  },
+  {
+    "seq": 24,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "stage": "tool_succeeded",
+    "summary": "run_simulation → succeeded [가상]",
+    "decision_id": "EVT-TEP-0001-D04",
+    "tool_request_id": "EVT-TEP-0001-D04-T1",
+    "run_id": null,
+    "data": {
+      "error": null
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.241450Z"
+  },
+  {
+    "seq": 25,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "stage": "state_updated",
+    "summary": "상태 v3→v4, 정보 갱신=True",
+    "decision_id": "EVT-TEP-0001-D04",
+    "tool_request_id": "EVT-TEP-0001-D04-T1",
+    "run_id": "RUN-002-SIM_SP19_UP050",
+    "data": {
+      "notes": [
+        "[가상 예측] 실험 RUN-002-SIM_SP19_UP050 결과·후속 영향 반영"
+      ],
+      "updated_sensors": [],
+      "comparison": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "baseline_run_id": "RUN-001-SIM_HOLD",
+        "comparable_run_ids": [
+          "RUN-002-SIM_SP19_UP050"
+        ],
+        "not_comparable": {},
+        "metric_deltas": {
+          "RUN-002-SIM_SP19_UP050": {
+            "usd_per_m3": -0.04,
+            "tracking_accuracy": -0.12,
+            "product_m3": 0.1,
+            "cost_total_usd": -2.9
+          }
+        },
+        "comparable": true
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.241514Z"
+  },
+  {
+    "seq": 26,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "stage": "options_built",
+    "summary": "선택지 7개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "excluded",
+        "reason": "query_needed=fail: 대상 센서가 모두 최신"
+      },
+      "SIM_HOLD": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_DN050": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP100": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_DN100": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; min_candidate_runs=fail: 비교 가능 후보 1/2; alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 1/2"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 1/2"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 1/2"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 1/2"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 1/2"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 1/2"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 아직 심슨을 이긴 case 없음; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패); min_candidate_runs=fail: 비교 가능 후보 1/2"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.247987Z"
+  },
+  {
+    "seq": 27,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D05",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "SIM_SP19_DN050",
+        "SIM_SP19_UP100",
+        "SIM_SP19_DN100",
+        "SIM_SP19_DN150",
+        "SIM_SP19_DN200",
+        "QUERY_LOOP_RELATIONS",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.248737Z"
+  },
+  {
+    "seq": 28,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "stage": "model_selected",
+    "summary": "선택 SIM_SP19_DN050 (tool_call)",
+    "decision_id": "EVT-TEP-0001-D05",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "SIM_SP19_DN050": 0.7,
+        "SIM_SP19_UP100": 0.05,
+        "SIM_SP19_DN100": 0.05,
+        "SIM_SP19_DN150": 0.05,
+        "SIM_SP19_DN200": 0.05,
+        "QUERY_LOOP_RELATIONS": 0.05,
+        "REQUEST_HUMAN_REVIEW": 0.05
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.248972Z"
+  },
+  {
+    "seq": 29,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "stage": "tool_started",
+    "summary": "run_simulation(SIM_SP19_DN050) 시작",
+    "decision_id": "EVT-TEP-0001-D05",
+    "tool_request_id": "EVT-TEP-0001-D05-T1",
+    "run_id": null,
+    "data": {
+      "args": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "horizon_s": 14400,
+        "composition_sample_id": "PURGE-0117"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.248982Z"
+  },
+  {
+    "seq": 30,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "stage": "tool_succeeded",
+    "summary": "run_simulation → succeeded [가상]",
+    "decision_id": "EVT-TEP-0001-D05",
+    "tool_request_id": "EVT-TEP-0001-D05-T1",
+    "run_id": null,
+    "data": {
+      "error": null
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.249099Z"
+  },
+  {
+    "seq": 31,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "stage": "state_updated",
+    "summary": "상태 v4→v5, 정보 갱신=True",
+    "decision_id": "EVT-TEP-0001-D05",
+    "tool_request_id": "EVT-TEP-0001-D05-T1",
+    "run_id": "RUN-003-SIM_SP19_DN050",
+    "data": {
+      "notes": [
+        "[가상 예측] 실험 RUN-003-SIM_SP19_DN050 결과·후속 영향 반영"
+      ],
+      "updated_sensors": [],
+      "comparison": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "baseline_run_id": "RUN-001-SIM_HOLD",
+        "comparable_run_ids": [
+          "RUN-002-SIM_SP19_UP050",
+          "RUN-003-SIM_SP19_DN050"
+        ],
+        "not_comparable": {},
+        "metric_deltas": {
+          "RUN-002-SIM_SP19_UP050": {
+            "usd_per_m3": -0.04,
+            "tracking_accuracy": -0.12,
+            "product_m3": 0.1,
+            "cost_total_usd": -2.9
+          },
+          "RUN-003-SIM_SP19_DN050": {
+            "usd_per_m3": 0.04,
+            "tracking_accuracy": 0.22,
+            "product_m3": -0.1,
+            "cost_total_usd": 2.9
+          }
+        },
+        "comparable": true
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.249174Z"
+  },
+  {
+    "seq": 32,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "stage": "options_built",
+    "summary": "선택지 6개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "excluded",
+        "reason": "query_needed=fail: 대상 센서가 모두 최신"
+      },
+      "SIM_HOLD": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_DN050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP100": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_DN100": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.256066Z"
+  },
+  {
+    "seq": 33,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D06",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "SIM_SP19_UP100",
+        "SIM_SP19_DN100",
+        "SIM_SP19_DN150",
+        "SIM_SP19_DN200",
+        "QUERY_LOOP_RELATIONS",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.257357Z"
+  },
+  {
+    "seq": 34,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "stage": "model_selected",
+    "summary": "선택 SIM_SP19_UP100 (tool_call)",
+    "decision_id": "EVT-TEP-0001-D06",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "SIM_SP19_UP100": 0.7,
+        "SIM_SP19_DN100": 0.06,
+        "SIM_SP19_DN150": 0.06,
+        "SIM_SP19_DN200": 0.06,
+        "QUERY_LOOP_RELATIONS": 0.06,
+        "REQUEST_HUMAN_REVIEW": 0.06
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.257645Z"
+  },
+  {
+    "seq": 35,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "stage": "tool_started",
+    "summary": "run_simulation(SIM_SP19_UP100) 시작",
+    "decision_id": "EVT-TEP-0001-D06",
+    "tool_request_id": "EVT-TEP-0001-D06-T1",
+    "run_id": null,
+    "data": {
+      "args": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "horizon_s": 14400,
+        "composition_sample_id": "PURGE-0117"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.257657Z"
+  },
+  {
+    "seq": 36,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "stage": "tool_succeeded",
+    "summary": "run_simulation → succeeded [가상]",
+    "decision_id": "EVT-TEP-0001-D06",
+    "tool_request_id": "EVT-TEP-0001-D06-T1",
+    "run_id": null,
+    "data": {
+      "error": null
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.257798Z"
+  },
+  {
+    "seq": 37,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "stage": "state_updated",
+    "summary": "상태 v5→v6, 정보 갱신=True",
+    "decision_id": "EVT-TEP-0001-D06",
+    "tool_request_id": "EVT-TEP-0001-D06-T1",
+    "run_id": "RUN-004-SIM_SP19_UP100",
+    "data": {
+      "notes": [
+        "[가상 예측] 실험 RUN-004-SIM_SP19_UP100 결과·후속 영향 반영"
+      ],
+      "updated_sensors": [],
+      "comparison": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "baseline_run_id": "RUN-001-SIM_HOLD",
+        "comparable_run_ids": [
+          "RUN-002-SIM_SP19_UP050",
+          "RUN-003-SIM_SP19_DN050",
+          "RUN-004-SIM_SP19_UP100"
+        ],
+        "not_comparable": {},
+        "metric_deltas": {
+          "RUN-002-SIM_SP19_UP050": {
+            "usd_per_m3": -0.04,
+            "tracking_accuracy": -0.12,
+            "product_m3": 0.1,
+            "cost_total_usd": -2.9
+          },
+          "RUN-003-SIM_SP19_DN050": {
+            "usd_per_m3": 0.04,
+            "tracking_accuracy": 0.22,
+            "product_m3": -0.1,
+            "cost_total_usd": 2.9
+          },
+          "RUN-004-SIM_SP19_UP100": {
+            "usd_per_m3": -0.07,
+            "tracking_accuracy": -0.19,
+            "product_m3": 0.2,
+            "cost_total_usd": -4.9
+          }
+        },
+        "comparable": true
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.257881Z"
+  },
+  {
+    "seq": 38,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "stage": "options_built",
+    "summary": "선택지 5개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "excluded",
+        "reason": "query_needed=fail: 대상 센서가 모두 최신"
+      },
+      "SIM_HOLD": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_DN050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP100": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_DN100": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 1/4"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 1/4; alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 1/4"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 1/4; alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 1/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 1/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 1/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 1/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 1/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.263677Z"
+  },
+  {
+    "seq": 39,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D07",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "SIM_SP19_DN100",
+        "SIM_SP19_DN150",
+        "SIM_SP19_DN200",
+        "QUERY_LOOP_RELATIONS",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.264422Z"
+  },
+  {
+    "seq": 40,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "stage": "model_selected",
+    "summary": "선택 SIM_SP19_DN100 (tool_call)",
+    "decision_id": "EVT-TEP-0001-D07",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "SIM_SP19_DN100": 0.7,
+        "SIM_SP19_DN150": 0.075,
+        "SIM_SP19_DN200": 0.075,
+        "QUERY_LOOP_RELATIONS": 0.075,
+        "REQUEST_HUMAN_REVIEW": 0.075
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.264651Z"
+  },
+  {
+    "seq": 41,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "stage": "tool_started",
+    "summary": "run_simulation(SIM_SP19_DN100) 시작",
+    "decision_id": "EVT-TEP-0001-D07",
+    "tool_request_id": "EVT-TEP-0001-D07-T1",
+    "run_id": null,
+    "data": {
+      "args": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "horizon_s": 14400,
+        "composition_sample_id": "PURGE-0117"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.264661Z"
+  },
+  {
+    "seq": 42,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "stage": "tool_succeeded",
+    "summary": "run_simulation → succeeded [가상]",
+    "decision_id": "EVT-TEP-0001-D07",
+    "tool_request_id": "EVT-TEP-0001-D07-T1",
+    "run_id": null,
+    "data": {
+      "error": null
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.264780Z"
+  },
+  {
+    "seq": 43,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "stage": "state_updated",
+    "summary": "상태 v6→v7, 정보 갱신=True",
+    "decision_id": "EVT-TEP-0001-D07",
+    "tool_request_id": "EVT-TEP-0001-D07-T1",
+    "run_id": "RUN-005-SIM_SP19_DN100",
+    "data": {
+      "notes": [
+        "[가상 예측] 실험 RUN-005-SIM_SP19_DN100 결과·후속 영향 반영"
+      ],
+      "updated_sensors": [],
+      "comparison": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "baseline_run_id": "RUN-001-SIM_HOLD",
+        "comparable_run_ids": [
+          "RUN-002-SIM_SP19_UP050",
+          "RUN-003-SIM_SP19_DN050",
+          "RUN-004-SIM_SP19_UP100",
+          "RUN-005-SIM_SP19_DN100"
+        ],
+        "not_comparable": {},
+        "metric_deltas": {
+          "RUN-002-SIM_SP19_UP050": {
+            "usd_per_m3": -0.04,
+            "tracking_accuracy": -0.12,
+            "product_m3": 0.1,
+            "cost_total_usd": -2.9
+          },
+          "RUN-003-SIM_SP19_DN050": {
+            "usd_per_m3": 0.04,
+            "tracking_accuracy": 0.22,
+            "product_m3": -0.1,
+            "cost_total_usd": 2.9
+          },
+          "RUN-004-SIM_SP19_UP100": {
+            "usd_per_m3": -0.07,
+            "tracking_accuracy": -0.19,
+            "product_m3": 0.2,
+            "cost_total_usd": -4.9
+          },
+          "RUN-005-SIM_SP19_DN100": {
+            "usd_per_m3": 0.1,
+            "tracking_accuracy": 0.25,
+            "product_m3": -0.3,
+            "cost_total_usd": 6.85
+          }
+        },
+        "comparable": true
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.264867Z"
+  },
+  {
+    "seq": 44,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "stage": "options_built",
+    "summary": "선택지 4개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "excluded",
+        "reason": "query_needed=fail: 대상 센서가 모두 최신"
+      },
+      "SIM_HOLD": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_DN050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP100": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_DN100": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 2/4"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 2/4; alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 2/4"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 2/4; alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 2/4"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 2/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 2/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 2/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 2/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.270735Z"
+  },
+  {
+    "seq": 45,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D08",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "SIM_SP19_DN150",
+        "SIM_SP19_DN200",
+        "QUERY_LOOP_RELATIONS",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.271499Z"
+  },
+  {
+    "seq": 46,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "stage": "model_selected",
+    "summary": "선택 SIM_SP19_DN150 (tool_call)",
+    "decision_id": "EVT-TEP-0001-D08",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "SIM_SP19_DN150": 0.7,
+        "SIM_SP19_DN200": 0.1,
+        "QUERY_LOOP_RELATIONS": 0.1,
+        "REQUEST_HUMAN_REVIEW": 0.1
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.271725Z"
+  },
+  {
+    "seq": 47,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "stage": "tool_started",
+    "summary": "run_simulation(SIM_SP19_DN150) 시작",
+    "decision_id": "EVT-TEP-0001-D08",
+    "tool_request_id": "EVT-TEP-0001-D08-T1",
+    "run_id": null,
+    "data": {
+      "args": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "horizon_s": 14400,
+        "composition_sample_id": "PURGE-0117"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.271736Z"
+  },
+  {
+    "seq": 48,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "stage": "tool_succeeded",
+    "summary": "run_simulation → succeeded [가상]",
+    "decision_id": "EVT-TEP-0001-D08",
+    "tool_request_id": "EVT-TEP-0001-D08-T1",
+    "run_id": null,
+    "data": {
+      "error": null
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.271856Z"
+  },
+  {
+    "seq": 49,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "stage": "state_updated",
+    "summary": "상태 v7→v8, 정보 갱신=True",
+    "decision_id": "EVT-TEP-0001-D08",
+    "tool_request_id": "EVT-TEP-0001-D08-T1",
+    "run_id": "RUN-006-SIM_SP19_DN150",
+    "data": {
+      "notes": [
+        "[가상 예측] 실험 RUN-006-SIM_SP19_DN150 결과·후속 영향 반영"
+      ],
+      "updated_sensors": [],
+      "comparison": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "baseline_run_id": "RUN-001-SIM_HOLD",
+        "comparable_run_ids": [
+          "RUN-002-SIM_SP19_UP050",
+          "RUN-003-SIM_SP19_DN050",
+          "RUN-004-SIM_SP19_UP100",
+          "RUN-005-SIM_SP19_DN100",
+          "RUN-006-SIM_SP19_DN150"
+        ],
+        "not_comparable": {},
+        "metric_deltas": {
+          "RUN-002-SIM_SP19_UP050": {
+            "usd_per_m3": -0.04,
+            "tracking_accuracy": -0.12,
+            "product_m3": 0.1,
+            "cost_total_usd": -2.9
+          },
+          "RUN-003-SIM_SP19_DN050": {
+            "usd_per_m3": 0.04,
+            "tracking_accuracy": 0.22,
+            "product_m3": -0.1,
+            "cost_total_usd": 2.9
+          },
+          "RUN-004-SIM_SP19_UP100": {
+            "usd_per_m3": -0.07,
+            "tracking_accuracy": -0.19,
+            "product_m3": 0.2,
+            "cost_total_usd": -4.9
+          },
+          "RUN-005-SIM_SP19_DN100": {
+            "usd_per_m3": 0.1,
+            "tracking_accuracy": 0.25,
+            "product_m3": -0.3,
+            "cost_total_usd": 6.85
+          },
+          "RUN-006-SIM_SP19_DN150": {
+            "usd_per_m3": 0.21,
+            "tracking_accuracy": 0.26,
+            "product_m3": -0.6,
+            "cost_total_usd": 14.54
+          }
+        },
+        "comparable": true
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.271952Z"
+  },
+  {
+    "seq": 50,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "stage": "options_built",
+    "summary": "선택지 3개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "excluded",
+        "reason": "query_needed=fail: 대상 센서가 모두 최신"
+      },
+      "SIM_HOLD": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_DN050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP100": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_DN100": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 3/4"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 3/4; alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 3/4"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 3/4; alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 3/4"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 3/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 3/4"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 3/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 3/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.276402Z"
+  },
+  {
+    "seq": 51,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D09",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "SIM_SP19_DN200",
+        "QUERY_LOOP_RELATIONS",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.277192Z"
+  },
+  {
+    "seq": 52,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "stage": "model_selected",
+    "summary": "선택 SIM_SP19_DN200 (tool_call)",
+    "decision_id": "EVT-TEP-0001-D09",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "SIM_SP19_DN200": 0.7,
+        "QUERY_LOOP_RELATIONS": 0.15,
+        "REQUEST_HUMAN_REVIEW": 0.15
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.277402Z"
+  },
+  {
+    "seq": 53,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "stage": "tool_started",
+    "summary": "run_simulation(SIM_SP19_DN200) 시작",
+    "decision_id": "EVT-TEP-0001-D09",
+    "tool_request_id": "EVT-TEP-0001-D09-T1",
+    "run_id": null,
+    "data": {
+      "args": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "horizon_s": 14400,
+        "composition_sample_id": "PURGE-0117"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.277413Z"
+  },
+  {
+    "seq": 54,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "stage": "tool_succeeded",
+    "summary": "run_simulation → succeeded [가상]",
+    "decision_id": "EVT-TEP-0001-D09",
+    "tool_request_id": "EVT-TEP-0001-D09-T1",
+    "run_id": null,
+    "data": {
+      "error": null
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.277536Z"
+  },
+  {
+    "seq": 55,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 9,
+    "stage": "state_updated",
+    "summary": "상태 v8→v9, 정보 갱신=True",
+    "decision_id": "EVT-TEP-0001-D09",
+    "tool_request_id": "EVT-TEP-0001-D09-T1",
+    "run_id": "RUN-007-SIM_SP19_DN200",
+    "data": {
+      "notes": [
+        "[가상 예측] 실험 RUN-007-SIM_SP19_DN200 결과·후속 영향 반영"
+      ],
+      "updated_sensors": [],
+      "comparison": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "baseline_run_id": "RUN-001-SIM_HOLD",
+        "comparable_run_ids": [
+          "RUN-002-SIM_SP19_UP050",
+          "RUN-003-SIM_SP19_DN050",
+          "RUN-004-SIM_SP19_UP100",
+          "RUN-005-SIM_SP19_DN100",
+          "RUN-006-SIM_SP19_DN150",
+          "RUN-007-SIM_SP19_DN200"
+        ],
+        "not_comparable": {},
+        "metric_deltas": {
+          "RUN-002-SIM_SP19_UP050": {
+            "usd_per_m3": -0.04,
+            "tracking_accuracy": -0.12,
+            "product_m3": 0.1,
+            "cost_total_usd": -2.9
+          },
+          "RUN-003-SIM_SP19_DN050": {
+            "usd_per_m3": 0.04,
+            "tracking_accuracy": 0.22,
+            "product_m3": -0.1,
+            "cost_total_usd": 2.9
+          },
+          "RUN-004-SIM_SP19_UP100": {
+            "usd_per_m3": -0.07,
+            "tracking_accuracy": -0.19,
+            "product_m3": 0.2,
+            "cost_total_usd": -4.9
+          },
+          "RUN-005-SIM_SP19_DN100": {
+            "usd_per_m3": 0.1,
+            "tracking_accuracy": 0.25,
+            "product_m3": -0.3,
+            "cost_total_usd": 6.85
+          },
+          "RUN-006-SIM_SP19_DN150": {
+            "usd_per_m3": 0.21,
+            "tracking_accuracy": 0.26,
+            "product_m3": -0.6,
+            "cost_total_usd": 14.54
+          },
+          "RUN-007-SIM_SP19_DN200": {
+            "usd_per_m3": 0.33,
+            "tracking_accuracy": 0.27,
+            "product_m3": -1.4,
+            "cost_total_usd": 19.1
+          }
+        },
+        "comparable": true
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.277634Z"
+  },
+  {
+    "seq": 56,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 9,
+    "stage": "options_built",
+    "summary": "선택지 3개 허용",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "UNMAPPED:XMV(6) 100% 수동 개방": {
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      "QUERY_PURGE_ANALYZER": {
+        "status": "excluded",
+        "reason": "query_needed=fail: 대상 센서가 모두 최신"
+      },
+      "SIM_HOLD": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      "SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료; case_search_open=fail: case 탐색 종료(select_case): RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "SIM_SP19_DN050": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료; case_search_open=fail: case 탐색 종료(select_case): RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "SIM_SP19_UP100": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료; case_search_open=fail: case 탐색 종료(select_case): RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "SIM_SP19_DN100": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료; case_search_open=fail: case 탐색 종료(select_case): RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_search_open=fail: case 탐색 종료(select_case): RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "SIM_SP19_DN150": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료; case_search_open=fail: case 탐색 종료(select_case): RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_search_open=fail: case 탐색 종료(select_case): RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "SIM_SP19_DN200": {
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료; case_search_open=fail: case 탐색 종료(select_case): RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "SIM_CHANGE_PRODUCTION_TARGET": {
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      "QUERY_LOOP_RELATIONS": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_HOLD": {
+        "status": "excluded",
+        "reason": "case_selection=fail: select_case: RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "RECOMMEND:SIM_SP19_UP050": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 선정 결과 select_case / SIM_SP19_DN050: RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4); alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN050": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      },
+      "RECOMMEND:SIM_SP19_UP100": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 선정 결과 select_case / SIM_SP19_DN050: RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4); alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      "RECOMMEND:SIM_SP19_DN100": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 선정 결과 select_case / SIM_SP19_DN050: RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "RECOMMEND:SIM_SP19_UP150": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 선정 결과 select_case / SIM_SP19_DN050: RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4); run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN150": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 선정 결과 select_case / SIM_SP19_DN050: RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "RECOMMEND:SIM_SP19_UP200": {
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 선정 결과 select_case / SIM_SP19_DN050: RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4); run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      "RECOMMEND:SIM_SP19_DN200": {
+        "status": "excluded",
+        "reason": "case_selection=fail: 선정 결과 select_case / SIM_SP19_DN050: RUN-003-SIM_SP19_DN050 이후 4개 case 가 모두 이기지 못함(patience 4)"
+      },
+      "REQUEST_HUMAN_REVIEW": {
+        "status": "open",
+        "reason": "모든 검사 통과"
+      }
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.281996Z"
+  },
+  {
+    "seq": 57,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 9,
+    "stage": "model_requested",
+    "summary": "Zoro 호출 (fake)",
+    "decision_id": "EVT-TEP-0001-D10",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "allowed": [
+        "QUERY_LOOP_RELATIONS",
+        "RECOMMEND:SIM_SP19_DN050",
+        "REQUEST_HUMAN_REVIEW"
+      ],
+      "client_kind": "fake"
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.282892Z"
+  },
+  {
+    "seq": 58,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 9,
+    "stage": "model_selected",
+    "summary": "선택 RECOMMEND:SIM_SP19_DN050 (recommendation)",
+    "decision_id": "EVT-TEP-0001-D10",
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "distribution": {
+        "RECOMMEND:SIM_SP19_DN050": 0.7,
+        "QUERY_LOOP_RELATIONS": 0.15,
+        "REQUEST_HUMAN_REVIEW": 0.15
+      },
+      "warnings": []
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.283035Z"
+  },
+  {
+    "seq": 59,
+    "event_id": "EVT-TEP-0001",
+    "state_version": 9,
+    "stage": "terminated",
+    "summary": "종료: recommendation_ready → recommendation",
+    "decision_id": null,
+    "tool_request_id": null,
+    "run_id": null,
+    "data": {
+      "detail": ""
+    },
+    "sim_time_s": 21840.0,
+    "logged_at": "2026-11-19T12:18:11.283627Z"
+  }
+]

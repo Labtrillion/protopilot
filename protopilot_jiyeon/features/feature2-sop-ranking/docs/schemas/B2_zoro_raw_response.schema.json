@@ -1,0 +1,70 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "title": "Request Id",
+      "type": "string"
+    },
+    "client_kind": {
+      "enum": [
+        "real",
+        "fake"
+      ],
+      "title": "Client Kind",
+      "type": "string"
+    },
+    "model": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Model"
+    },
+    "endpoint": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Endpoint"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "latency_ms": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Latency Ms"
+    },
+    "body": {
+      "description": "모델/서버가 돌려준 원본 JSON 그대로 (수정·보강 금지)",
+      "title": "Body"
+    }
+  },
+  "required": [
+    "request_id",
+    "client_kind",
+    "received_at",
+    "body"
+  ],
+  "title": "ZoroRawResponse",
+  "type": "object"
+}

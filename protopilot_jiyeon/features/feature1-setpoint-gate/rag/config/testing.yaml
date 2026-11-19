@@ -1,0 +1,22 @@
+knowledge_base: zoro_rag_knowledge
+index:
+  path: .zoro_test_index/qdrant
+  collection: zoro_test
+  manifest: .zoro_test_index/manifest.json
+  chunks: .zoro_test_index/chunks.jsonl
+  url: null
+  api_key: null
+chunking: {target_tokens: 450, max_tokens: 650, overlap_tokens: 60}
+models:
+  dense_model: BAAI/bge-m3
+  sparse_model: Qdrant/bm25
+  reranker_model: Qwen/Qwen3-Reranker-0.6B
+  device: cpu
+  batch_size: 16
+  cache_dir: null
+  reranker_enabled: false
+  testing_hash_embeddings: true
+retrieval: {dense_top_k: 20, sparse_top_k: 20, fused_top_k: 15, final_top_k: 5, rrf_k: 60, safety_coverage: true}
+alarm: {stale_after_seconds: 300, use_simulation_disturbance_id: false}
+
+simulator: tep_studio_braatz

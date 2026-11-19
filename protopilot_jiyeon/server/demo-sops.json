@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TEP-COOL-01",
+    "revision": 1,
+    "title": "반응기 냉각 이상",
+    "tags": ["XMEAS(9)", "XMEASADD(5)", "XMEASADD(6)", "XMV(10)"],
+    "checks": [
+      "반응기 온도와 냉각수 입구 온도의 추세를 대조합니다.",
+      "냉각수 밸브 명령, 실제 개도, 냉각수 유량이 함께 움직였는지 확인합니다.",
+      "감량 검토 시 반응기 최고 온도·압력, 후단 분리기 액위, 제품 유량을 함께 비교합니다."
+    ],
+    "diagnoses": {
+      "inlet": "냉각수 입구 온도 변동 우선 확인",
+      "valve": "냉각수 밸브·유량 응답 우선 확인",
+      "combined": "입구 온도와 밸브·유량 응답을 함께 확인",
+      "insufficient": "관측 근거가 부족해 원인 판단 보류"
+    },
+    "candidates": ["hold", "reduce_now", "reduce_30", "reduce_60"]
+  },
+  {
+    "id": "TEP-PRESSURE-01",
+    "revision": 1,
+    "title": "반응기 압력 상한",
+    "tags": ["XMEAS(7)"],
+    "side": "high",
+    "source_title": "Downs·Vogel TEP 벤치마크 · 표 6",
+    "source_url": "https://doi.org/10.1016/0098-1354(93)80018-I",
+    "checks": [
+      "압력 계측값과 알람 기준을 확인합니다. 센서 시험으로 발생한 알람은 모델 계측과 대조합니다.",
+      "공정 계측에서 발생한 경우 반응기 온도와 후단 분리기 액위도 확인합니다.",
+      "유지와 감량을 비교할 때 모델 트립과 정상 운전 범위 이탈 시간을 먼저 봅니다."
+    ],
+    "diagnoses": {
+      "verify_signal": "압력 계측의 신뢰성 우선 확인",
+      "verify_process": "반응기 압력과 연관 공정 계측을 함께 확인",
+      "insufficient": "관측 근거가 부족해 원인 판단 보류"
+    },
+    "candidates": ["hold", "reduce_now"]
+  },
+  {
+    "id": "TEP-TRIP-01",
+    "revision": 1,
+    "title": "모델 보호 정지 확인",
+    "kind": "trip",
+    "source_title": "Downs·Vogel TEP 벤치마크 · 표 6",
+    "source_url": "https://doi.org/10.1016/0098-1354(93)80018-I",
+    "checks": [
+      "정지를 일으킨 태그와 커널의 정지 메시지를 확인합니다.",
+      "대응을 비교하려면 정지 전 알람의 상태에서 분기합니다."
+    ]
+  }
+]

@@ -1,0 +1,576 @@
+{
+  "event_id": "TEP-EVT-0001",
+  "status": "evidence_retrieved",
+  "alarm_context": {
+    "active_alarms": [
+      {
+        "alarm_id": "XMEAS7_HI",
+        "normalized_tag": "XMEAS_7",
+        "variable_definition": "Reactor Pressure",
+        "severity": "HI",
+        "current_value": 2905.0,
+        "unit": "kPa(g)",
+        "equipment": null,
+        "stale": false,
+        "timestamp": null,
+        "threshold": 2895.0,
+        "direction": "high",
+        "measured_at": "1970-01-01T01:00:00Z",
+        "quality": "unknown",
+        "sample_id": null,
+        "activated_at": "1970-01-01T01:00:00Z",
+        "deadband_clear_value": null,
+        "facts": [
+          "Observed alarm XMEAS7_HI with severity HI.",
+          "Observed XMEAS7 = 2905.0 kPa(g)."
+        ]
+      }
+    ],
+    "observed_variables": {
+      "XMEAS_7": 2905.0,
+      "XMEAS_9": 145.0,
+      "XMV_10": 42.0
+    },
+    "event_timestamp": "1970-01-01T01:00:00Z",
+    "snapshot_id": null,
+    "active_objective": null,
+    "measurements": {
+      "XMEAS_7": {
+        "value": 2905.0,
+        "unit": null,
+        "measured_at": null,
+        "quality": "unknown",
+        "sample_id": null,
+        "stale": null
+      },
+      "XMEAS_9": {
+        "value": 145.0,
+        "unit": null,
+        "measured_at": null,
+        "quality": "unknown",
+        "sample_id": null,
+        "stale": null
+      },
+      "XMV_10": {
+        "value": 42.0,
+        "unit": null,
+        "measured_at": null,
+        "quality": "unknown",
+        "sample_id": null,
+        "stale": null
+      }
+    },
+    "simulation_context": {},
+    "known_disturbances": [],
+    "hypothesized_disturbances": [],
+    "affected_equipment": [
+      "reactor"
+    ],
+    "missing_information": [
+      "Measurement quality for XMEAS7_HI is unknown; do not assume a reliable observation.",
+      "Measurement quality for XMEAS_7 is unknown; do not assume a reliable observation.",
+      "No measurement unit supplied for XMEAS_7.",
+      "No measurement time supplied for XMEAS_7; freshness is unknown.",
+      "Measurement quality for XMEAS_9 is unknown; do not assume a reliable observation.",
+      "No measurement unit supplied for XMEAS_9.",
+      "No measurement time supplied for XMEAS_9; freshness is unknown.",
+      "Measurement quality for XMV_10 is unknown; do not assume a reliable observation.",
+      "No measurement unit supplied for XMV_10.",
+      "No measurement time supplied for XMV_10; freshness is unknown."
+    ],
+    "retrieval_priorities": [
+      "alarm interpretation",
+      "variable definitions",
+      "possible causes",
+      "process relationships",
+      "operating constraints"
+    ],
+    "recent_changes": [],
+    "withheld_ground_truth_fields": [
+      "disturbance_id"
+    ]
+  },
+  "evidence": [
+    {
+      "evidence_id": "EVIDENCE-EC64C2137A04",
+      "evidence_type": "SAFETY",
+      "statement": "P_R | Reactor pressure (XMEAS 7) | kPa g | XMEAS 7. The interlock trips above 3000 kPa g.",
+      "source_document": "APMonitor_Instructions",
+      "source_section": "Tennessee Eastman Challenge Process > 4. Model > Variables",
+      "source_page": null,
+      "source_chunk_id": "e3a66d977f9631150676879c",
+      "supporting_quote": "Tennessee Eastman Challenge Process > 4. Model > Variables\n\nSymbol | Meaning | Units | Where it appears\nP_R | Reactor pressure (XMEAS 7) | kPa g | XMEAS 7. The interlock trips above 3000 kPa g.\nL_R | Reactor level (XMEAS 8) | % | XMEAS 8, on its transmitter span. The interlock limits are −2.1 and 114.4 % of that span.\nT_R | Reactor temperature (XMEAS 9) | °C | Derived each step from the states, parameters and controller output.\nL_S | Separator level (XMEAS 12) | % | Derived each step from the states, parameters and controller output.\nL_C | Stripper level (XMEAS 15) | % | Derived each step from the states, parameters and controller output.\nF_11 | Stripper underflow, the production (XMEAS 17) | m³/h | Derived each step from the states, parameters and controller output.\nx_G | G in product (XMEAS 40) | mol % | Derived each step from the states, parameters and controller output.\nJ | Operating cost | $/h | The published cost function, from the measurements.\nF_p | Production index | % | Ricker's production index: every flow setpoint is a ratio times it.",
+      "related_alarm_ids": [
+        "XMEAS7_HI"
+      ],
+      "related_variable_ids": [
+        "XMEAS_12",
+        "XMEAS_15",
+        "XMEAS_17",
+        "XMEAS_40",
+        "XMEAS_7",
+        "XMEAS_8",
+        "XMEAS_9"
+      ],
+      "source_url": null,
+      "source_version": "sha256:76b2a81fcde4",
+      "verification_status": "source_supported",
+      "provenance": {
+        "retrieval_intents": [
+          "HISTORICAL_EXPERIMENTS",
+          "OPERATING_CONSTRAINTS",
+          "POSSIBLE_CAUSES",
+          "PROCESS_RELATIONSHIPS",
+          "VARIABLE_DEFINITION"
+        ],
+        "rrf_score": 0.08528091060985797,
+        "reranker_score": null,
+        "source_type": "original_technical_reference",
+        "procedure": {},
+        "source_file": "02_Operational_Guidance/APMonitor_Instructions.html",
+        "parsing_warnings": [],
+        "evidence_types": [
+          "CONTROL",
+          "ECONOMIC",
+          "MEASUREMENT",
+          "SAFETY"
+        ],
+        "inferred_metadata": [
+          "equipment",
+          "evidence_types"
+        ]
+      }
+    },
+    {
+      "evidence_id": "EVIDENCE-4126F1BCACF8",
+      "evidence_type": "SAFETY",
+      "statement": "XMEAS(7) Reactor Pressure [kPa gauge] 경보(높음/낮음) 대응. [코드] 반응기 압력을 읽는 루프는 없다. 이 구조에서 압력에 닿는 조작은 퍼지 경로 (CONTRL19 → SETPT(6) → CONTRL6 → XMV(6)) 와 분리기 압력 오버라이드뿐이다. [코드] 퍼지 B 목표를 낮추면 CONTRL19 가 SETPT(6)(퍼지 유량 목표)을 올린다(simulate_purge_b_cases 표). [가설] 퍼지가 늘면 반응기 압력이 내려간다. 시뮬레이션으로 확인한다. [문헌] 반응기 압력 셧다운 한계는 Downs & Vogel 표 6 의 3000 kPa(g). → check_purge_override 후 simulate_purge_b_cases.",
+      "source_document": "tep_studio_braatz_sop",
+      "source_section": "tep-studio-braatz-sensor-response > protocol > sensor_XMEAS_7",
+      "source_page": null,
+      "source_chunk_id": "c881537075b59eb4b01c8be1",
+      "supporting_quote": "tep-studio-braatz-sensor-response > protocol > sensor_XMEAS_7\n\n{\n  \"applicability\": {\n    \"simulator\": \"tep_studio_braatz\"\n  },\n  \"step\": {\n    \"id\": \"sensor_XMEAS_7\",\n    \"actor\": \"운영자 / Zoro AI\",\n    \"instruction_ko\": \"XMEAS(7) Reactor Pressure [kPa gauge] 경보(높음/낮음) 대응. [코드] 반응기 압력을 읽는 루프는 없다. 이 구조에서 압력에 닿는 조작은 퍼지 경로 (CONTRL19 → SETPT(6) → CONTRL6 → XMV(6)) 와 분리기 압력 오버라이드뿐이다. [코드] 퍼지 B 목표를 낮추면 CONTRL19 가 SETPT(6)(퍼지 유량 목표)을 올린다(simulate_purge_b_cases 표). [가설] 퍼지가 늘면 반응기 압력이 내려간다. 시뮬레이션으로 확인한다. [문헌] 반응기 압력 셧다운 한계는 Downs & Vogel 표 6 의 3000 kPa(g). → check_purge_override 후 simulate_purge_b_cases.\",\n    \"retrieval_text_en\": \"XMEAS(7) Reactor Pressure alarm high low response \",\n    \"source_refs\": [\n      \"studio_control_src\",\n      \"variables\",\n      \"downs_vogel\"\n    ],\n    \"response_kind\": \"case_review\",\n    \"control_chain\": [],\n    \"transitions\": [\n      {\n        \"when_ko\": \"확인 완료\",\n        \"to\": \"check_purge_override\"\n      },\n      {\n        \"when_ko\": \"밸브 포화·정보 부족\",\n        \"to\": \"operator_review\"\n      }\n    ]\n  }\n}",
+      "related_alarm_ids": [
+        "XMEAS7_HI"
+      ],
+      "related_variable_ids": [
+        "XMEAS_7",
+        "XMV_6"
+      ],
+      "source_url": null,
+      "source_version": "sha256:8510176e23c9",
+      "verification_status": "source_supported",
+      "provenance": {
+        "retrieval_intents": [
+          "ALARM_INTERPRETATION",
+          "HISTORICAL_EXPERIMENTS",
+          "POSSIBLE_CAUSES",
+          "PROCESS_RELATIONSHIPS"
+        ],
+        "rrf_score": 0.07503314968046107,
+        "reranker_score": null,
+        "source_type": "authored_review_protocol",
+        "procedure": {
+          "document_id": "tep-studio-braatz-sensor-response",
+          "document_version": "1.0",
+          "step_id": "sensor_XMEAS_7",
+          "instruction_ko": "XMEAS(7) Reactor Pressure [kPa gauge] 경보(높음/낮음) 대응. [코드] 반응기 압력을 읽는 루프는 없다. 이 구조에서 압력에 닿는 조작은 퍼지 경로 (CONTRL19 → SETPT(6) → CONTRL6 → XMV(6)) 와 분리기 압력 오버라이드뿐이다. [코드] 퍼지 B 목표를 낮추면 CONTRL19 가 SETPT(6)(퍼지 유량 목표)을 올린다(simulate_purge_b_cases 표). [가설] 퍼지가 늘면 반응기 압력이 내려간다. 시뮬레이션으로 확인한다. [문헌] 반응기 압력 셧다운 한계는 Downs & Vogel 표 6 의 3000 kPa(g). → check_purge_override 후 simulate_purge_b_cases.",
+          "actor": "운영자 / Zoro AI",
+          "transitions": [
+            {
+              "when_ko": "확인 완료",
+              "to": "check_purge_override"
+            },
+            {
+              "when_ko": "밸브 포화·정보 부족",
+              "to": "operator_review"
+            }
+          ],
+          "source_refs": [
+            "studio_control_src",
+            "variables",
+            "downs_vogel"
+          ],
+          "action": null
+        },
+        "source_file": "additional/knowledge/tep_studio_braatz_sop.json",
+        "parsing_warnings": [],
+        "evidence_types": [
+          "CONTROL",
+          "MEASUREMENT",
+          "SAFETY"
+        ],
+        "inferred_metadata": [
+          "equipment",
+          "evidence_types"
+        ]
+      }
+    },
+    {
+      "evidence_id": "EVIDENCE-5AE1E3B136F5",
+      "evidence_type": "SAFETY",
+      "statement": "The shutdown limits (3000 kPa g, 175 °C and the liquid volumes) are the benchmark's own teaching values, not those of any real plant, where they come from the vessel design code and the safety-instrumented-system study (IEC 61511).",
+      "source_document": "APMonitor_Instructions",
+      "source_section": null,
+      "source_page": 26,
+      "source_chunk_id": "2d0f8e8a43397d8739d03762",
+      "supporting_quote": "The plant equations, constants, noise levels, analyzer periods and shutdown limits are those of\n the public code, unchanged. The shutdown limits (3000 kPa g, 175 °C and the liquid volumes)\n are the benchmark's own teaching values, not those of any real plant, where they come from\n the vessel design code and the safety-instrumented-system study (IEC 61511).\n Random numbers come from two seeded generators (disturbance walks and measurement\n noise apart, as in the 2015 revision of Bathelt, Ricker and Jelali) instead of the original single\n generator, so a run replays bit for bit after Reset. Individual noise realizations therefore differ\n from the original code's, while their statistics (the sum of twelve uniform deviates, scaled to the\n published standard deviations) are the same.\n The analyzers fire on a step count (every 360 and 900 one-second steps) rather than on a\n floating-point clock. This changes no sample time.",
+      "related_alarm_ids": [
+        "XMEAS7_HI"
+      ],
+      "related_variable_ids": [],
+      "source_url": "https://apmonitor.com/apps/tennessee-eastman/instructions.php",
+      "source_version": "sha256:52a112fea54f",
+      "verification_status": "source_supported",
+      "provenance": {
+        "retrieval_intents": [
+          "OPERATING_CONSTRAINTS",
+          "POSSIBLE_CAUSES"
+        ],
+        "rrf_score": 0.04451067477014181,
+        "reranker_score": null,
+        "source_type": "original_technical_reference",
+        "procedure": {},
+        "source_file": "02_Operational_Guidance/APMonitor_Instructions.pdf",
+        "parsing_warnings": [
+          "Damaged PDF recovered in memory with PyMuPDF after PdfStreamError; completeness is unverified"
+        ],
+        "evidence_types": [
+          "DISTURBANCE",
+          "MEASUREMENT",
+          "SAFETY"
+        ],
+        "inferred_metadata": [
+          "equipment",
+          "evidence_types"
+        ]
+      }
+    },
+    {
+      "evidence_id": "EVIDENCE-5368176DC1B5",
+      "evidence_type": "SAFETY",
+      "statement": "SETPT(19) 를 현재값 대비 ±0.5~±2.0 mol% 바꾼 case 를 hold(SOP 단독)와 같은 조건에서 시뮬레이션한다. [코드] ΔSETPT(6)=K19·ΔSETPT(19)·100/26/100: −1 mol% → SETPT(6) +0.2133 kscmh, XMV(6) +26.03%p 즉시. 오차가 남으면 360 s 마다 SETPT(6) +0.01212. XMV(6)+즉시 변화가 0~100% 밖이면 시험하지 않는다. 오버라이드 래치 중에는 CONTRL6 이 돌지 않아 효과가 없다.",
+      "source_document": "tep_studio_braatz_sop",
+      "source_section": "tep-studio-braatz-sensor-response > protocol > simulate_purge_b_cases",
+      "source_page": null,
+      "source_chunk_id": "e4f2551b7f04d9927271d002",
+      "supporting_quote": "tep-studio-braatz-sensor-response > protocol > simulate_purge_b_cases\n\n{\n  \"applicability\": {\n    \"simulator\": \"tep_studio_braatz\"\n  },\n  \"step\": {\n    \"id\": \"simulate_purge_b_cases\",\n    \"actor\": \"Zoro AI 시뮬레이션 검토 모듈\",\n    \"instruction_ko\": \"SETPT(19) 를 현재값 대비 ±0.5~±2.0 mol% 바꾼 case 를 hold(SOP 단독)와 같은 조건에서 시뮬레이션한다. [코드] ΔSETPT(6)=K19·ΔSETPT(19)·100/26/100: −1 mol% → SETPT(6) +0.2133 kscmh, XMV(6) +26.03%p 즉시. 오차가 남으면 360 s 마다 SETPT(6) +0.01212. XMV(6)+즉시 변화가 0~100% 밖이면 시험하지 않는다. 오버라이드 래치 중에는 CONTRL6 이 돌지 않아 효과가 없다.\",\n    \"retrieval_text_en\": \"XMEAS(7) XMEAS(10) XMEAS(13) XMEAS(30) reactor pressure purge rate purge B composition CONTRL19 CONTRL6 XMV(6) SETPT(19) setpoint case simulation\",\n    \"source_refs\": [\n      \"studio_control_src\",\n      \"team_sop\",\n      \"studio_md\",\n      \"benchmark\"\n    ],\n    \"action\": {\n      \"kind\": \"simulation_review\",\n      \"trigger_variable_ids\": [\n        \"XMEAS_7\",\n        \"XMEAS_10\",\n        \"XMEAS_13\",\n        \"XMEAS_30\"\n      ],\n      \"plan\": {\n        \"simulator\": \"tep_studio_braatz\",\n        \"parameter\": \"SETPT(19)\",\n        \"scheme_call\": \"Scheme::set_setpoint(19, value)\",\n        \"loop\": \"CONTRL19\",\n        \"controlled_tag\": \"XMEAS(30)\",\n        \"unit\": \"mol%\",\n        \"preset_value\": 13.823,\n        \"value_basis\": \"relative_to_active_setpoint\",\n        \"candidates\": [\n          [\n            \"SIM_SP19_UP050\",\n            0.5\n          ],\n          [\n            \"SIM_SP19_DN050\",\n            -0.5\n          ],\n          [\n            \"SIM_SP19_UP100\",\n            1.0\n          ],\n          [\n            \"SIM_SP19_DN100\",\n            -1.0\n          ],\n          [\n            \"SIM_SP19_UP150\",\n            1.5\n          ],\n          [\n            \"SIM_SP19_DN150\",\n            -1.5\n          ],\n          [\n            \"SIM_SP19_UP200\",\n            2.0\n          ],\n          [\n            \"SIM_SP19_DN200\",\n            -2.0\n          ]\n        ],\n        \"candidate_fields\": [\n          \"catalog_action_id\",\n          \"delta_mol_pct\"\n        ],\n        \"baseline\": \"SIM_HOLD\",\n        \"preconditions\": [\n          \"override_released\",\n          \"XMEAS(30)_fresh\",\n          \"active_SETPT(19)_known\"\n        ],\n        \"valve_limit_rule\": \"XMV(6)+immediate in [0,100]\",\n        \"selection_rule\": \"docs/BENCHMARK.md (patience 4)\",\n        \"constraints\": {\n          \"reactor_pressure_shutdown_kpag\": 3000,\n          \"production_ratio_min\": 0.99\n        },\n        \"objective\": {\n          \"metric\": \"benchmark_vs_sop_only\",\n          \"direction\": \"maximize\"\n        },\n        \"values_status\": \"example\",\n        \"results\": null\n      }\n    },\n    \"transitions\": [\n      {\n        \"when_ko\": \"시뮬레이션 결과 확보\",\n        \"to\": \"operator_review\"\n      },\n      {\n        \"when_ko\": \"전제 불충족\",\n        \"to\": \"hold_current_targets\"\n      }\n    ]\n  }\n}",
+      "related_alarm_ids": [
+        "XMEAS7_HI"
+      ],
+      "related_variable_ids": [
+        "XMEAS_10",
+        "XMEAS_13",
+        "XMEAS_30",
+        "XMEAS_7",
+        "XMV_6"
+      ],
+      "source_url": null,
+      "source_version": "sha256:8510176e23c9",
+      "verification_status": "source_supported",
+      "provenance": {
+        "retrieval_intents": [
+          "SOP_REVIEW"
+        ],
+        "rrf_score": 0.03278688524590164,
+        "reranker_score": null,
+        "source_type": "authored_review_protocol",
+        "procedure": {
+          "document_id": "tep-studio-braatz-sensor-response",
+          "document_version": "1.0",
+          "step_id": "simulate_purge_b_cases",
+          "instruction_ko": "SETPT(19) 를 현재값 대비 ±0.5~±2.0 mol% 바꾼 case 를 hold(SOP 단독)와 같은 조건에서 시뮬레이션한다. [코드] ΔSETPT(6)=K19·ΔSETPT(19)·100/26/100: −1 mol% → SETPT(6) +0.2133 kscmh, XMV(6) +26.03%p 즉시. 오차가 남으면 360 s 마다 SETPT(6) +0.01212. XMV(6)+즉시 변화가 0~100% 밖이면 시험하지 않는다. 오버라이드 래치 중에는 CONTRL6 이 돌지 않아 효과가 없다.",
+          "actor": "Zoro AI 시뮬레이션 검토 모듈",
+          "transitions": [
+            {
+              "when_ko": "시뮬레이션 결과 확보",
+              "to": "operator_review"
+            },
+            {
+              "when_ko": "전제 불충족",
+              "to": "hold_current_targets"
+            }
+          ],
+          "source_refs": [
+            "studio_control_src",
+            "team_sop",
+            "studio_md",
+            "benchmark"
+          ],
+          "action": {
+            "kind": "simulation_review",
+            "trigger_variable_ids": [
+              "XMEAS_7",
+              "XMEAS_10",
+              "XMEAS_13",
+              "XMEAS_30"
+            ],
+            "plan": {
+              "simulator": "tep_studio_braatz",
+              "parameter": "SETPT(19)",
+              "scheme_call": "Scheme::set_setpoint(19, value)",
+              "loop": "CONTRL19",
+              "controlled_tag": "XMEAS(30)",
+              "unit": "mol%",
+              "preset_value": 13.823,
+              "value_basis": "relative_to_active_setpoint",
+              "candidates": [
+                [
+                  "SIM_SP19_UP050",
+                  0.5
+                ],
+                [
+                  "SIM_SP19_DN050",
+                  -0.5
+                ],
+                [
+                  "SIM_SP19_UP100",
+                  1.0
+                ],
+                [
+                  "SIM_SP19_DN100",
+                  -1.0
+                ],
+                [
+                  "SIM_SP19_UP150",
+                  1.5
+                ],
+                [
+                  "SIM_SP19_DN150",
+                  -1.5
+                ],
+                [
+                  "SIM_SP19_UP200",
+                  2.0
+                ],
+                [
+                  "SIM_SP19_DN200",
+                  -2.0
+                ]
+              ],
+              "candidate_fields": [
+                "catalog_action_id",
+                "delta_mol_pct"
+              ],
+              "baseline": "SIM_HOLD",
+              "preconditions": [
+                "override_released",
+                "XMEAS(30)_fresh",
+                "active_SETPT(19)_known"
+              ],
+              "valve_limit_rule": "XMV(6)+immediate in [0,100]",
+              "selection_rule": "docs/BENCHMARK.md (patience 4)",
+              "constraints": {
+                "reactor_pressure_shutdown_kpag": 3000,
+                "production_ratio_min": 0.99
+              },
+              "objective": {
+                "metric": "benchmark_vs_sop_only",
+                "direction": "maximize"
+              },
+              "values_status": "example",
+              "results": null
+            }
+          }
+        },
+        "source_file": "additional/knowledge/tep_studio_braatz_sop.json",
+        "parsing_warnings": [],
+        "evidence_types": [
+          "CASE_STUDY",
+          "CONTROL",
+          "MEASUREMENT",
+          "SAFETY"
+        ],
+        "inferred_metadata": [
+          "equipment",
+          "evidence_types"
+        ]
+      }
+    },
+    {
+      "evidence_id": "EVIDENCE-8ABF9B0E528F",
+      "evidence_type": "MEASUREMENT",
+      "statement": "`XMEAS(7)` | Reactor Pressure | kPa gauge",
+      "source_document": "README",
+      "source_section": "Contents > `teprob.f` > Continuous Process Measurements",
+      "source_page": null,
+      "source_chunk_id": "a0a137265a2abaf5ae70f5cc",
+      "supporting_quote": "Contents > `teprob.f` > Continuous Process Measurements\n\nContinuous Process Measurements\n\nVariable | Description | unit\n-------- | ----------- | ----\n`XMEAS(1)` | A Feed (stream 1) | kscmh\n`XMEAS(2)` | D Feed (stream 2) | kg/hr\n`XMEAS(3)` | E Feed (stream 3) | kg/hr\n`XMEAS(4)` | A and C Feed (stream 4) | kscmh\n`XMEAS(5)` | Recycle Flow (stream 8) | kscmh\n`XMEAS(6)` | Reactor Feed Rate (stream 6) | kscmh\n`XMEAS(7)` | Reactor Pressure | kPa gauge\n`XMEAS(8)` | Reactor Level | %\n`XMEAS(9)` | Reactor Temperature | Deg C\n`XMEAS(10)` | Purge Rate (stream 9) | kscmh\n`XMEAS(11)` | Product Sep Temp | Deg C\n`XMEAS(12)` | Product Sep Level | %\n`XMEAS(13)` | Prod Sep Pressure | kPa gauge\n`XMEAS(14)` | Prod Sep Underflow (stream 10) | m3/hr\n`XMEAS(15)` | Stripper Level | %\n`XMEAS(16)` | Stripper Pressure | kPa gauge\n`XMEAS(17)` | Stripper Underflow (stream 11) | m3/hr\n`XMEAS(18)` | Stripper Temperature | Deg C\n`XMEAS(19)` | Stripper Steam Flow | kg/hr\n`XMEAS(20)` | Compressor Work | kW\n`XMEAS(21)` | Reactor Cooling Water Outlet Temp | Deg C\n`XMEAS(22)` | Separator Cooling Water Outlet Temp | Deg C",
+      "related_alarm_ids": [
+        "XMEAS7_HI"
+      ],
+      "related_variable_ids": [
+        "XMEAS_1",
+        "XMEAS_10",
+        "XMEAS_11",
+        "XMEAS_12",
+        "XMEAS_13",
+        "XMEAS_14",
+        "XMEAS_15",
+        "XMEAS_16",
+        "XMEAS_17",
+        "XMEAS_18",
+        "XMEAS_19",
+        "XMEAS_2",
+        "XMEAS_20",
+        "XMEAS_21",
+        "XMEAS_22",
+        "XMEAS_3",
+        "XMEAS_4",
+        "XMEAS_5",
+        "XMEAS_6",
+        "XMEAS_7",
+        "XMEAS_8",
+        "XMEAS_9"
+      ],
+      "source_url": null,
+      "source_version": "sha256:6b23047252e7",
+      "verification_status": "source_supported",
+      "provenance": {
+        "retrieval_intents": [
+          "VARIABLE_DEFINITION"
+        ],
+        "rrf_score": 0.03278688524590164,
+        "reranker_score": null,
+        "source_type": "original_technical_reference",
+        "procedure": {},
+        "source_file": "03_Control_and_Variables/README.md",
+        "parsing_warnings": [],
+        "evidence_types": [
+          "MEASUREMENT"
+        ],
+        "inferred_metadata": [
+          "equipment",
+          "evidence_types"
+        ]
+      }
+    }
+  ],
+  "candidate_actions": [
+    {
+      "kind": "simulation_review",
+      "status": "input_review_required",
+      "source_type": "authored_review_protocol",
+      "procedure_id": "tep-studio-braatz-sensor-response",
+      "step_id": "simulate_purge_b_cases",
+      "source_refs": [
+        "studio_control_src",
+        "team_sop",
+        "studio_md",
+        "benchmark"
+      ],
+      "source_chunk_id": "e4f2551b7f04d9927271d002",
+      "evidence_id": "EVIDENCE-5368176DC1B5",
+      "matched_alarm_tags": [
+        "XMEAS_7"
+      ],
+      "plan": {
+        "simulator": "tep_studio_braatz",
+        "parameter": "SETPT(19)",
+        "scheme_call": "Scheme::set_setpoint(19, value)",
+        "loop": "CONTRL19",
+        "controlled_tag": "XMEAS(30)",
+        "unit": "mol%",
+        "preset_value": 13.823,
+        "value_basis": "relative_to_active_setpoint",
+        "candidates": [
+          [
+            "SIM_SP19_UP050",
+            0.5
+          ],
+          [
+            "SIM_SP19_DN050",
+            -0.5
+          ],
+          [
+            "SIM_SP19_UP100",
+            1.0
+          ],
+          [
+            "SIM_SP19_DN100",
+            -1.0
+          ],
+          [
+            "SIM_SP19_UP150",
+            1.5
+          ],
+          [
+            "SIM_SP19_DN150",
+            -1.5
+          ],
+          [
+            "SIM_SP19_UP200",
+            2.0
+          ],
+          [
+            "SIM_SP19_DN200",
+            -2.0
+          ]
+        ],
+        "candidate_fields": [
+          "catalog_action_id",
+          "delta_mol_pct"
+        ],
+        "baseline": "SIM_HOLD",
+        "preconditions": [
+          "override_released",
+          "XMEAS(30)_fresh",
+          "active_SETPT(19)_known"
+        ],
+        "valve_limit_rule": "XMV(6)+immediate in [0,100]",
+        "selection_rule": "docs/BENCHMARK.md (patience 4)",
+        "constraints": {
+          "reactor_pressure_shutdown_kpag": 3000,
+          "production_ratio_min": 0.99
+        },
+        "objective": {
+          "metric": "benchmark_vs_sop_only",
+          "direction": "maximize"
+        },
+        "values_status": "example",
+        "results": null
+      },
+      "recommended_setpoint": null,
+      "snapshot_id": null,
+      "active_objective": null,
+      "simulation_required": true,
+      "control_action_authorized": false,
+      "input_review_reasons": [
+        "Measurement quality for XMEAS7_HI is unknown; do not assume a reliable observation.",
+        "Measurement quality for XMEAS_7 is unknown; do not assume a reliable observation.",
+        "No measurement unit supplied for XMEAS_7.",
+        "No measurement time supplied for XMEAS_7; freshness is unknown.",
+        "Measurement quality for XMEAS_9 is unknown; do not assume a reliable observation.",
+        "No measurement unit supplied for XMEAS_9.",
+        "No measurement time supplied for XMEAS_9; freshness is unknown.",
+        "Measurement quality for XMV_10 is unknown; do not assume a reliable observation.",
+        "No measurement unit supplied for XMV_10.",
+        "No measurement time supplied for XMV_10; freshness is unknown.",
+        "No simulator snapshot_id supplied; replay state has not been identified.",
+        "No active objective supplied; confirm the current optimization goal."
+      ]
+    }
+  ],
+  "missing_evidence": [
+    "Measurement quality for XMEAS7_HI is unknown; do not assume a reliable observation.",
+    "Measurement quality for XMEAS_7 is unknown; do not assume a reliable observation.",
+    "No measurement unit supplied for XMEAS_7.",
+    "No measurement time supplied for XMEAS_7; freshness is unknown.",
+    "Measurement quality for XMEAS_9 is unknown; do not assume a reliable observation.",
+    "No measurement unit supplied for XMEAS_9.",
+    "No measurement time supplied for XMEAS_9; freshness is unknown.",
+    "Measurement quality for XMV_10 is unknown; do not assume a reliable observation.",
+    "No measurement unit supplied for XMV_10.",
+    "No measurement time supplied for XMV_10; freshness is unknown.",
+    "No simulator snapshot_id supplied; replay state has not been identified.",
+    "No active objective supplied; confirm the current optimization goal.",
+    "Candidate simulations have not been executed; no optimal setpoint is established.",
+    "Production and product quality tolerances must be supplied before selecting a feasible setpoint.",
+    "Damaged PDF recovered in memory with PyMuPDF after PdfStreamError; completeness is unverified"
+  ],
+  "unresolved_questions": [
+    "The alarm does not establish a root cause; candidate causes require downstream validation."
+  ],
+  "simulation_required": true,
+  "control_action_authorized": false
+}

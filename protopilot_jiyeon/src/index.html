@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#eef0f2">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27%3E%3Cpath fill=%27%23242a30%27 d=%27M0 6l6-6h14v5H8L5 8v12H0z%27/%3E%3C/svg%3E">
+  <title>ProtoPilot · TEP 시뮬레이터</title>
+  <link rel="stylesheet" href="/app.css?v=3">
+</head>
+<body>
+  <header class="topbar" id="dashboard-topbar">
+    <a class="brand" href="/" aria-label="ProtoPilot 홈"><span class="brand-mark" aria-hidden="true"></span>PROTOPILOT</a>
+    <div class="site-label">Tennessee Eastman <span> / </span> 공정 시뮬레이터</div>
+    <div class="global-status"><span id="connection" class="status"><i></i> 연결 중</span><span id="clock" class="clock" title="시뮬레이션 시간">00:00:00</span></div>
+    <div class="top-actions">
+      <label class="speed"><span class="sr-only">시뮬레이션 배속</span><select id="speed"><option value="15">15×</option><option value="60" selected>60×</option><option value="240">240×</option><option value="960">960×</option></select></label>
+      <button type="button" id="run" data-icon="pause" disabled>일시정지</button>
+      <button type="button" id="reset" class="icon-button" aria-label="새 실행으로 초기화" title="새 실행으로 초기화" data-icon="reset" disabled></button>
+      <button type="button" id="open-scenario" disabled>시나리오</button>
+      <button type="button" id="open-controls" class="solid" data-icon="sliders" disabled>값 조정</button>
+    </div>
+  </header>
+
+  <main class="console" id="console" data-pane="plant" tabindex="-1">
+    <div class="segments console-switch" role="group" aria-label="관제 화면">
+      <button type="button" data-pane-target="plant" aria-controls="plant-panel" aria-pressed="true">공정도</button>
+      <button type="button" data-pane-target="pipes" aria-controls="pipe-details" aria-pressed="false">배관</button>
+      <button type="button" data-pane-target="telemetry" aria-controls="telemetry-panel" aria-pressed="false">계측</button>
+      <button type="button" data-pane-target="events" aria-controls="event-monitor" aria-pressed="false">알람·이벤트</button>
+      <button type="button" data-pane-target="setpoints" aria-controls="setpoint-panel" aria-pressed="false">SP 목표</button>
+    </div>
+    <section class="panel plant-panel" id="plant-panel" aria-labelledby="plant-heading">
+      <div class="panel-head plant-head">
+        <h1 id="plant-heading">공정도</h1>
+        <div class="view-controls">
+          <div class="segments view-switch" role="group" aria-label="공정 화면">
+            <button id="view-3d" type="button" data-icon="box" aria-pressed="true">3D 모델</button>
+            <button id="view-2d" type="button" data-icon="diagram" aria-pressed="false">2D 공정도</button>
+          </div>
+          <button id="overview" type="button" data-icon="scan">전체 보기</button>
+        </div>
+      </div>
+      <div class="model-toolbar">
+        <div class="circuit-controls" role="group" aria-label="배관 경로 추적">
+          <span class="toolbar-label">배관 추적</span>
+          <button type="button" data-circuit="" aria-controls="pipe-details" aria-pressed="true">전체</button>
+          <button type="button" data-circuit="recycle" aria-controls="pipe-details" aria-pressed="false">재순환</button>
+          <button type="button" data-circuit="cooling" aria-controls="pipe-details" aria-pressed="false">냉각수</button>
+          <button type="button" data-circuit="steam" aria-controls="pipe-details" aria-pressed="false">스팀·재비기</button>
+        </div>
+        <div class="layer-controls" role="group" aria-label="공정 표시 레이어">
+          <button id="view-flow" type="button" data-icon="flow" aria-pressed="true">유량</button>
+          <button id="view-pressure" type="button" data-icon="gauge" aria-pressed="true">가스 압력</button>
+          <button id="toggle-tags" type="button" data-icon="tag" aria-controls="model-labels model-tag-list interior-parts" aria-pressed="true" title="태그 가리기">태그</button>
+          <button id="toggle-tag-list" type="button" aria-expanded="false" aria-controls="model-tag-list">태그 목록</button>
+          <button id="toggle-internals" type="button" data-icon="layers" aria-pressed="false"><span id="internals-label">내부 전체</span></button>
+        </div>
+      </div>
+      <div class="stage" id="stage" data-view="3d">
+        <p class="canvas-error" id="canvas-error" role="status" hidden>3D를 표시할 수 없어 2D 공정도를 열었습니다.</p>
+        <p class="plant-guide"><b>공정 흐름</b> 원료 공급 → 반응 → 분리 → 제품 배출</p>
+        <div id="model-tag-list" class="model-tag-list" role="region" aria-label="태그 목록" tabindex="0" hidden></div>
+        <div class="stage-controls">
+          <div id="interior-tools" class="interior-tools" hidden>
+            <div id="interior-parts" class="interior-parts" role="group" aria-label="내부 부품 태그" hidden></div>
+            <div class="legend"><span><i class="level-key" aria-hidden="true"></i>액위 SP</span></div>
+          </div>
+          <span class="orbit-hint">좌클릭 드래그로 상하좌우 이동 <span>·</span> 우클릭 드래그로 회전 <span>·</span> 휠로 확대·축소</span>
+        </div>
+        <div class="stage-display">
+          <div id="canvas" class="canvas" data-focus="plant"></div>
+          <div id="model-labels" class="model-labels"></div>
+          <div id="diagram" class="diagram" tabindex="0" aria-label="2D 공정도 스크롤" hidden></div>
+        </div>
+        <div class="stage-footer">
+          <div id="legend" class="legend"></div>
+          <span class="diagram-hint">좌우 스크롤</span>
+        </div>
+      </div>
+      <section id="pipe-details" class="pipe-details" aria-labelledby="pipe-details-title" aria-live="polite">
+        <h2 id="pipe-details-title">연결 배관</h2>
+        <div id="pipe-details-content" class="pipe-details-content"></div>
+      </section>
+    </section>
+
+    <div class="plant-sidebar">
+      <aside class="panel event-monitor" id="event-monitor" aria-labelledby="event-monitor-title">
+        <p id="alarm-announcement" class="sr-only" role="status"></p>
+        <div class="panel-head">
+          <div class="heading-inline"><span data-icon="bell"></span><h2 id="event-monitor-title">알람 및 이벤트 추적</h2></div>
+        </div>
+        <div class="segments event-monitor-controls" role="group" aria-label="알람 및 이벤트 보기">
+          <button type="button" data-event-mode="alarms" aria-controls="event-monitor-content" aria-pressed="true">알람<span id="active-alarm-count" class="subtle-count"></span></button>
+          <button type="button" data-event-mode="events" aria-controls="event-monitor-content" aria-pressed="false">이벤트</button>
+        </div>
+        <div id="event-monitor-content" class="event-monitor-content" role="region" tabindex="0" aria-label="현재 알람">
+          <p class="monitor-message" role="status">알람 데이터 연결 중</p>
+          <ul class="event-list" role="list" hidden></ul>
+        </div>
+        <div id="latest-zoro-review" class="latest-zoro-review" hidden>
+          <div><strong>최근 Zoro-1 검토</strong><p id="latest-zoro-summary" role="status"></p></div>
+          <button type="button" id="open-latest-zoro-results">결과 보기</button>
+        </div>
+      </aside>
+      <section class="panel setpoint-panel" id="setpoint-panel" aria-labelledby="setpoint-title">
+        <div class="panel-head">
+          <div class="heading-inline"><span data-icon="sliders"></span><h2 id="setpoint-title">SP 목표</h2></div>
+        </div>
+        <ul id="setpoint-list" class="setpoint-list"></ul>
+      </section>
+    </div>
+
+    <section class="panel telemetry-panel" id="telemetry-panel" aria-labelledby="telemetry-title">
+      <div class="panel-head">
+        <div class="heading-inline"><span data-icon="activity"></span><h2 id="telemetry-title">실시간 계측</h2><span id="channel-count" class="subtle-count"></span></div>
+        <div class="exports"><a data-icon="download" href="/api/export/csv">CSV</a><a data-icon="download" href="/api/export/json">JSON</a></div>
+      </div>
+      <div class="telemetry-toolbar">
+        <div class="segments telemetry-modes" role="group" aria-label="계측 화면">
+          <button type="button" id="tab-values" aria-pressed="true">채널</button>
+          <button type="button" id="tab-response" aria-pressed="false" disabled>SP 응답</button>
+        </div>
+      </div>
+      <div id="channel-view" class="channel-view">
+        <div class="filter-bar">
+          <div class="channel-summary">
+            <div class="segments channel-scope" role="group" aria-label="채널 범위">
+              <button type="button" id="scope-primary" aria-pressed="true">주요 계측</button>
+              <button type="button" id="scope-all" aria-pressed="false">전체 채널</button>
+            </div>
+            <span id="matches" class="matches"></span>
+          </div>
+          <label><span class="sr-only">채널 유형</span><select id="channel-group"><option value="">모든 채널</option></select></label>
+          <label><span class="sr-only">설비 필터</span><select id="channel-area"><option value="">모든 설비</option></select></label>
+        </div>
+        <div class="table-scroll" role="region" tabindex="0" aria-label="실시간 계측 표 스크롤">
+          <table>
+            <thead><tr><th scope="col">계측 / 조작값</th><th scope="col" class="right">현재값</th><th scope="col">상태</th></tr></thead>
+            <tbody id="rows"><tr><td colspan="3">계측 데이터 연결 중</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="response-view" class="response-view" role="region" aria-label="SP 응답" tabindex="0" hidden>
+        <div class="response-controls">
+          <label><span class="sr-only">추적할 설정값</span><select id="response-select" disabled></select></label>
+        </div>
+        <div id="response-values" class="response-values"></div>
+        <div class="response-chart-head">
+          <div class="response-legend"><span><i></i>PV 실측</span><span><i class="response-command"></i>SP 목표</span>
+            <span id="response-change-marker" hidden><i class="response-change"></i>SP 변경</span></div>
+          <span id="response-window" title="시뮬레이션 시간 기준">최근 30분</span>
+        </div>
+        <canvas id="response-chart" class="response-chart" role="img" aria-label="시간에 따른 설정값과 계측값"></canvas>
+        <section id="response-valve" class="response-section" aria-labelledby="response-valve-title" hidden>
+          <div class="response-chart-head">
+            <h3 id="response-valve-title">밸브 응답</h3><code id="response-valve-tag"></code>
+          </div>
+          <div class="response-legend response-valve-legend">
+            <span><i class="response-command"></i>명령 <b id="response-valve-command">—</b></span>
+            <span><i></i>실제 개도 <b id="response-valve-position">—</b></span>
+          </div>
+          <canvas id="response-valve-chart" class="response-chart valve-chart" role="img" aria-label="시간에 따른 밸브 명령과 실제 개도"></canvas>
+        </section>
+        <section class="response-section response-adjustment" aria-labelledby="response-adjustment-title">
+          <h3 id="response-adjustment-title">조정 요약</h3>
+          <p id="response-adjustment">이 실행에서 SP 변경 기록이 없습니다.</p>
+          <p id="response-adjustment-time" hidden></p>
+          <p>현재 편차 (PV − SP) <b id="response-deviation">—</b></p>
+        </section>
+        <section id="response-connected" class="response-section response-connected" aria-labelledby="response-connected-title" hidden>
+          <div class="response-chart-head">
+            <h3 id="response-connected-title">연결 설비 반응</h3><code>R-101 → E-101 → V-101</code>
+          </div>
+          <div class="response-connected-signal">
+            <div class="response-chart-head"><h4>분리기 압력</h4><code>XMEAS(13)</code></div>
+            <div class="response-legend">
+              <span>현재 <b id="response-separator-pressure-value">—</b></span>
+              <span>SP 변경 대비 <b id="response-separator-pressure-delta">—</b></span>
+            </div>
+            <canvas id="response-separator-pressure-chart" class="response-chart compact-chart" role="img" aria-label="분리기 압력 추세"></canvas>
+          </div>
+          <div class="response-connected-signal">
+            <div class="response-chart-head"><h4>분리기 액위</h4><code>XMEAS(12)</code></div>
+            <div class="response-legend">
+              <span>현재 <b id="response-separator-level-value">—</b></span>
+              <span>SP 변경 대비 <b id="response-separator-level-delta">—</b></span>
+            </div>
+            <canvas id="response-separator-level-chart" class="response-chart compact-chart with-time" role="img" aria-label="분리기 액위 추세"></canvas>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="adjust-dialog" aria-labelledby="adjust-title">
+    <form id="adjust-form">
+      <div class="dialog-head"><div><div class="context-label">MODE 1 · RICKER CONTROL</div><h2 id="adjust-title">공정 값 조정</h2></div>
+        <button id="close-dialog" type="button" class="icon-button" data-icon="close" aria-label="닫기"></button>
+      </div>
+      <div class="dialog-fields">
+        <label>조정 유형<select id="adjust-kind">
+          <option value="setpoint">폐루프 설정값</option><option value="mv">밸브 개도 / 교반기</option><option value="disturbance">모델 외란 (IDV)</option>
+          <option value="offset">센서 오프셋 시험</option><option value="limit">알람 기준</option>
+        </select></label>
+        <label>대상<select id="adjust-target"></select></label>
+        <div id="adjust-info" class="adjust-info"></div>
+        <div class="value-fields">
+          <label id="adjust-low-wrap" hidden>하한<input id="adjust-low" type="number" step="any" placeholder="비워두면 미사용"></label>
+          <label id="adjust-value-wrap"><span id="adjust-value-label">설정값</span><input id="adjust-value" type="number" step="any" required></label>
+          <label id="adjust-enabled-wrap" hidden>외란 상태<select id="adjust-enabled"><option value="1">적용</option><option value="0">해제</option></select></label>
+        </div>
+        <p id="adjust-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-actions"><button id="adjust-release" type="button">기본값 복원</button><button type="submit" id="adjust-apply" class="solid">적용하고 설비 보기</button></div>
+    </form>
+  </dialog>
+  <dialog id="zoro-agent-dialog" aria-labelledby="zoro-agent-title">
+    <div class="dialog-head"><div><div id="zoro-agent-context" class="context-label"></div><h2 id="zoro-agent-title">Zoro 대응 검토</h2></div>
+      <button id="close-zoro-agent" type="button" class="icon-button" data-icon="close" aria-label="Zoro 대응 검토 닫기"></button>
+    </div>
+    <div class="zoro-agent-body"><p id="zoro-agent-status" role="status"></p><div id="zoro-agent-result" hidden></div></div>
+    <div class="dialog-actions">
+      <button id="retry-zoro-agent" type="button" hidden>다시 시도</button>
+      <button id="open-zoro-simulation-results" type="button" class="solid" hidden>시뮬레이션 결과 보기</button>
+    </div>
+  </dialog>
+  <dialog id="scenario-dialog" aria-labelledby="scenario-title">
+    <form id="scenario-form">
+      <div class="dialog-head"><h2 id="scenario-title">라이브 시나리오</h2>
+        <button id="close-scenario" type="button" class="icon-button" data-icon="close" aria-label="시나리오 닫기"></button>
+      </div>
+      <div class="dialog-fields">
+        <label>데모 시나리오
+          <select id="demo-scenario" required autofocus disabled>
+            <option value="" selected disabled>시나리오를 선택하세요</option>
+          </select>
+        </label>
+        <p class="adjust-info">불러오면 시간 0에서 일시정지합니다. 관제 화면에서 실행을 누르세요.</p>
+        <p id="scenario-error" role="alert" hidden></p>
+        <a href="/api/scenario">현재 시나리오 JSON 저장</a>
+        <details class="controller-panel">
+          <summary>제어 옵션 <span id="protection-state"></span></summary>
+          <div id="controller-options"></div>
+          <p id="controller-detail"></p>
+        </details>
+        <details id="recording-archive" class="recording-archive">
+          <summary>이전 로컬 기록</summary>
+          <label>기록<select id="archived-run" disabled></select></label>
+          <label>계측 태그<select id="archived-channel" disabled></select></label>
+          <p id="archived-status" role="status"></p>
+          <div id="archived-preview" hidden>
+            <canvas id="archived-chart" aria-hidden="true"></canvas>
+            <label>기록 시점<input id="archived-frame" type="range" min="0" max="0" value="0" step="1"></label>
+            <output id="archived-value" for="archived-frame"></output>
+          </div>
+          <div id="archived-links" class="archive-links" hidden>
+            <a id="archived-csv">CSV</a><a id="archived-json">JSON</a>
+            <a id="archived-scenario" hidden>시나리오 JSON</a>
+            <button type="button" id="archived-replay" hidden>재실행 준비</button>
+          </div>
+        </details>
+      </div>
+      <div class="dialog-actions"><button type="submit" id="load-scenario" class="solid" disabled>불러와 재실행 준비</button></div>
+    </form>
+  </dialog>
+  <main class="simulation-results" id="simulation-results" aria-labelledby="simulation-title" hidden>
+    <div class="simulation-layout">
+      <button type="button" id="simulation-back"><span aria-hidden="true">←</span> 대시보드</button>
+      <header class="simulation-heading">
+        <p class="context-label" id="simulation-kind">알람 대응 시뮬레이션</p>
+        <h1 id="simulation-title" tabindex="-1"></h1>
+        <p id="simulation-context"></p>
+        <p id="simulation-sensor-note" class="simulation-note" hidden>센서 시험 전의 모델 측정값으로 비교했습니다.</p>
+      </header>
+      <section id="simulation-comparison" aria-labelledby="simulation-cards-title">
+        <h2 id="simulation-cards-title">대응안 비교</h2>
+        <div id="simulation-zoro-summary" class="simulation-verdict" hidden></div>
+        <div id="simulation-sweep" hidden>
+          <div class="simulation-verdict" id="simulation-verdict"></div>
+          <details class="simulation-baseline" id="simulation-baseline">
+            <summary>SOP 기준안 상세</summary>
+            <div class="simulation-card" id="simulation-baseline-card"></div>
+          </details>
+          <div class="simulation-sweep-rows" id="simulation-sweep-cards"></div>
+        </div>
+        <ul class="simulation-grid" id="simulation-cards" role="list"></ul>
+      </section>
+      <details class="simulation-scoring" id="simulation-scoring">
+        <summary>점수 산정 기준</summary>
+        <ul id="simulation-rubric"></ul>
+      </details>
+    </div>
+  </main>
+  <dialog id="alarm-response-dialog" aria-labelledby="alarm-response-title">
+    <div class="dialog-head">
+      <div><p class="context-label">알람 대응</p><h2 id="alarm-response-title"></h2><p id="alarm-response-context"></p></div>
+      <button id="close-alarm-response" type="button" class="icon-button" data-icon="close" aria-label="알람 대응 닫기"></button>
+    </div>
+    <div class="dialog-fields">
+      <p id="alarm-response-status" class="adjust-info" role="status"></p>
+      <div id="alarm-response-result" hidden></div>
+    </div>
+    <form method="dialog" class="dialog-actions">
+      <button type="submit">닫기</button>
+      <button id="retry-alarm-response" type="button" class="solid" hidden>다시 비교</button>
+      <button id="open-simulation-results" type="button" class="solid" data-icon="arrow" hidden>시뮬레이션 결과 보기</button>
+    </form>
+  </dialog>
+  <div id="notice" class="notice" role="status" hidden></div>
+  <script type="module" src="/app.js?v=3"></script>
+</body>
+</html>

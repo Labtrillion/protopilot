@@ -1,0 +1,10 @@
+.DS_Store
+.venv/
+node_modules/
+dist/
+data/
+__pycache__/
+/.runtime/
+/worktrees/
+
+*.egg-info/

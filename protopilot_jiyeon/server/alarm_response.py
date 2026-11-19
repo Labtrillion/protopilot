@@ -1,0 +1,260 @@
+"""Retrieve a demo SOP and compare its responses on isolated TEP branches."""
+
+import os
+from copy import deepcopy
+from dataclasses import asdict, replace
+from hashlib import sha256
+from time import perf_counter
+from urllib.error import URLError
+from uuid import uuid4
+
+import numpy as np
+from tep_studio import TennesseeEastmanProcess
+
+from .agent_config import CONFIG
+from .alarm_rules import AlarmMonitor
+from .assistant import FALLBACK, append_trace, zoro_choices
+from .branch_metrics import FINAL_WINDOW_HOURS, branch_summary, step_cost
+from .catalog import CHANNELS
+from .plant import COOLING_TAGS, control_action
+from .recording import timestamp
+from .scenario import KERNEL_REVISION, STEP_HOURS, adjustment
+from setpoint_rag.sop_align import align, compact_for
+from .sop_lookup import find_sop
+
+HORIZON_HOURS = CONFIG["alarm_branch_hours"]
+SWEEP_DELAY_MINUTES = (0, 15, 30, 45, 60)
+SWEEP_REDUCTION_PCT = (1, 2.5, 5, 7.5, 10)
+
+
+def reduction_candidate(rate, delay):
+    sop_id = {0: "reduce_now", 30: "reduce_30", 60: "reduce_60"}.get(delay) if rate == 5 else None
+    timing = f"{delay}분 후" if delay else "즉시"
+    return sop_id or f"reduce_{rate:g}_{delay}", (f"{timing} {rate:g}% 감량", rate, delay)
+
+
+SWEEP_CANDIDATES = dict(reduction_candidate(rate, delay)
+                        for delay in SWEEP_DELAY_MINUTES for rate in SWEEP_REDUCTION_PCT)
+CANDIDATES = {"hold": ("현재 생산 목표 유지", 0, None), **SWEEP_CANDIDATES}
+COOLING_LABELS = {
+    "XMEASADD(5)": "반응기 냉각수 입구 온도",
+    "XMEASADD(6)": "반응기 냉각수 유량",
+    "XMV(10)": "냉각수 밸브 명령",
+    "XMV(10):actual": "냉각수 밸브 실제 개도",
+}
+
+
+def select_sop(checkpoint):
+    """[ADDED] Align the alarm with tep-sops from the checkpoint's observed history.
+    Order: confident IDV SOP -> sensor-alarm SOP for the tag/side/severity -> curated demo SOP."""
+    alarm = checkpoint.alarm
+    if alarm["kind"] == "trip":
+        return find_sop(alarm), None
+    alignment = align(alarm, list(checkpoint.history))
+    sop = compact_for(alignment) or find_sop(alarm)
+    alignment["selected_sop"] = sop["id"] if sop else None
+    return sop, alignment
+
+
+def evidence(checkpoint, sop, alignment=None):
+    alarm_tag = checkpoint.alarm["tag"]
+    tags = (*COOLING_TAGS, "XMV(10):actual") if sop["id"] == "TEP-COOL-01" else (
+        "XMEAS(7)", "XMEAS(9)", "XMEAS(12)", "XMEAS(17)",
+    )
+    # [ADDED] readings for the conditions that made the aligned IDV SOP hold
+    if alignment and alignment.get("idv_selected"):
+        held = [c["tag"] for r in alignment["top_detail"] if r["holds"] for c in r["conditions"]]
+        tags = (*held, *tags)
+    entries = []
+    for tag in dict.fromkeys((alarm_tag, *tags)):
+        if tag not in checkpoint.observed:
+            continue
+        channel = CHANNELS[tag.split(":")[0]]
+        entries.append({
+            "tag": tag, "label": COOLING_LABELS.get(tag, channel["label"]),
+            "value": checkpoint.observed[tag], "unit": channel["unit"],
+        })
+    return entries
+
+
+def choose_response(checkpoint, sop, readings, alignment=None):
+    started = perf_counter()
+    choices = {key: CANDIDATES[key][0] for key in sop["candidates"]}
+    state = {
+        "alarm": checkpoint.alarm,
+        "related_alarms": checkpoint.related_alarms,
+        "readings": readings,
+        "sop": {key: sop[key] for key in ("id", "revision", "title", "checks")},
+        "current_production_target": checkpoint.controller.setpoints.production_rate,
+    }
+    if alignment and alignment.get("idv_selected"):
+        # [ADDED] why this SOP was aligned: held SOP predicates with their latest values
+        state["alignment"] = {
+            "held_rules": alignment["ranking"][0]["held_rules"],
+            "conditions": [{k: c.get(k) for k in ("tag", "operator", "latest", "fraction")}
+                           for r in alignment["top_detail"] if r["holds"] for c in r["conditions"]],
+            "runner_up": [r["protocol_id"] for r in alignment["ranking"][1:3]],
+        }
+    if sop["id"] == "TEP-COOL-01":
+        state["trend"] = checkpoint.cooling_trend
+    questions = {
+        "diagnosis": {
+            "type": "choice", "criteria": sop["diagnoses"],
+            "instructions": (
+                "Choose the diagnostic check supported by the alarm measurements and SOP. "
+                "Use trends and valve-command vs actual-opening/flow when present. "
+                "Select insufficient when the evidence does not distinguish causes."
+            ),
+        },
+        "response": {
+            "type": "choice", "criteria": choices,
+            "instructions": (
+                "Choose the SOP response to prioritize in a simulated comparison based on these readings. "
+                "An instrument-only alarm should be verified while holding the current target. "
+                "Prefer a conservative choice when evidence is inconclusive."
+            ),
+        },
+    }
+    reason = None
+    try:
+        selected = zoro_choices(state, questions)
+        model = "Zoro-1"
+    except (AttributeError, KeyError, IndexError, TypeError, ValueError, URLError, TimeoutError) as error:
+        diagnosis = "insufficient"
+        if sop["id"] == "TEP-PRESSURE-01":
+            diagnosis = "verify_signal" if checkpoint.alarm["source"] == "센서 시험" else "verify_process"
+        selected = {"diagnosis": {"choice": diagnosis, "confidence": None},
+                    "response": {"choice": "hold", "confidence": None}}
+        model = FALLBACK
+        reason = type(error).__name__ if os.environ.get("ZORO_BASE_URL") else "not_configured"
+    diagnosis, response = selected["diagnosis"], selected["response"]
+    return {
+        "model": model, "fallback": model == FALLBACK, "fallback_reason": reason,
+        "decision_ms": round((perf_counter() - started) * 1000, 2),
+        "diagnosis": {**diagnosis, "label": sop["diagnoses"][diagnosis["choice"]]},
+        "response": {**response, "label": choices[response["choice"]]},
+    }
+
+
+def run_branch(checkpoint, candidate):
+    label, reduction, delay = CANDIDATES[candidate]
+    identity = {"id": candidate, "label": label, "reduction_pct": reduction, "delay_minutes": delay}
+    controller = deepcopy(checkpoint.controller)
+    measurements = checkpoint.measurements.copy()
+    target = controller.setpoints.production_rate
+    delay_steps = None if delay is None else round(delay / 60 / STEP_HOURS)
+    rows = [measurements]
+    alarm_tag = checkpoint.alarm["tag"]
+    signal_index = int(alarm_tag.split("(")[1].rstrip(")")) - 1
+    group = CHANNELS[alarm_tag]["group"]
+    protected_steps = 0
+    shutdown = None
+    applied = False
+    cost = 0.0
+    offsets = {tag: checkpoint.observed[tag] - float(checkpoint.measurements[i])
+               for i, tag in enumerate(f"XMEAS({k})" for k in range(1, 42))
+               if checkpoint.observed.get(tag) is not None and abs(checkpoint.observed[tag] - checkpoint.measurements[i]) > 1e-9}
+    monitor = AlarmMonitor(checkpoint.limits)
+    sim = TennesseeEastmanProcess()
+    try:
+        sim.restore(checkpoint.native)
+        if group == "measurements":
+            alarm_samples = [measurements[signal_index]]
+        elif group == "manipulated_variables":
+            alarm_samples = [checkpoint.observed[alarm_tag]]
+        else:
+            alarm_samples = [sim.kernel.outputs(sim.time, sim.state)[group][signal_index]]
+        if delay_steps is not None:
+            target = adjustment({"op": "setpoint", "id": "production_rate", "value": target * (1 - reduction / 100)})["value"]
+        for step in range(round(HORIZON_HOURS / STEP_HOURS)):
+            if step == delay_steps:
+                controller.setpoints = replace(controller.setpoints, production_rate=target)
+                applied = True
+            action, control, _ = control_action(controller, measurements, sim.time, checkpoint.manual)
+            result = sim.advance(action, control_interval=STEP_HOURS, disturbances=checkpoint.idv)
+            measurements = result.measurements
+            rows.append(measurements)
+            alarm_signal = result.implemented_action if group == "manipulated_variables" else getattr(result, group)
+            alarm_samples.append(alarm_signal[signal_index])
+            protected_steps += int(any(control.overrides_active.values()))
+            cost += step_cost(result)
+            monitor.update(sim.time, measurements, offsets, controller.setpoints, STEP_HOURS)
+            if result.shutdown_status["terminated"]:
+                shutdown = result.shutdown_status
+                break
+    except (RuntimeError, ValueError):
+        return {**identity, "error": "이 조건에서 분기를 계산할 수 없습니다."}
+    finally:
+        sim.kernel.close()
+    summary = branch_summary(np.asarray(rows), protected_steps, shutdown, cost=cost,
+                             reference=checkpoint.controller.setpoints.production_rate,
+                             horizon_hours=HORIZON_HOURS, alarm=monitor.summary())
+    return {
+        **identity, **summary, **alarm_recovery(alarm_samples, checkpoint.limits[alarm_tag]),
+        "production_target": float(target), "action_applied": applied,
+    }
+
+
+def alarm_recovery(samples, limits):
+    series = np.asarray(samples, dtype=float)
+    low, high = limits
+    outside = ~np.isfinite(series)
+    if low is not None:
+        outside |= series < low
+    if high is not None:
+        outside |= series > high
+    final_steps = min(len(series) - 1, round(FINAL_WINDOW_HOURS / STEP_HOURS))
+    outside_steps = np.flatnonzero(outside)
+    recovery_step = int(outside_steps[-1]) + 1 if outside_steps.size else 0
+    return {
+        "alarm_final_window_inside": not bool(np.any(outside[-final_steps:])),
+        "alarm_recovery_minutes": None if outside[-1] else recovery_step * STEP_HOURS * 60,
+    }
+
+
+def evaluate_alarm(checkpoint):
+    alarm = checkpoint.alarm
+    sop, alignment = select_sop(checkpoint)  # [CHANGED] was find_sop(alarm): tag-only lookup
+    readings = evidence(checkpoint, sop, alignment) if sop else []
+    digest = sha256(checkpoint.native.model_bytes).hexdigest()[:12]
+    sop_summary = {key: sop[key] for key in ("id", "revision", "title", "checks")} if sop else None
+    source_url = sop.get("source_url") if sop else None
+    if isinstance(source_url, str) and source_url.startswith("https://doi.org/") and sop.get("source_title"):
+        sop_summary.update(source_title=sop["source_title"], source_url=source_url)
+    result = {
+        "decision_id": uuid4().hex, "alarm": alarm, "related_alarms": checkpoint.related_alarms,
+        "sop": sop_summary,
+        "readings": readings, "decision": None, "branches": [], "alignment": alignment,
+        "start": {"checkpoint": digest, "run_id": checkpoint.run_id, "step": checkpoint.step,
+                  "time_hours": round(checkpoint.native.time, 8), "horizon_hours": HORIZON_HOURS,
+                  "production_target": checkpoint.controller.setpoints.production_rate},
+    }
+    if sop and sop.get("candidates"):
+        result["decision"] = choose_response(checkpoint, sop, readings, alignment)
+        baseline = run_branch(checkpoint, "hold")
+        variants = {key: run_branch(checkpoint, key) for key in SWEEP_CANDIDATES}
+        evaluated = {"hold": baseline, **variants}
+        result["branches"] = [evaluated[key] for key in sop["candidates"]]
+        result["sweep"] = {
+            "baseline": baseline, "delay_minutes": SWEEP_DELAY_MINUTES, "reduction_pct": SWEEP_REDUCTION_PCT,
+            "final_window_hours": min(HORIZON_HOURS, FINAL_WINDOW_HOURS), "branches": list(variants.values()),
+        }
+    trace = {
+        **result, "time_utc": timestamp(), "flow": "live_alarm_response", "kernel_revision": KERNEL_REVISION,
+        "simulation_context": {
+            "mode": "mode1", "seed": checkpoint.seed, "step_hours": STEP_HOURS,
+            "setpoints": asdict(checkpoint.controller.setpoints),
+            "controller": {key: getattr(checkpoint.controller, f"enable_{key}")
+                           for key in ("composition", "overrides", "pct_g_feedback")},
+            "manual_overrides": {f"XMV({i + 1})": value for i, value in checkpoint.manual.items()},
+            "alarm_limits": checkpoint.limits, "cooling_trend": checkpoint.cooling_trend,
+            "evaluation_faults": [f"IDV({i + 1})" for i in np.flatnonzero(checkpoint.idv)],
+        },
+    }
+    return result, trace
+
+
+def analyze_alarm(checkpoint, trace_path):
+    result, trace = evaluate_alarm(checkpoint)
+    result["logged"] = append_trace(trace_path, trace)
+    return result

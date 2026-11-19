@@ -1,0 +1,107 @@
+{
+  "$defs": {
+    "LogStage": {
+      "enum": [
+        "input_received",
+        "options_built",
+        "model_requested",
+        "model_selected",
+        "decision_rejected",
+        "policy_decision",
+        "tool_started",
+        "tool_succeeded",
+        "tool_failed",
+        "tool_running",
+        "state_updated",
+        "terminated"
+      ],
+      "title": "LogStage",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "seq": {
+      "title": "Seq",
+      "type": "integer"
+    },
+    "event_id": {
+      "title": "Event Id",
+      "type": "string"
+    },
+    "state_version": {
+      "title": "State Version",
+      "type": "integer"
+    },
+    "stage": {
+      "$ref": "#/$defs/LogStage"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "decision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decision Id"
+    },
+    "tool_request_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tool Request Id"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Run Id"
+    },
+    "data": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Data",
+      "type": "object"
+    },
+    "sim_time_s": {
+      "title": "Sim Time S",
+      "type": "number"
+    },
+    "logged_at": {
+      "description": "벽시계 UTC",
+      "format": "date-time",
+      "title": "Logged At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "seq",
+    "event_id",
+    "state_version",
+    "stage",
+    "summary",
+    "sim_time_s",
+    "logged_at"
+  ],
+  "title": "LogEntry",
+  "type": "object"
+}

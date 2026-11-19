@@ -1,0 +1,55 @@
+{
+  "$defs": {
+    "ChoiceQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "choice",
+          "default": "choice",
+          "title": "Type",
+          "type": "string"
+        },
+        "instructions": {
+          "title": "Instructions",
+          "type": "string"
+        },
+        "criteria": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "minProperties": 1,
+          "title": "Criteria",
+          "type": "object"
+        }
+      },
+      "required": [
+        "instructions",
+        "criteria"
+      ],
+      "title": "ChoiceQuestion",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Zoro 에 실제로 전송되는 본문 (공식 형식 그대로).",
+  "properties": {
+    "state": {
+      "additionalProperties": true,
+      "title": "State",
+      "type": "object"
+    },
+    "questions": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ChoiceQuestion"
+      },
+      "title": "Questions",
+      "type": "object"
+    }
+  },
+  "required": [
+    "state",
+    "questions"
+  ],
+  "title": "ZoroRequest",
+  "type": "object"
+}
