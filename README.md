@@ -4,7 +4,7 @@
 
 ProtoPilot은 Tennessee Eastman Process(TEP)에서 알람 발생 시점의 공정 상태를 재현합니다. 표준운전절차(SOP)와 계측·조작 이력을 바탕으로 Zoro-1이 제안한 대응안을 시험하고, 공정 제약 충족 여부와 비용·생산량을 비교합니다.
 
-**[Brev 라이브 데모](https://protopilot-rx8cin03n.gobrev.dev/)** · [해커톤 발표 자료](https://docs.google.com/presentation/d/1OP7zI-4293JVnL-ZUxfro8mzeUhKAqT7yBn7WfbLIVM/edit?slide=id.p1#slide=id.p1) · [데모 영상](docs/media/protopilot-demo.mp4) · [제출 에이전트 로그](docs/agent-log.md) · [기술 문서](#기술과-관련-문서)
+**[Brev 라이브 데모](https://protopilot-rx8cin03n.gobrev.dev/)** · [해커톤 발표 자료](https://docs.google.com/presentation/d/1OP7zI-4293JVnL-ZUxfro8mzeUhKAqT7yBn7WfbLIVM/edit?slide=id.p1#slide=id.p1) · [데모 영상](https://drive.google.com/file/d/1iA_0NsVXWJF3tzQqJ_xo5plWEqI_3RkR/view) · [제출 에이전트 로그](docs/agent-log.md) · [기술 문서](#기술과-관련-문서)
 
 <h2 align="center">팀 소개</h2>
 
