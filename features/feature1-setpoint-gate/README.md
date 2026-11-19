@@ -10,7 +10,7 @@
 라이브 RAG 인덱스를 처음 준비할 때는 Feature 1 폴더에서 다음을 실행합니다.
 
 ```bash
-cd rag_jiyeon
+cd rag
 ZORO_DEVICE=cpu ZORO_MODEL_CACHE="$PWD/.cache/hub" ZORO_SPARSE_CACHE="$PWD/.cache/fastembed" .venv/bin/python main.py --config config/tep_studio.yaml ingest
 ```
 

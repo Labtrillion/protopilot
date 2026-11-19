@@ -35,7 +35,7 @@ python main.py --config config/tep_studio.yaml --input examples/tep_studio/alarm
 ## IDV(8) 시나리오 처음 실행
 
 ```bash
-cd features/feature1-setpoint-gate/rag_jiyeon
+cd features/feature1-setpoint-gate/rag
 source .venv/bin/activate
 python main.py
 ```
