@@ -6,7 +6,8 @@ import { mountSignal, signalTag } from './signal.js';
 import { mountScenario } from './scenario.js';
 import { mountAlarmResponse } from './alarm-response.js';
 import {
-  KPI_TAGS, byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderKpis, renderRows, wallTime,
+  KPI_TAGS, byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderKpis, renderRows,
+  unacknowledgedAlarms, wallTime,
 } from './ui.js';
 
 // Representative closed loop per unit; used only when the server defines it for that unit.
@@ -17,9 +18,9 @@ const PRIMARY_TAGS = [7, 13, 16, 8, 12, 15, 9, 11, 18, 6, 17, 10].map(codeFor);
 const channels = new Map();
 const trends = new Map();
 const reset = byId('reset'), run = byId('run'), speed = byId('speed'), select = byId('area-select');
-const connection = byId('connection'), soundBtn = byId('sound');
+const connection = byId('connection');
 const pageId = crypto.randomUUID();
-let plantView, openControls, status, audio, buzzer = false, noticeTimer, pageRecorded = false;
+let plantView, openControls, status, noticeTimer, pageRecorded = false;
 let circuit = '', setpoints = [], telemetryView = 'values';
 let focusedArea = 'plant', selection, alarmTab = 'active', connected = false;
 let seenAlarms = new Set(), visibleChannels = [];
@@ -153,29 +154,14 @@ function trackSetpoint(id, jump = false) {
   }
 }
 
-function note(message, level = 'ok') {
+function note(message, level = 'ok', alarmId = '') {
   const box = byId('notice');
   box.textContent = message;
   box.dataset.level = level;
+  box.dataset.alarmId = alarmId;
   box.hidden = false;
   clearTimeout(noticeTimer);
   noticeTimer = setTimeout(() => { box.hidden = true; }, 4500);
-}
-
-function ringAlarm() {
-  if (!buzzer || audio?.state !== 'running') return;
-  [0, 0.19].forEach((delay) => {
-    const oscillator = audio.createOscillator(), gain = audio.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.value = delay ? 650 : 850;
-    const start = audio.currentTime + delay;
-    gain.gain.setValueAtTime(0.001, start);
-    gain.gain.exponentialRampToValueAtTime(0.2, start + 0.016);
-    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.13);
-    oscillator.connect(gain).connect(audio.destination);
-    oscillator.start(start);
-    oscillator.stop(start + 0.14);
-  });
 }
 
 const filtersActive = () => Boolean(byId('search').value.trim() || byId('channel-group').value || byId('channel-area').value);
@@ -260,8 +246,9 @@ function investigate(area, tag, saved) {
 function markNewAlarm(on) {
   const tab = byId('active-tab');
   const show = on && alarmTab !== 'active';
+  if (tab.hasAttribute('data-new') === show) return;
   tab.toggleAttribute('data-new', show);
-  tab.textContent = show ? '활성 알람 · 새 알람' : '활성 알람';
+  tab.textContent = show ? '미확인 알람 · 새 알람' : '미확인 알람';
 }
 
 function renderConnection() {
@@ -300,14 +287,19 @@ function receive(next) {
       trends.set(tag, values);
     }
   }
-  const newAlarm = status.alarms.filter((alarm) => !seenAlarms.has(alarm.id)).sort((a, b) => b.id - a.id)[0];
+  const pending = unacknowledgedAlarms(status);
+  const newAlarm = pending.filter((alarm) => !seenAlarms.has(alarm.id)).sort((a, b) => b.id - a.id)[0];
   seenAlarms = new Set(status.alarms.map((alarm) => alarm.id));
+  const notice = byId('notice');
+  if (!notice.hidden && notice.dataset.alarmId && !pending.some((alarm) => String(alarm.id) === notice.dataset.alarmId)) {
+    notice.hidden = true;
+  }
+  if (!pending.length) markNewAlarm(false);
   if (newAlarm) {
     // Incoming alarms notify only; the user's unit, SP, tracking, interior and filters stay as they are.
-    ringAlarm();
     markNewAlarm(true);
     const code = AREAS[newAlarm.area]?.code;
-    note(`${code ? `${code} · ` : ''}${newAlarm.label} — 알람 항목을 선택하면 해당 설비로 이동합니다.`, newAlarm.kind === 'trip' ? 'danger' : 'warning');
+    note(`${code ? `${code} · ` : ''}${newAlarm.label} — 알람 항목을 선택하면 해당 설비로 이동합니다.`, newAlarm.kind === 'trip' ? 'danger' : 'warning', newAlarm.id);
   }
   renderConnection();
   byId('clock').textContent = elapsed(status.time_hours);
@@ -465,22 +457,6 @@ function attachEvents() {
   byId('clear-test').addEventListener('click', () => doCommand({ op: 'offset', id: 'XMEAS(7)', value: 0 }, () => {
     note('반응기 압력 센서 시험을 해제했습니다.');
   }));
-  soundBtn.addEventListener('click', async () => {
-    if (buzzer) {
-      buzzer = false;
-    } else {
-      try {
-        audio ??= new AudioContext();
-        await audio.resume();
-        buzzer = true;
-      } catch {
-        note('브라우저에서 알람 소리를 재생할 수 없습니다.', 'danger');
-      }
-    }
-    soundBtn.setAttribute('aria-pressed', buzzer);
-    soundBtn.innerHTML = icon(buzzer ? 'sound' : 'muted');
-    soundBtn.title = buzzer ? '알람 소리 끄기' : '알람 소리 켜기';
-  });
 }
 
 async function poll() {

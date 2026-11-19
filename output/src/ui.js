@@ -36,8 +36,6 @@ const icons = {
   download: '<path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/>',
   search: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 5 5"/>',
   bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12a2 2 0 0 0 4 0"/>',
-  muted: '<path d="M3 9h4l5-4v14l-5-4H3zm13 0 5 6m0-6-5 6"/>',
-  sound: '<path d="M3 9h4l5-4v14l-5-4H3zm13 0a4 4 0 0 1 0 6m2.5-8.5a7.7 7.7 0 0 1 0 11"/>',
   bolt: '<path d="m13 2-9 12h7l-1 8 10-12h-8z"/>',
   close: '<path d="m6 6 12 12M18 6 6 18"/>',
   check: '<path d="m5 12 4 4L19 6"/>',
@@ -222,10 +220,13 @@ export function renderRows(channels, status, selected) {
 }
 
 const KIND = { warning: '경고', trip: '트립', change: '조작', clear: '복구', ack: '확인', protection: '보호 제어' };
+export const unacknowledgedAlarms = (status) => status?.alarms.filter((alarm) => !alarm.ack) ?? [];
+
 export function renderAlarms(status, tab, metadata) {
-  const events = tab === 'active' ? status?.alarms : status?.events;
+  const pending = unacknowledgedAlarms(status);
+  const events = tab === 'active' ? pending : status?.events;
   const panel = byId('events');
-  const count = status?.alarms.length ?? 0;
+  const count = pending.length;
   const responseEvents = new Set(status?.response_events ?? []);
   byId('alarm-count').textContent = count;
   byId('alarm-count').classList.toggle('alarming', count > 0);
@@ -233,8 +234,7 @@ export function renderAlarms(status, tab, metadata) {
   const focusAttribute = ['data-response-alarm', 'data-ack', 'data-event-id']
     .find((name) => panel.contains(focused) && focused.hasAttribute(name));
   const focusKey = focusAttribute && focused.getAttribute(focusAttribute);
-  const items = !events?.length ? `<div class="alarm-empty">${icon('check')}<b>${tab === 'active' ? '활성 알람 없음' : '기록된 이벤트 없음'}</b>
-      <span>${tab === 'active' ? '새 알람은 배지와 소리로 알립니다. 항목을 선택하면 관련 설비로 이동합니다.' : '공정 조작과 알람 내역이 여기에 표시됩니다.'}</span></div>`
+  const items = !events?.length ? `<div class="alarm-empty">${icon('check')}<b>${tab === 'active' ? '미확인 알람 없음' : '기록된 이벤트 없음'}</b></div>`
     : events.map((e) => {
       const unit = metadata.get(e.tag)?.unit;
       const detail = [e.tag, e.value == null ? '' : `${reading(e.value, unit)} ${unit ?? ''}`,
@@ -245,13 +245,16 @@ export function renderAlarms(status, tab, metadata) {
         </button>
         <div class="event-actions">
           ${responseEvents.has(e.id) ? `<button type="button" class="alarm-study" data-response-alarm="${e.id}">${e.kind === 'trip' ? 'SOP 확인' : '대응 비교'}</button>` : ''}
-          ${tab === 'active' ? `<button type="button" class="ack" data-ack="${e.id}" ${e.ack ? 'disabled' : ''}>${e.ack ? '확인됨' : '알람 확인'}</button>` : ''}
+          ${tab === 'active' ? `<button type="button" data-ack="${e.id}">알람 확인</button>` : ''}
         </div>
       </article>`;
     }).join('');
   if (panel.dataset.html !== items) {
     panel.innerHTML = items;
     panel.dataset.html = items;
-    if (focusKey) panel.querySelector(`[${focusAttribute}="${focusKey}"]:not(:disabled)`)?.focus({ preventScroll: true });
+    if (focusKey) {
+      const nextFocus = panel.querySelector(`[${focusAttribute}="${focusKey}"]`) ?? panel;
+      nextFocus.focus({ preventScroll: true });
+    }
   }
 }
