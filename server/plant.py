@@ -56,6 +56,9 @@ class AlarmCheckpoint:
     monitor: object = None
     offsets: dict = field(default_factory=dict)
     history: tuple = ()  # (time_hours, observed) samples for SOP alignment, newest last
+    decision_history: tuple = ()
+    base_setpoints: object = None
+    timeline: tuple = ()
 
 
 def control_action(controller, measurements, time, manual):
@@ -240,13 +243,16 @@ class Plant:
         now = self.sim.time
         if self.history and now - self.history[-1].time_hours < HISTORY_SAMPLE_HOURS - 1e-9:
             return
-        self.history.append(HistorySample(
+        self.history.append(self.history_sample(now, values))
+        while now - self.history[0].time_hours > HISTORY_WINDOW_HOURS + 1e-9:
+            self.history.popleft()
+
+    def history_sample(self, now, values):
+        return HistorySample(
             round(now, 8), tuple(values[tag] for tag in MEASUREMENT_TAGS),
             tuple(float(value) for value in self.requested),
             tuple(sorted(key for key, active in self.protection.items() if active)),
-        ))
-        while now - self.history[0].time_hours > HISTORY_WINDOW_HOURS + 1e-9:
-            self.history.popleft()
+        )
 
     def active_disturbances(self):
         return [f"IDV({index + 1})" for index in np.flatnonzero(self.idv)]
@@ -300,12 +306,17 @@ class Plant:
         snapshot = self.sim.snapshot()
         controller = deepcopy(self.controller)
         related = tuple(dict(alarm) for alarm in self.active.values())
+        alarm_sample = self.history_sample(self.sim.time, observed)
+        decision_history = tuple(sample for sample in self.history if sample.time_hours < alarm_sample.time_hours)
+        decision_history = (*decision_history, alarm_sample)
+        timeline = tuple(self.timeline)
         for alarm in alarms:
             self.alarm_checkpoints[alarm["id"]] = AlarmCheckpoint(
                 self.recording.id, self.step, self.seed, dict(alarm), snapshot, controller,
                 self.measurements.copy(), self.manual.copy(), self.idv.copy(), self.limits.copy(),
                 observed, tuple(self.cooling_trend), related,
                 monitor=self.alarm_monitor.copy(), offsets=self.offsets.copy(), history=tuple(self.sop_history),
+                decision_history=decision_history, base_setpoints=self.base_setpoints, timeline=timeline,
             )
         while len(self.alarm_checkpoints) > self.events.maxlen:
             active_ids = {alarm["id"] for alarm in self.active.values()}

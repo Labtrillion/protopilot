@@ -139,7 +139,7 @@ class LiveScenarioTest(unittest.TestCase):
             "response": {"choice": "reduce_30", "confidence": 0.85},
         }}
         with patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}):
-            with patch("server.assistant._request", return_value=answers) as request:
+            with patch("zoro.client._request", return_value=answers) as request:
                 with patch("server.alarm_response.HORIZON_HOURS", 1.01):
                     result = analyze_alarm(checkpoint, log)
         self.assertEqual(result["sop"]["id"], "TEP-COOL-01")
@@ -190,7 +190,7 @@ class ExperimentsTest(unittest.TestCase):
             replies = [{"answers": {"tool": {"choice": "run_scenario", "confidence": 0.92}}},
                        {"choices": [{"message": {"content": '{"config":{"horizon":0.15}}'}}]}]
             with patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}):
-                with patch("server.assistant._request", side_effect=replies) as request:
+                with patch("zoro.client._request", side_effect=replies) as request:
                     zoro = respond("0.15시간 실행", [], tools, log)
                     self.assertTrue(request.call_args_list[0].args[0].endswith("/v1/systemone"))
                     self.assertFalse(request.call_args_list[0].args[1]["reasoning"])

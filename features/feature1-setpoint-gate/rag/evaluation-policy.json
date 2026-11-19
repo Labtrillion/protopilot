@@ -1,0 +1,11 @@
+{
+  "id": "tep-paired-evaluation-v1",
+  "sources": {
+    "studio": "legacy/STUDIO.md",
+    "economics": ["eval-savings", "eval-gates"]
+  },
+  "final_window_hours": 2,
+  "production_ratio_min": 0.99,
+  "g_mass_pct_range": [45, 55],
+  "max_def_mol_pct": 2
+}

@@ -1,7 +1,19 @@
 import { SCORE_WEIGHTS, bestImprovement, evaluateBranch, scoreBranch } from './simulation-score.js';
 import { byId, elapsed, escape, reading } from './ui.js';
 
-const RESULTS_HASH = '#simulation-results';
+import { renderZoroCards, renderZoroEvidence, renderZoroSummary } from './zoro-results.js';
+
+const RESULTS_HASH = '#simulation-result';
+const LEGACY_HASH = '#simulation-results';
+const LATEST_ZORO_RESULT = 'protopilot:zoro-result';
+
+function latestZoroResult() {
+  try {
+    return JSON.parse(sessionStorage.getItem(LATEST_ZORO_RESULT));
+  } catch {
+    return null;
+  }
+}
 const formatNumber = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 });
 
 function quantity(value, unit) {
@@ -130,6 +142,19 @@ function renderSweep(data) {
   }).join('');
 }
 
+function renderZoroResults(data) {
+  byId('simulation-kind').textContent = 'Zoro-1 · 알람 대응 시뮬레이션';
+  byId('simulation-title').textContent = data.alarm.label;
+  byId('simulation-context').textContent = [data.alarm.tag, `발생 ${elapsed(data.alarm.time_hours)}`,
+    `비교 시간 ${elapsed(data.start.horizon_hours)}`].filter(Boolean).join(' · ');
+  byId('simulation-sensor-note').hidden = data.alarm.source !== '센서 시험';
+  byId('simulation-sweep').hidden = true;
+  byId('simulation-cards').hidden = false;
+  byId('simulation-zoro-summary').innerHTML = renderZoroSummary(data);
+  byId('simulation-cards').innerHTML = renderZoroCards(data);
+  byId('simulation-rubric').innerHTML = renderZoroEvidence(data);
+}
+
 function renderResults(data) {
   byId('simulation-kind').textContent = data.sweep ? 'Function 2 · 프로토콜 개선' : '알람 대응 시뮬레이션';
   byId('simulation-title').textContent = data.alarm.label;
@@ -154,10 +179,25 @@ export function mountSimulationResults() {
   let opener;
 
   function syncView() {
-    const data = location.hash === RESULTS_HASH ? history.state?.alarmSimulation : null;
+    const hash = location.hash;
+    const isResults = hash === RESULTS_HASH || hash === LEGACY_HASH;
+    const data = history.state?.alarmSimulation ?? (hash === RESULTS_HASH ? latestZoroResult() : null);
     const wasOpen = !panel.hidden;
-    if (data) {
-      renderResults(data);
+    if (isResults) {
+      const isZoro = data?.kind === 'zoro';
+      byId('simulation-comparison').hidden = !data;
+      byId('simulation-scoring').hidden = !data;
+      byId('simulation-zoro-summary').hidden = !isZoro;
+      byId('simulation-scoring').querySelector('summary').textContent = isZoro ? 'Zoro-1 판단 및 검색 근거' : '점수 산정 기준';
+      byId('simulation-cards-title').textContent = isZoro ? '설정값 분기 비교' : '대응안 비교';
+      if (isZoro) renderZoroResults(data);
+      else if (data) renderResults(data);
+      else {
+        byId('simulation-kind').textContent = '알람 대응 시뮬레이션';
+        byId('simulation-title').textContent = '시뮬레이션 결과';
+        byId('simulation-context').textContent = '대시보드에서 알람의 Zoro 대응 검토를 실행하면 여기에 결과가 표시됩니다.';
+        byId('simulation-sensor-note').hidden = true;
+      }
       topbar.hidden = dashboard.hidden = true;
       panel.hidden = false;
       panel.scrollTop = 0;
@@ -170,14 +210,27 @@ export function mountSimulationResults() {
     }
   }
 
-  byId('simulation-back').addEventListener('click', () => history.back());
+  byId('simulation-back').addEventListener('click', () => {
+    if (history.state?.alarmSimulation) history.back();
+    else {
+      history.replaceState(null, '', location.pathname + location.search);
+      syncView();
+    }
+  });
   window.addEventListener('popstate', syncView);
   syncView();
   return (data) => {
     opener = document.activeElement;
     byId('simulation-baseline').open = false;
     byId('simulation-scoring').open = false;
-    history.pushState({ alarmSimulation: data }, '', RESULTS_HASH);
+    if (data.kind === 'zoro') {
+      try {
+        sessionStorage.setItem(LATEST_ZORO_RESULT, JSON.stringify(data));
+      } catch {
+        // Result navigation also works with history state when session storage is unavailable.
+      }
+    }
+    history.pushState({ alarmSimulation: data }, '', data.kind === 'zoro' ? RESULTS_HASH : LEGACY_HASH);
     syncView();
   };
 }

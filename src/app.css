@@ -843,3 +843,18 @@ button:disabled, button[aria-pressed]:disabled { cursor: default; color: var(--d
 .study-table th, .study-table td { padding: 0.35rem 0.45rem; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: top; }
 .study-note { color: var(--muted); font-size: 0.78rem; }
 .danger-text { color: var(--danger); }
+
+.latest-zoro-review {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+  border-top: 1px solid var(--line); padding: 0.65rem 0.75rem; font-size: 0.8rem;
+}
+.latest-zoro-review p { margin: 0.2rem 0 0; color: var(--subtext); }
+.latest-zoro-review button { flex: none; }
+#zoro-agent-result .zoro-changes, .zoro-changes {
+  display: grid; gap: 0.35rem; margin: 0.3rem 0; padding: 0; list-style: none;
+}
+.zoro-changes li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.2rem 0.65rem; }
+.zoro-changes strong { font-variant-numeric: tabular-nums; }
+#simulation-zoro-summary { display: block; margin-bottom: 0.8rem; }
+#simulation-zoro-summary .zoro-summary { display: grid; gap: 0.35rem; }
+#simulation-zoro-summary .zoro-summary p { margin: 0; }

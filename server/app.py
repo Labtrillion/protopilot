@@ -14,7 +14,8 @@ from .catalog import CHANNELS, METADATA
 from .plant import Plant, TICK_SECONDS
 from .recording import ArchivedRecording, encode
 from .rollout import Rollout
-from .setpoint_decision import analyze_setpoints, capture_point
+from setpoint_gate.setpoint_decision import analyze_setpoints, capture_alarm_point, capture_point
+from sop_ranking.evaluate import evaluate_alternatives
 
 ROOT = Path(__file__).resolve().parents[1]
 ZORO_STUDY = BoundedSemaphore()
@@ -22,11 +23,17 @@ SETPOINT_STUDY = BoundedSemaphore()
 ROLLOUT_STUDY = BoundedSemaphore()
 
 
+def analyze_alarm_setpoints(checkpoint, trace_path):
+    with SETPOINT_STUDY:
+        return analyze_setpoints(capture_alarm_point(checkpoint), trace_path, evaluate_alternatives=evaluate_alternatives)
+
+
 class ConsoleHandler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, plant, lock, alarm_studies, **kwargs):
+    def __init__(self, *args, plant, lock, alarm_studies, setpoint_studies, **kwargs):
         self.plant = plant
         self.lock = lock
         self.alarm_studies = alarm_studies
+        self.setpoint_studies = setpoint_studies
         super().__init__(*args, directory=str(ROOT / "dist"), **kwargs)
 
     def log_message(self, format, *args):
@@ -62,6 +69,9 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
         elif path.startswith("/api/alarm-response/"):
             job_id = path.removeprefix("/api/alarm-response/")
             self.alarm_study_status(job_id, self.alarm_studies.get(job_id))
+        elif path.startswith("/api/setpoint-decision/"):
+            job_id = path.removeprefix("/api/setpoint-decision/")
+            self.alarm_study_status(job_id, self.setpoint_studies.get(job_id))
         elif path in ("/api/export/csv", "/api/export/json"):
             self.download(path.rsplit("/", 1)[1])
         else:
@@ -140,8 +150,23 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             return
         self.respond(result)
 
+    def alarm_setpoint_decision(self, body):
+        alarm_id = body["alarm_id"]
+        if type(alarm_id) is not int or body.get("apply"):
+            raise ValueError("알람 식별자를 지정하고 비교만 요청하세요.")
+        with self.lock:
+            checkpoint = self.plant.alarm_checkpoints.get(alarm_id) if body.get("run") == self.plant.recording.id else None
+        if checkpoint is None:
+            self.respond({"error": "알람 발생 시점의 상태를 찾을 수 없습니다. 현재 알람을 다시 선택하세요."}, 404)
+            return
+        job_id, job = self.setpoint_studies.submit(checkpoint, retry=body.get("retry") is True)
+        self.alarm_study_status(job_id, job)
+
     def setpoint_decision(self, body):
         """Decide setpoint changes for the live plant now; `apply: true` also sends Zoro-1's changes to the plant."""
+        if "alarm_id" in body:
+            self.alarm_setpoint_decision(body)
+            return
         with self.lock:
             if body.get("run") != self.plant.recording.id:
                 self.respond({"error": "현재 실행 기록의 ID를 지정하세요."}, 404)
@@ -154,7 +179,8 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             self.respond({"error": "다른 설정값 판단을 계산 중입니다. 잠시 후 다시 시도하세요."}, 409)
             return
         try:
-            result = analyze_setpoints(point, self.plant.root / "agent-trace.jsonl")
+            result = analyze_setpoints(point, self.plant.root / "agent-trace.jsonl",
+                                       evaluate_alternatives=evaluate_alternatives)
         finally:
             SETPOINT_STUDY.release()
         if body.get("apply") and not result["decision"]["fallback"]:
@@ -200,8 +226,7 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             ROLLOUT_STUDY.release()
 
     def zoro_agent(self, body):
-        # Imported here so the console still starts when the agent package is absent.
-        from .zoro_bridge import run_zoro_agent
+        from sop_ranking.zoro_bridge import run_zoro_agent
 
         alarm_id = body.get("alarm_id")
         if type(alarm_id) is not int or not isinstance(body.get("run"), str):
@@ -294,8 +319,10 @@ def main():
         parser.error("먼저 npm run build를 실행하세요.")
     lock, stop = RLock(), Event()
     plant = Plant(args.data)
-    alarm_studies = AlarmStudies(plant.root / "agent-trace.jsonl")
-    handler = partial(ConsoleHandler, plant=plant, lock=lock, alarm_studies=alarm_studies)
+    trace_path = plant.root / "agent-trace.jsonl"
+    alarm_studies = AlarmStudies(trace_path)
+    setpoint_studies = AlarmStudies(trace_path, workers=1, analyze=partial(analyze_alarm_setpoints, trace_path=trace_path))
+    handler = partial(ConsoleHandler, plant=plant, lock=lock, alarm_studies=alarm_studies, setpoint_studies=setpoint_studies)
     with ThreadingHTTPServer(("127.0.0.1", args.port), handler) as server:
         thread = Thread(target=advance_forever, args=(plant, lock, stop), daemon=True)
         thread.start()
@@ -308,6 +335,7 @@ def main():
             stop.set()
             thread.join()
             alarm_studies.close()
+            setpoint_studies.close()
 
 
 if __name__ == "__main__":

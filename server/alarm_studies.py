@@ -16,24 +16,25 @@ def ignore_worker_interrupts():
 
 
 class AlarmStudies:
-    def __init__(self, trace_path, *, workers=None):
+    def __init__(self, trace_path, *, workers=None, analyze=None):
         self.trace_path = trace_path
         workers = workers if workers is not None else max(2, min(4, (cpu_count() or 2) - 1))
-        self.processes = ProcessPoolExecutor(
+        self.processes = None if analyze else ProcessPoolExecutor(
             max_workers=workers, mp_context=get_context("spawn"), initializer=ignore_worker_interrupts,
         )
+        self.analyze = analyze
         # Keep queued jobs out of the process pool until a worker slot is available.
         self.executor = ThreadPoolExecutor(max_workers=workers)
         self.lock = Lock()
         self.jobs = OrderedDict()
 
-    def submit(self, checkpoint):
+    def submit(self, checkpoint, *, retry=False):
         # The current recording can rotate while an alarm checkpoint stays available.
         job_id = f"{checkpoint.run_id}-{checkpoint.alarm['id']}"
         with self.lock:
             job = self.jobs.get(job_id)
-            if job is None or (job.done() and job.exception() is not None):
-                job = self.executor.submit(self._analyze, checkpoint)
+            if job is None or (job.done() and (retry or job.exception() is not None)):
+                job = self.executor.submit(self.analyze or self._analyze, checkpoint)
                 self.jobs[job_id] = job
             self.jobs.move_to_end(job_id)
             expired = len(self.jobs) - 80
@@ -54,4 +55,5 @@ class AlarmStudies:
 
     def close(self):
         self.executor.shutdown(cancel_futures=True)
-        self.processes.shutdown()
+        if self.processes is not None:
+            self.processes.shutdown()

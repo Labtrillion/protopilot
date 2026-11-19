@@ -31,8 +31,9 @@ let focusedArea = 'plant', selection, connected = false;
 let visibleChannels = [], channelScope = 'primary', explicitTag = '';
 
 const response = mountResponse(trackSetpoint);
-const alarmResponse = mountAlarmResponse(request, mountSimulationResults());
-const zoroAgent = mountZoroAgent(request);
+const openSimulationResults = mountSimulationResults();
+const alarmResponse = mountAlarmResponse(request, openSimulationResults);
+const zoroAgent = mountZoroAgent(request, openSimulationResults, () => setpoints);
 const eventMonitor = mountEventMonitor((event) => {
   if (status?.alarms.some(({ id }) => id === event.id)) locateAlarm(event);
   else focus(event.area, channels.has(event.tag) ? event.tag : '');
@@ -221,6 +222,7 @@ function filter() {
 }
 
 function renderConnection() {
+  zoroAgent.update(status?.run);
   scenario.update(status, connected);
   setpointControls.update(status, connected);
   eventMonitor.update(status, connected);
@@ -357,7 +359,7 @@ async function poll() {
       follow({ kind: 'channel', item: channels.get('XMEAS(7)') });
       filter();
     }
-    if (!pageRecorded) {
+    if (!pageRecorded && !dashboard.hidden) {
       await command({ op: 'new_recording', page_id: pageId });
       pageRecorded = true;
     }

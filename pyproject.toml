@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "protopilot-features"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.7,<3"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools]
+packages = ["server", "zoro", "setpoint_gate", "setpoint_rag", "sop_ranking"]
+package-dir = {setpoint_gate = "features/feature1-setpoint-gate/setpoint_gate", setpoint_rag = "features/feature1-setpoint-gate/rag", sop_ranking = "features/feature2-sop-ranking/sop_ranking"}
+
+[tool.setuptools.package-data]
+server = ["*.json"]
+setpoint_gate = ["*.json"]
+setpoint_rag = ["evaluation-policy.json", "sop-index.json", "legacy/Zoro-RAG-Knowledge/economics.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "features/feature1-setpoint-gate/tests", "features/feature2-sop-ranking/tests", "zoro/tests"]
