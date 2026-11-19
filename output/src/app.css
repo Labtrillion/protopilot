@@ -91,8 +91,8 @@ select {
 .site-label span, .context-label span, .orbit-hint span { color: var(--muted); padding-inline: 0.28rem; }
 .global-status { margin-left: auto; display: flex; gap: 1rem; align-items: center; white-space: nowrap; }
 .status { display: inline-flex; align-items: center; gap: 0.43rem; color: var(--muted); font-size: 0.87rem; }
-.status i, .footer i { width: 0.48rem; height: 0.48rem; background: var(--muted); border-radius: 50%; flex: none; }
-.status.live i, .footer i.online { background: var(--ok); }
+.status i { width: 0.48rem; height: 0.48rem; background: var(--muted); border-radius: 50%; flex: none; }
+.status.live i { background: var(--ok); }
 .status.trip, .status.offline { color: var(--danger); }
 .status.trip i, .status.offline i { background: var(--danger); }
 .clock { color: var(--text); font: 600 1.02rem var(--mono); }
@@ -230,9 +230,6 @@ tr.alarm-row :is(.numeric > span, .channel-state) { color: var(--warning); }
 .event-actions:empty { display: none; }
 .event-actions button { padding: 0.14rem 0.5rem; font-size: 0.76rem; }
 .event-actions .alarm-study { color: var(--tracked); border-color: var(--tracked); }
-.footer { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.25rem 0.75rem 0.36rem; color: var(--muted); font: 0.74rem var(--mono); }
-.footer > span:first-child { display: flex; align-items: center; gap: 0.46rem; }
-.footer span:last-child { text-align: right; }
 
 dialog {
   --dialog-gutter: clamp(1rem, 4vmin, 2rem);
@@ -314,7 +311,6 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .legend span { font-size: 0.70rem; }
   .orbit-hint { display: none; }
   .model-tag { padding: 0.22rem; }
-  .footer { padding-inline: 0.66rem; }
 }
 
 /* Process canvas tools and shared instrumentation. */
@@ -458,7 +454,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 }
 /* Keep the model and its readouts visible together on the desktop console. */
 @media (min-width: 960px) and (min-height: 540px) {
-  body { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100dvh; overflow: hidden; }
+  body { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100dvh; overflow: hidden; }
   .console {
     grid-template-columns: clamp(14.3rem, 17vw, 19.4rem) minmax(0, 1fr) clamp(22rem, 27vw, 33rem);
     grid-template-rows: minmax(0, 1fr);
@@ -471,7 +467,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .table-scroll, .alarm-items { height: auto; flex: 1; }
   .inspector-content, .alarm-items, .table-scroll { overscroll-behavior: contain; }
   .response-chart-wrap { height: auto; flex: 1; min-height: 0; }
-  .topbar, .footer { min-width: 0; }
+  .topbar { min-width: 0; }
 }
 
 @media (min-width: 960px) and (max-height: 620px) {

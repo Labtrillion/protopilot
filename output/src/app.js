@@ -6,7 +6,7 @@ import { mountScenario } from './scenario.js';
 import { mountAlarmResponse } from './alarm-response.js';
 import {
   byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderRows,
-  unacknowledgedAlarms, wallTime,
+  unacknowledgedAlarms,
 } from './ui.js';
 
 // Representative closed loop per unit; used only when the server defines it for that unit.
@@ -265,8 +265,6 @@ function renderConnection() {
   byId('clear-test').disabled = !connected;
   byId('tab-response').disabled = !setpoints.length;
   response.enable(connected);
-  byId('record-light').classList.toggle('online', connected && !status?.error);
-  byId('record-status').textContent = connected && !status?.error && status ? `로컬 기록 · ${status.sample.toLocaleString('ko-KR')} 샘플` : '로컬 기록 연결 확인';
 }
 
 function receive(next) {
@@ -299,7 +297,6 @@ function receive(next) {
   }
   renderConnection();
   byId('clock').textContent = elapsed(status.time_hours);
-  byId('footer-time').textContent = `마지막 샘플 ${wallTime(status.time_utc)} KST · TEP Studio`;
   if (previous?.running !== status.running) run.innerHTML = status.running ? `${icon('pause')} 일시정지` : `${icon('play')} 실행`;
   if (document.activeElement !== speed) speed.value = status.speed;
   byId('clear-test').hidden = !('XMEAS(7)' in status.offsets);
