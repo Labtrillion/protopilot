@@ -103,9 +103,12 @@ const LEVELS = Object.fromEntries(Object.entries(VESSELS).filter(([, spec]) => s
 }));
 
 const portEnds = [
-  ['01', 'A', true], ['02', 'D', true], ['03', 'E', true], ['04', 'A/C', true],
-  ['CWS', 'CWS', true], ['CWR', 'CWR', false], ['09', 'PURGE', false],
-  ['11', 'PRODUCT', false], ['ST', 'STM', true], ['CD', 'COND', false],
+  ['01', 'A', 'start', 'left'], ['02', 'D', 'start', 'left'],
+  ['03', 'E', 'start', 'left'], ['04', 'A/C', 'start', 'left'],
+  ['CWS', 'CWS', 'start', 'left'], ['CWR', 'CWR', 'end', 'left'],
+  ['09', 'PURGE', 'end', 'right'],
+  ['CD', 'COND', 'end', 'right', 39, -14], ['11', 'PRODUCT', 'end', 'right', 39, 0],
+  ['ST', 'STM', 'start', 'right', 53, 18],
 ];
 
 const meters = [
@@ -114,7 +117,7 @@ const meters = [
   ['12', 0.26, -22, -4], ['13', 0.48, 0, -7],
 ];
 const flowReadouts = [
-  ['06', 0.02, 7, 17], ['08R', 0.51, -34, -7], ['10', 0.10, 17, 17], ['11', 0.02, 28, -10],
+  ['06', 0.02, 7, 17], ['08R', 0.51, -34, -7], ['10', 0.10, 17, 17], ['11', 0.02, 24, -10],
 ];
 
 function annotation([id, fraction, dx, dy]) {
@@ -134,12 +137,14 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
   }).join('');
   const arrows = Object.entries({ ...MEDIA, tracked: { colorToken: '--tracked' }, muted: { colorToken: '--pipe-muted' } }).map(([id, { colorToken }]) =>
     `<marker id="arrow-${id}" viewBox="0 0 9 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 9 4 0 8 2 4Z" fill="var(${colorToken})"/></marker>`).join('');
-  const portsMarkup = portEnds.map(([id, name, atStart]) => {
-    const [x, y] = project(streamPaths.get(id).getPoint(atStart ? 0 : 1));
+  const portsMarkup = portEnds.map(([id, name, end, side, dx = 0, dy = 0]) => {
+    const [x, y] = project(streamPaths.get(id).getPoint(end === 'start' ? 0 : 1));
     const width = name.length > 4 ? 59 : 33;
-    const left = (atStart && id !== 'ST') || id === 'CWR';
-    return `<g class="pfd-port" transform="translate(${left ? x - width : x} ${y})">
-      ${rect(0, -8, width, 16, 3)}<text x="${width / 2}" y="4">${name}</text></g>`;
+    const left = x + dx - (side === 'left' ? width : 0);
+    const baseline = y + dy;
+    const leader = dx || dy ? `<path d="M${x} ${y}L${x + dx - 12} ${baseline}H${x + dx}"/>` : '';
+    return `<g class="pfd-port">${leader}${rect(left, baseline - 8, width, 16, 3)}
+      <text x="${left + width / 2}" y="${baseline + 4}">${name}</text></g>`;
   }).join('');
   const meterMarkup = meters.map(annotation).map(([id, x, y]) => `<text class="pfd-id" x="${x}" y="${y}">#${id}</text>`).join('');
   const target = '<rect class="pfd-hit" aria-hidden="true" rx="3"/>';
@@ -157,7 +162,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
       <rect x="${x}" y="${datum}" width="${w}" height="0"/><line x1="${x + 4}" x2="${x + w - 4}" y1="${datum}" y2="${datum}"/></g>`;
   }).join('');
   const readouts = anchors.filter(([id]) => id in CORE_PRESSURES).map(([id, [x, y]]) =>
-    `<text class="pfd-pressure" data-pressure="${id}" x="${x + 28}" y="${y}"></text>`
+    `<text class="pfd-pressure" data-pressure="${id}" x="${x + 28}" y="${y + (id === 'reactor' ? 12 : 0)}"></text>`
   ).join('');
   const flowMarkup = flowReadouts.map(annotation).map(([id, x, y]) =>
     `<text class="pfd-flow-reading" data-flow-reading="${id}" x="${x}" y="${y}"></text>`

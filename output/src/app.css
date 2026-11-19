@@ -342,6 +342,7 @@ dialog::backdrop { background: var(--surface); }
 .pfd-symbol.selected { stroke: var(--focus); stroke-width: 2.5; }
 .pfd-symbol.in-alarm { stroke: var(--warning); stroke-width: 2.4; }
 .pfd-port rect { fill: var(--surface); stroke: var(--control-line); stroke-width: 1.2; }
+.pfd-port path { fill: none; stroke: var(--control-line); stroke-dasharray: 2 3; }
 .pfd-port text, .pfd-unit text, .pfd-id, .pfd-pressure { text-anchor: middle; font: 700 11px var(--mono); fill: var(--text); }
 .pfd-id { text-anchor: start; fill: var(--subtext); font-size: 10px; paint-order: stroke; stroke: var(--stage); stroke-width: 3px; stroke-linejoin: round; }
 .pfd-pressure { display: none; text-anchor: start; fill: var(--text); font-size: 11px; paint-order: stroke; stroke: var(--stage); stroke-width: 5px; stroke-linejoin: round; }
