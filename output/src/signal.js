@@ -52,7 +52,7 @@ function describe(signal, status, format) {
   return [location, PRESSURE_TAGS.has(tag) || LEVEL_TAGS.has(tag) ? '' : '선택한 태그를 공정 화면에 표시합니다.', '현재 계측'];
 }
 
-function drawTrace(canvas, values, min, max) {
+function drawTrace(canvas, values, min, max, discrete) {
   const width = canvas.clientWidth, height = canvas.clientHeight;
   if (!width || !height) return;
   const dpr = Math.min(2, devicePixelRatio);
@@ -79,8 +79,10 @@ function drawTrace(canvas, values, min, max) {
       contiguous = false;
       return;
     }
-    if (contiguous) ctx.lineTo(x(i), y(value));
-    else ctx.moveTo(x(i), y(value));
+    if (contiguous) {
+      if (discrete) ctx.lineTo(x(i), y(values[i - 1]));
+      ctx.lineTo(x(i), y(value));
+    } else ctx.moveTo(x(i), y(value));
     contiguous = true;
   });
   ctx.stroke();
@@ -137,7 +139,7 @@ export function mountSignal() {
     const min = Math.min(...numeric), max = Math.max(...numeric);
     nodes['trace-count'].textContent = `${values.length}점`;
     nodes['trace-range'].textContent = min === max ? format(min) : numeric.length ? `${format(min)} ~ ${format(max)}` : '—';
-    drawTrace(nodes.chart, values, min, max);
+    drawTrace(nodes.chart, values, min, max, ['setpoint', 'disturbance', 'mv'].includes(kind));
   }
 
   new ResizeObserver(render).observe(byId('signal-trace'));

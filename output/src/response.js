@@ -92,11 +92,12 @@ export function mountResponse(onSetpoint, onSelect) {
       const n = (v) => reading(v, spec.unit);
       const delta = Number.isFinite(last?.pv) && Number.isFinite(last?.sp) ? last.pv - last.sp : null;
       const control = relatedControl[selected];
+      const command = latest?.manual?.[control] ?? latest?.values[control];
       label.innerHTML = `
         <div><span>PV 실측 · ${spec.pv}</span><b>${n(last?.pv)} <small>${spec.unit}</small></b></div>
         <div><span>SP 목표</span><b>${n(last?.sp)} <small>${spec.unit}</small></b></div>
         <div><span>편차 (PV − SP)</span><b>${delta > 0 ? '+' : ''}${n(delta)} <small>${spec.unit}</small></b></div>
-        <div><span>${control} · 실제 / 명령</span><b>${reading(latest?.actuators?.[control])}% <small>/ ${reading(latest?.values[control])}%</small></b></div>`;
+        <div><span>${control} · 실제 / 명령</span><b>${reading(latest?.actuators?.[control])}% <small>/ ${reading(command)}%</small></b></div>`;
       canvas.setAttribute('aria-label', `${spec.label} 추세, 실측 ${n(last?.pv)} ${spec.unit}, 목표 ${n(last?.sp)} ${spec.unit}`);
     }
     draw(canvas, points, spec?.unit);

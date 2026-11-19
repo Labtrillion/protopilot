@@ -37,9 +37,11 @@ function inspector() {
 }
 
 function follow(next) {
+  const tag = signalTag(next);
   selection = next;
   signal.select(next);
-  plantView?.track(next.item.area, signalTag(next));
+  plantView?.track(next.item.area, tag);
+  for (const button of byId('kpis').children) button.toggleAttribute('data-tracked', button.dataset.tag === tag);
 }
 
 function focus(area, tag = '', resetCamera = false, next) {
@@ -155,7 +157,7 @@ function receive(next) {
   if (previous?.running !== status.running) run.innerHTML = status.running ? `${icon('pause')} 일시정지` : `${icon('play')} 실행`;
   if (document.activeElement !== speed) speed.value = status.speed;
   byId('clear-test').hidden = !('XMEAS(7)' in status.offsets);
-  if (sampled) renderKpis(status, channels, trends);
+  if (sampled) renderKpis(status, channels, trends, signalTag(selection));
   renderRows(visibleChannels, status, signalTag(selection));
   inspector();
   renderAlarms(status, alarmTab, channels);
@@ -212,6 +214,7 @@ function attachEvents() {
     showTelemetry('response', setpoints.find((item) => item.pv === signalTag(selection))?.id);
   });
   byId('signal-locate').addEventListener('click', () => {
+    if (!selection) return;
     const tag = signalTag(selection);
     plantView.reveal(tag);
     focus(selection.item.area, tag, false, selection);
@@ -313,6 +316,7 @@ async function poll() {
 
 initIcons();
 select.innerHTML = Object.entries(AREAS).map(([key, area]) => option(key, key === 'plant' ? '공정 전체' : `${area.code} · ${area.name}`)).join('');
+select.value = focusedArea;
 byId('channel-area').insertAdjacentHTML('beforeend', Object.entries(AREAS).filter(([key]) => key !== 'plant').map(([key, area]) => option(key, area.name)).join(''));
 inspector();
 renderAlarms(status, alarmTab, channels);

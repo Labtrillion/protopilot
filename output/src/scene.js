@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { AREAS, CORE_PRESSURES, MEDIA, PORTS, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { buildInternals } from './internals.js';
+import { reading } from './ui.js';
 import * as geo from './geometry.js';
 
 const initialOffset = new T.Vector3(6.8, 18, 28);
@@ -310,7 +311,7 @@ export function mountScene(container, host, select) {
       label.button.classList.toggle('has-pressure', showPressure && Boolean(CORE_PRESSURES[area]));
       if (showPressure && CORE_PRESSURES[area] && data) {
         const value = data.values[codeFor(CORE_PRESSURES[area])];
-        label.value.textContent = Number.isFinite(value) ? `${value.toFixed(1)} kPa(g)` : '';
+        label.value.textContent = Number.isFinite(value) ? `${reading(value, 'kPa(g)')} kPa(g)` : '';
       } else {
         label.value.textContent = '';
       }

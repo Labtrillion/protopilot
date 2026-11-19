@@ -141,7 +141,8 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     },
     track(area, tag) {
       for (const unit of svg.querySelectorAll('[data-area],[data-symbol],[data-pressure]')) {
-        unit.classList.toggle('tracked', (unit.dataset.area || unit.dataset.symbol || unit.dataset.pressure) === area);
+        const tracked = unit.dataset.pressure ? codeFor(CORE_PRESSURES[unit.dataset.pressure]) === tag : (unit.dataset.area || unit.dataset.symbol) === area;
+        unit.classList.toggle('tracked', tracked);
       }
       for (const valve of svg.querySelectorAll('[data-valve]')) valve.classList.toggle('tracked', valve.dataset.valve === tag);
       for (const line of STREAMS) {

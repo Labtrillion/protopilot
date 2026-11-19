@@ -65,7 +65,7 @@ export function renderPressures(status, enabled, tracked = '') {
     const tag = row.dataset.pressureTag;
     const alarming = status?.alarms.some((alarm) => alarm.tag === tag);
     const value = status?.values[tag];
-    const formatted = Number.isFinite(value) ? value.toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '—';
+    const formatted = reading(value, 'kPa(g)');
     row.querySelector('b').innerHTML = `${formatted}<small>kPa(g)</small>`;
     row.classList.toggle('alarming', alarming);
     row.toggleAttribute('data-tracked', tag === tracked);
@@ -95,7 +95,7 @@ function drawTrend(canvas, values, index) {
 }
 
 const kpis = [[7, '반응기 압력'], [9, '반응기 온도'], [6, '반응기 입구 유량'], [17, '제품 유량']];
-export function renderKpis(status, metadata, trends) {
+export function renderKpis(status, metadata, trends, tracked) {
   const root = byId('kpis');
   if (!root.children.length) root.innerHTML = kpis.map(([i, label]) =>
     `<button type="button" data-tag="${codeFor(i)}"><span>${label}</span><b>—</b><small></small><canvas width="88" height="34" aria-hidden="true"></canvas></button>`).join('');
@@ -105,6 +105,7 @@ export function renderKpis(status, metadata, trends) {
     card.querySelector('b').textContent = reading(status.values[tag], unit);
     card.querySelector('small').textContent = unit;
     card.classList.toggle('alarming', status.alarms.some((event) => event.tag === tag));
+    card.toggleAttribute('data-tracked', tag === tracked);
     drawTrend(card.querySelector('canvas'), trends.get(tag) ?? [], i);
   });
 }
