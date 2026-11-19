@@ -126,6 +126,7 @@ select:disabled { cursor: default; }
     overflow-wrap: anywhere;
     cursor: pointer;
   }
+  select option + option { border-block-start: 1px solid var(--line-soft); }
   select option::checkmark { order: 1; flex: none; color: var(--muted); }
   select option:disabled { color: var(--disabled-text); cursor: default; }
   @media (hover: hover) {
