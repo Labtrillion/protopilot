@@ -1,0 +1,1373 @@
+[
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 0,
+    "iteration": 1,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 0,
+      "tool_calls": 0,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 16,
+      "tool_calls": 12,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "QUERY_PURGE_ANALYZER",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": null,
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 0,
+    "iteration": 1,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 0,
+      "tool_calls": 0,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 16,
+      "tool_calls": 12,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "QUERY_PURGE_ANALYZER",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": null,
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 0,
+    "iteration": 1,
+    "phase": "running_tool",
+    "usage": {
+      "decisions": 1,
+      "tool_calls": 1,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 15,
+      "tool_calls": 11,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "QUERY_PURGE_ANALYZER",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D01",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "iteration": 1,
+    "phase": "state_updated",
+    "usage": {
+      "decisions": 1,
+      "tool_calls": 1,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 15,
+      "tool_calls": 11,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "QUERY_PURGE_ANALYZER",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D01",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "iteration": 2,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 1,
+      "tool_calls": 1,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 15,
+      "tool_calls": 11,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "QUERY_PURGE_ANALYZER",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D01",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "iteration": 2,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 1,
+      "tool_calls": 1,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 15,
+      "tool_calls": 11,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "QUERY_PURGE_ANALYZER",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D01",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 1,
+    "iteration": 2,
+    "phase": "running_tool",
+    "usage": {
+      "decisions": 2,
+      "tool_calls": 2,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 14,
+      "tool_calls": 10,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "QUERY_PURGE_ANALYZER",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D02",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "iteration": 2,
+    "phase": "state_updated",
+    "usage": {
+      "decisions": 2,
+      "tool_calls": 2,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 14,
+      "tool_calls": 10,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "QUERY_PURGE_ANALYZER",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D02",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "iteration": 3,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 2,
+      "tool_calls": 2,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 14,
+      "tool_calls": 10,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D02",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "iteration": 3,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 2,
+      "tool_calls": 2,
+      "simulations": 0
+    },
+    "remaining": {
+      "decisions": 14,
+      "tool_calls": 10,
+      "simulations": 10
+    },
+    "open_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D02",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 2,
+    "iteration": 3,
+    "phase": "running_tool",
+    "usage": {
+      "decisions": 3,
+      "tool_calls": 3,
+      "simulations": 1
+    },
+    "remaining": {
+      "decisions": 13,
+      "tool_calls": 9,
+      "simulations": 9
+    },
+    "open_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D03",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "iteration": 3,
+    "phase": "state_updated",
+    "usage": {
+      "decisions": 3,
+      "tool_calls": 3,
+      "simulations": 1
+    },
+    "remaining": {
+      "decisions": 13,
+      "tool_calls": 9,
+      "simulations": 9
+    },
+    "open_option_ids": [
+      "SIM_HOLD",
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D03",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "iteration": 4,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 3,
+      "tool_calls": 3,
+      "simulations": 1
+    },
+    "remaining": {
+      "decisions": 13,
+      "tool_calls": 9,
+      "simulations": 9
+    },
+    "open_option_ids": [
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D03",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "iteration": 4,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 3,
+      "tool_calls": 3,
+      "simulations": 1
+    },
+    "remaining": {
+      "decisions": 13,
+      "tool_calls": 9,
+      "simulations": 9
+    },
+    "open_option_ids": [
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D03",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 3,
+    "iteration": 4,
+    "phase": "running_tool",
+    "usage": {
+      "decisions": 4,
+      "tool_calls": 4,
+      "simulations": 2
+    },
+    "remaining": {
+      "decisions": 12,
+      "tool_calls": 8,
+      "simulations": 8
+    },
+    "open_option_ids": [
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D04",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "iteration": 4,
+    "phase": "state_updated",
+    "usage": {
+      "decisions": 4,
+      "tool_calls": 4,
+      "simulations": 2
+    },
+    "remaining": {
+      "decisions": 12,
+      "tool_calls": 8,
+      "simulations": 8
+    },
+    "open_option_ids": [
+      "SIM_SP19_UP050",
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_UP050",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D04",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "iteration": 5,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 4,
+      "tool_calls": 4,
+      "simulations": 2
+    },
+    "remaining": {
+      "decisions": 12,
+      "tool_calls": 8,
+      "simulations": 8
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D04",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "iteration": 5,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 4,
+      "tool_calls": 4,
+      "simulations": 2
+    },
+    "remaining": {
+      "decisions": 12,
+      "tool_calls": 8,
+      "simulations": 8
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D04",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 4,
+    "iteration": 5,
+    "phase": "running_tool",
+    "usage": {
+      "decisions": 5,
+      "tool_calls": 5,
+      "simulations": 3
+    },
+    "remaining": {
+      "decisions": 11,
+      "tool_calls": 7,
+      "simulations": 7
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D05",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "iteration": 5,
+    "phase": "state_updated",
+    "usage": {
+      "decisions": 5,
+      "tool_calls": 5,
+      "simulations": 3
+    },
+    "remaining": {
+      "decisions": 11,
+      "tool_calls": 7,
+      "simulations": 7
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN050",
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D05",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "iteration": 6,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 5,
+      "tool_calls": 5,
+      "simulations": 3
+    },
+    "remaining": {
+      "decisions": 11,
+      "tool_calls": 7,
+      "simulations": 7
+    },
+    "open_option_ids": [
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D05",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "iteration": 6,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 5,
+      "tool_calls": 5,
+      "simulations": 3
+    },
+    "remaining": {
+      "decisions": 11,
+      "tool_calls": 7,
+      "simulations": 7
+    },
+    "open_option_ids": [
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D05",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 5,
+    "iteration": 6,
+    "phase": "running_tool",
+    "usage": {
+      "decisions": 6,
+      "tool_calls": 6,
+      "simulations": 4
+    },
+    "remaining": {
+      "decisions": 10,
+      "tool_calls": 6,
+      "simulations": 6
+    },
+    "open_option_ids": [
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D06",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "iteration": 6,
+    "phase": "state_updated",
+    "usage": {
+      "decisions": 6,
+      "tool_calls": 6,
+      "simulations": 4
+    },
+    "remaining": {
+      "decisions": 10,
+      "tool_calls": 6,
+      "simulations": 6
+    },
+    "open_option_ids": [
+      "SIM_SP19_UP100",
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_UP100",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D06",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "iteration": 7,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 6,
+      "tool_calls": 6,
+      "simulations": 4
+    },
+    "remaining": {
+      "decisions": 10,
+      "tool_calls": 6,
+      "simulations": 6
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D06",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "iteration": 7,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 6,
+      "tool_calls": 6,
+      "simulations": 4
+    },
+    "remaining": {
+      "decisions": 10,
+      "tool_calls": 6,
+      "simulations": 6
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D06",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 6,
+    "iteration": 7,
+    "phase": "running_tool",
+    "usage": {
+      "decisions": 7,
+      "tool_calls": 7,
+      "simulations": 5
+    },
+    "remaining": {
+      "decisions": 9,
+      "tool_calls": 5,
+      "simulations": 5
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D07",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "iteration": 7,
+    "phase": "state_updated",
+    "usage": {
+      "decisions": 7,
+      "tool_calls": 7,
+      "simulations": 5
+    },
+    "remaining": {
+      "decisions": 9,
+      "tool_calls": 5,
+      "simulations": 5
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN100",
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D07",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "iteration": 8,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 7,
+      "tool_calls": 7,
+      "simulations": 5
+    },
+    "remaining": {
+      "decisions": 9,
+      "tool_calls": 5,
+      "simulations": 5
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D07",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "iteration": 8,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 7,
+      "tool_calls": 7,
+      "simulations": 5
+    },
+    "remaining": {
+      "decisions": 9,
+      "tool_calls": 5,
+      "simulations": 5
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D07",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 7,
+    "iteration": 8,
+    "phase": "running_tool",
+    "usage": {
+      "decisions": 8,
+      "tool_calls": 8,
+      "simulations": 6
+    },
+    "remaining": {
+      "decisions": 8,
+      "tool_calls": 4,
+      "simulations": 4
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D08",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "iteration": 8,
+    "phase": "state_updated",
+    "usage": {
+      "decisions": 8,
+      "tool_calls": 8,
+      "simulations": 6
+    },
+    "remaining": {
+      "decisions": 8,
+      "tool_calls": 4,
+      "simulations": 4
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN150",
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D08",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "iteration": 9,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 8,
+      "tool_calls": 8,
+      "simulations": 6
+    },
+    "remaining": {
+      "decisions": 8,
+      "tool_calls": 4,
+      "simulations": 4
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D08",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "iteration": 9,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 8,
+      "tool_calls": 8,
+      "simulations": 6
+    },
+    "remaining": {
+      "decisions": 8,
+      "tool_calls": 4,
+      "simulations": 4
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D08",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 8,
+    "iteration": 9,
+    "phase": "running_tool",
+    "usage": {
+      "decisions": 9,
+      "tool_calls": 9,
+      "simulations": 7
+    },
+    "remaining": {
+      "decisions": 7,
+      "tool_calls": 3,
+      "simulations": 3
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D09",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 9,
+    "iteration": 9,
+    "phase": "state_updated",
+    "usage": {
+      "decisions": 9,
+      "tool_calls": 9,
+      "simulations": 7
+    },
+    "remaining": {
+      "decisions": 7,
+      "tool_calls": 3,
+      "simulations": 3
+    },
+    "open_option_ids": [
+      "SIM_SP19_DN200",
+      "QUERY_LOOP_RELATIONS",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [
+      "RECOMMEND:SIM_HOLD",
+      "RECOMMEND:SIM_SP19_DN050",
+      "RECOMMEND:SIM_SP19_DN100",
+      "RECOMMEND:SIM_SP19_DN150",
+      "RECOMMEND:SIM_SP19_DN200"
+    ],
+    "last_decision_id": "EVT-TEP-0001-D09",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 9,
+    "iteration": 10,
+    "phase": "options_built",
+    "usage": {
+      "decisions": 9,
+      "tool_calls": 9,
+      "simulations": 7
+    },
+    "remaining": {
+      "decisions": 7,
+      "tool_calls": 3,
+      "simulations": 3
+    },
+    "open_option_ids": [
+      "QUERY_LOOP_RELATIONS",
+      "RECOMMEND:SIM_SP19_DN050",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [],
+    "last_decision_id": "EVT-TEP-0001-D09",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 9,
+    "iteration": 10,
+    "phase": "awaiting_model",
+    "usage": {
+      "decisions": 9,
+      "tool_calls": 9,
+      "simulations": 7
+    },
+    "remaining": {
+      "decisions": 7,
+      "tool_calls": 3,
+      "simulations": 3
+    },
+    "open_option_ids": [
+      "QUERY_LOOP_RELATIONS",
+      "RECOMMEND:SIM_SP19_DN050",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [],
+    "last_decision_id": "EVT-TEP-0001-D09",
+    "finished": false,
+    "termination_reason": null
+  },
+  {
+    "event_id": "EVT-TEP-0001",
+    "state_version": 9,
+    "iteration": 38,
+    "phase": "finished",
+    "usage": {
+      "decisions": 10,
+      "tool_calls": 9,
+      "simulations": 7
+    },
+    "remaining": {
+      "decisions": 6,
+      "tool_calls": 3,
+      "simulations": 3
+    },
+    "open_option_ids": [
+      "QUERY_LOOP_RELATIONS",
+      "RECOMMEND:SIM_SP19_DN050",
+      "REQUEST_HUMAN_REVIEW"
+    ],
+    "deferred_option_ids": [],
+    "last_decision_id": "EVT-TEP-0001-D10",
+    "finished": true,
+    "termination_reason": "recommendation_ready"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "history": {
+    "sample_hours": 0.05,
+    "window_hours": 2.0,
+    "trend_window_hours": 0.5
+  },
+  "setpoint_decision": {
+    "need_threshold": 0.5,
+    "branch_hours": 4.0,
+    "zoro_timeout_seconds": 90,
+    "category_steps": {"production_rate": [0.05, 0.10]},
+    "default_category_steps": [0.02, 0.04],
+    "rulebook": "setpoint-sops.json",
+    "alarm_rules": "alarm-rules.json"
+  },
+  "local_rule": {
+    "cut_fraction_of_initial": 0.05,
+    "floor_fraction_of_initial": 0.80,
+    "pressure_watch_kpa": 2800,
+    "saturation_fraction": 0.5
+  },
+  "rollout": {
+    "baselines": ["hold", "rule"],
+    "rule_interval_hours": 0.5
+  },
+  "alarm_response": {
+    "branch_hours": 3.75
+  }
+}

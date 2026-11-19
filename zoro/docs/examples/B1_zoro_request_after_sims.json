@@ -1,0 +1,584 @@
+{
+  "state": {
+    "event": {
+      "event_id": "EVT-TEP-0001",
+      "state_version": 5,
+      "sim_time_s": 21840.0,
+      "time_basis": "simulation_seconds",
+      "snapshot_id": "SNAP-TEP-0001-T21600"
+    },
+    "active_alarms": [
+      {
+        "alarm_id": "ALM-XMEAS7-H",
+        "sensor_id": "XMEAS(7)",
+        "condition": "high",
+        "raised_at_s": 21240.0,
+        "active": true,
+        "priority": "high",
+        "message": "반응기 압력 높음 (가상, 경보값은 예시)",
+        "threshold": 2895.0,
+        "unit": "kPa(g)",
+        "raw_tag": "PIR100"
+      }
+    ],
+    "active_setpoints": [
+      {
+        "setpoint_id": "SETPT(19)",
+        "value": 13.823,
+        "unit": "mol%",
+        "since_s": 0.0
+      }
+    ],
+    "actual_observations": {
+      "note": "실제 공정 측정값(최신)",
+      "latest": [
+        {
+          "sensor_id": "XMEAS(7)",
+          "value": 2846.0,
+          "unit": "kPa(g)",
+          "measured_at_s": 21590.0,
+          "age_s": 250.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMEAS(13)",
+          "value": 2742.0,
+          "unit": "kPa(g)",
+          "measured_at_s": 21590.0,
+          "age_s": 250.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMEAS(10)",
+          "value": 0.31,
+          "unit": "kscmh",
+          "measured_at_s": 21590.0,
+          "age_s": 250.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMV(6)",
+          "value": 36.2,
+          "unit": "%",
+          "measured_at_s": 21590.0,
+          "age_s": 250.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMEAS(9)",
+          "value": 120.41,
+          "unit": "degC",
+          "measured_at_s": 21590.0,
+          "age_s": 250.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": null
+        },
+        {
+          "sensor_id": "XMEAS(30)",
+          "value": 13.81,
+          "unit": "mol%",
+          "measured_at_s": 21780.0,
+          "age_s": 60.0,
+          "quality": "good",
+          "freshness": "pass",
+          "sample_id": "PURGE-0117"
+        }
+      ]
+    },
+    "information_gaps": [],
+    "safety_checks": [
+      {
+        "check_id": "SC-PRESSURE-OVERRIDE-INACTIVE",
+        "description": "분리기 압력 우선 제어 비작동 (S05)",
+        "status": "pass",
+        "source": "external_rule_engine (example)",
+        "evaluated_at_s": 21590.0
+      },
+      {
+        "check_id": "SC-PRODUCT-QUALITY-IN-SPEC",
+        "description": "제품 G/(G+H) 45–55%, D+E+F ≤ 2 mol% (팀 기준, 예시)",
+        "status": "unknown",
+        "source": "external_rule_engine (example)",
+        "evaluated_at_s": null
+      }
+    ],
+    "sop_evidence": [
+      {
+        "evidence_id": "EV:team-sop/tep-studio-closed-loop/S05#p1",
+        "doc_id": "tep-studio-closed-loop",
+        "doc_version": "1.0",
+        "clause": "S05 procedure 1",
+        "excerpt": "정상 경로는 퍼지 B 조성 XMEAS(30) → CONTRL19 → CONTRL6 유량 목표 → XMEAS(10)·XMV(6)이다. 목표 B는 13.823 mol%다."
+      },
+      {
+        "evidence_id": "EV:team-sop/tep-studio-closed-loop/S08#p2",
+        "doc_id": "tep-studio-closed-loop",
+        "doc_version": "1.0",
+        "clause": "S08 procedure 2",
+        "excerpt": "SOP 단독은 기존 목표를 유지한다. Zoro 시험에서도 같은 하위 제어기를 유지하며, 연결된 감독기가 승인한 상위 설정값 후보만 기록·적용한다. 바꿀 근거가 부족하면 현재 목표를 유지한다."
+      },
+      {
+        "evidence_id": "EV:team-sop/tep-studio-closed-loop/S04#c1",
+        "doc_id": "tep-studio-closed-loop",
+        "doc_version": "1.0",
+        "clause": "S04 constraints",
+        "excerpt": "원료·퍼지 분석기는 6분 간격으로 이전 시료를 보고한다. 같은 값이 반복되는 3분 로그 두 행을 독립적인 조성 변화로 세지 않는다."
+      },
+      {
+        "evidence_id": "EV:team-sop/tep-studio-closed-loop/S08#c1",
+        "doc_id": "tep-studio-closed-loop",
+        "doc_version": "1.0",
+        "clause": "S08 constraints",
+        "excerpt": "Studio 평가에는 Downs & Vogel 표 9의 기준 환산을 적용한다. 경제 조정에도 생산 목표·품질 규격·제어 보호 설정은 고정한다."
+      }
+    ],
+    "rag_unresolved": [
+      {
+        "topic": "퍼지 B 목표 변경 폭",
+        "detail": "검색된 SOP에 상위 목표 변경 폭·변화율의 정량 기준이 없음 — 감독기 허용값 확인 필요",
+        "evidence_ids": [
+          "EV:team-sop/tep-studio-closed-loop/S08#p2"
+        ]
+      },
+      {
+        "topic": "원인 확정",
+        "detail": "검색 결과만으로 압력 상승 원인을 확정할 수 없음",
+        "evidence_ids": []
+      }
+    ],
+    "history": [
+      {
+        "decision_id": "EVT-TEP-0001-D01",
+        "selected": "QUERY_PURGE_ANALYZER",
+        "kind": "tool_call",
+        "tool_status": "succeeded",
+        "info_updated": false,
+        "outcome": "XMEAS(30): 기존과 같은/더 오래된 측정(measured_at 20100s) → 갱신 아님; 조회는 성공했으나 새 측정값 없음 → 정보 갱신 실패"
+      },
+      {
+        "decision_id": "EVT-TEP-0001-D02",
+        "selected": "QUERY_PURGE_ANALYZER",
+        "kind": "tool_call",
+        "tool_status": "succeeded",
+        "info_updated": true,
+        "outcome": "XMEAS(30): 새 측정 반영 value=13.81 mol% @ 21780s"
+      },
+      {
+        "decision_id": "EVT-TEP-0001-D03",
+        "selected": "SIM_HOLD",
+        "kind": "tool_call",
+        "tool_status": "succeeded",
+        "info_updated": true,
+        "outcome": "[가상 예측] 실험 RUN-001-SIM_HOLD 결과·후속 영향 반영"
+      },
+      {
+        "decision_id": "EVT-TEP-0001-D04",
+        "selected": "SIM_SP19_UP050",
+        "kind": "tool_call",
+        "tool_status": "succeeded",
+        "info_updated": true,
+        "outcome": "[가상 예측] 실험 RUN-002-SIM_SP19_UP050 결과·후속 영향 반영"
+      },
+      {
+        "decision_id": "EVT-TEP-0001-D05",
+        "selected": "SIM_SP19_DN050",
+        "kind": "tool_call",
+        "tool_status": "succeeded",
+        "info_updated": true,
+        "outcome": "[가상 예측] 실험 RUN-003-SIM_SP19_DN050 결과·후속 영향 반영"
+      }
+    ],
+    "virtual_experiments": {
+      "note": "시뮬레이션 예측값(가상). 실제 관측 아님. 시각은 run 시작 기준 [s]",
+      "runs": [
+        {
+          "run_id": "RUN-001-SIM_HOLD",
+          "action_id": "SIM_HOLD",
+          "case_id": "CASE-HOLD",
+          "status": "succeeded",
+          "conditions": {
+            "snapshot_id": "SNAP-TEP-0001-T21600",
+            "horizon_s": 14400.0,
+            "simulator_version": "tepsim-wasm 0.0.0 (example)",
+            "disturbance_profile_id": "DIST-REPLAY-EXAMPLE",
+            "seed": 4651207995,
+            "initial_composition_sample_id": "PURGE-0117"
+          },
+          "impact": {
+            "original_alarm_recovered": false,
+            "recovery_time_s": null,
+            "exceedances": [
+              {
+                "sensor_id": "XMEAS(7)",
+                "equipment_id": "reactor",
+                "limit_name": "반응기 압력 경보 임계값",
+                "limit_value": 2895.0,
+                "unit": "kPa(g)",
+                "first_exceeded_at_s": 0.0,
+                "duration_s": 14400.0,
+                "max_excess": 18.0
+              }
+            ],
+            "affected_equipment": [
+              "reactor",
+              "purge"
+            ],
+            "metrics": {
+              "usd_per_m3": {
+                "value": 7.62,
+                "unit": "USD/m3",
+                "better": "lower"
+              },
+              "tracking_accuracy": {
+                "value": 0.52,
+                "unit": "score_0_1",
+                "better": "higher"
+              },
+              "product_m3": {
+                "value": 91.6,
+                "unit": "m3",
+                "better": "higher"
+              },
+              "cost_total_usd": {
+                "value": 697.99,
+                "unit": "USD(benchmark)",
+                "better": "lower"
+              }
+            },
+            "score": {
+              "tripped": false,
+              "usd_per_m3": 7.62,
+              "cost_usd": {
+                "purge": 467.65,
+                "product": 125.64,
+                "power": 74.68,
+                "steam": 30.02,
+                "total": 697.99
+              },
+              "product_m3": 91.6,
+              "tracking_accuracy": 0.52,
+              "per_variable_accuracy": {},
+              "in_threshold_fraction": 0.0,
+              "time_to_stable_s": null,
+              "final_window_inside": false,
+              "quality_ok": true,
+              "failed_gates": [
+                "final_window_inside"
+              ]
+            }
+          }
+        },
+        {
+          "run_id": "RUN-002-SIM_SP19_UP050",
+          "action_id": "SIM_SP19_UP050",
+          "case_id": "CASE-SP19-UP050",
+          "status": "succeeded",
+          "conditions": {
+            "snapshot_id": "SNAP-TEP-0001-T21600",
+            "horizon_s": 14400.0,
+            "simulator_version": "tepsim-wasm 0.0.0 (example)",
+            "disturbance_profile_id": "DIST-REPLAY-EXAMPLE",
+            "seed": 4651207995,
+            "initial_composition_sample_id": "PURGE-0117"
+          },
+          "impact": {
+            "original_alarm_recovered": false,
+            "recovery_time_s": null,
+            "exceedances": [
+              {
+                "sensor_id": "XMEAS(7)",
+                "equipment_id": "reactor",
+                "limit_name": "반응기 압력 경보 임계값",
+                "limit_value": 2895.0,
+                "unit": "kPa(g)",
+                "first_exceeded_at_s": 0.0,
+                "duration_s": 14400.0,
+                "max_excess": 18.0
+              }
+            ],
+            "affected_equipment": [
+              "reactor",
+              "purge"
+            ],
+            "metrics": {
+              "usd_per_m3": {
+                "value": 7.58,
+                "unit": "USD/m3",
+                "better": "lower"
+              },
+              "tracking_accuracy": {
+                "value": 0.4,
+                "unit": "score_0_1",
+                "better": "higher"
+              },
+              "product_m3": {
+                "value": 91.7,
+                "unit": "m3",
+                "better": "higher"
+              },
+              "cost_total_usd": {
+                "value": 695.09,
+                "unit": "USD(benchmark)",
+                "better": "lower"
+              }
+            },
+            "score": {
+              "tripped": false,
+              "usd_per_m3": 7.58,
+              "cost_usd": {
+                "purge": 465.71,
+                "product": 125.12,
+                "power": 74.37,
+                "steam": 29.89,
+                "total": 695.09
+              },
+              "product_m3": 91.7,
+              "tracking_accuracy": 0.4,
+              "per_variable_accuracy": {},
+              "in_threshold_fraction": 0.0,
+              "time_to_stable_s": null,
+              "final_window_inside": false,
+              "quality_ok": true,
+              "failed_gates": [
+                "final_window_inside"
+              ]
+            }
+          }
+        },
+        {
+          "run_id": "RUN-003-SIM_SP19_DN050",
+          "action_id": "SIM_SP19_DN050",
+          "case_id": "CASE-SP19-DN050",
+          "status": "succeeded",
+          "conditions": {
+            "snapshot_id": "SNAP-TEP-0001-T21600",
+            "horizon_s": 14400.0,
+            "simulator_version": "tepsim-wasm 0.0.0 (example)",
+            "disturbance_profile_id": "DIST-REPLAY-EXAMPLE",
+            "seed": 4651207995,
+            "initial_composition_sample_id": "PURGE-0117"
+          },
+          "impact": {
+            "original_alarm_recovered": true,
+            "recovery_time_s": 5400.0,
+            "exceedances": [],
+            "affected_equipment": [
+              "reactor",
+              "purge"
+            ],
+            "metrics": {
+              "usd_per_m3": {
+                "value": 7.66,
+                "unit": "USD/m3",
+                "better": "lower"
+              },
+              "tracking_accuracy": {
+                "value": 0.74,
+                "unit": "score_0_1",
+                "better": "higher"
+              },
+              "product_m3": {
+                "value": 91.5,
+                "unit": "m3",
+                "better": "higher"
+              },
+              "cost_total_usd": {
+                "value": 700.89,
+                "unit": "USD(benchmark)",
+                "better": "lower"
+              }
+            },
+            "score": {
+              "tripped": false,
+              "usd_per_m3": 7.66,
+              "cost_usd": {
+                "purge": 469.6,
+                "product": 126.16,
+                "power": 75.0,
+                "steam": 30.13,
+                "total": 700.89
+              },
+              "product_m3": 91.5,
+              "tracking_accuracy": 0.74,
+              "per_variable_accuracy": {},
+              "in_threshold_fraction": 0.625,
+              "time_to_stable_s": 5400.0,
+              "final_window_inside": true,
+              "quality_ok": true,
+              "failed_gates": []
+            }
+          }
+        }
+      ],
+      "comparison": {
+        "snapshot_id": "SNAP-TEP-0001-T21600",
+        "baseline_run_id": "RUN-001-SIM_HOLD",
+        "comparable_run_ids": [
+          "RUN-002-SIM_SP19_UP050",
+          "RUN-003-SIM_SP19_DN050"
+        ],
+        "not_comparable": {},
+        "metric_deltas": {
+          "RUN-002-SIM_SP19_UP050": {
+            "usd_per_m3": -0.04,
+            "tracking_accuracy": -0.12,
+            "product_m3": 0.1,
+            "cost_total_usd": -2.9
+          },
+          "RUN-003-SIM_SP19_DN050": {
+            "usd_per_m3": 0.04,
+            "tracking_accuracy": 0.22,
+            "product_m3": -0.1,
+            "cost_total_usd": 2.9
+          }
+        },
+        "comparable": true
+      },
+      "case_selection": {
+        "status": "continue",
+        "reason": "최선 RUN-003-SIM_SP19_DN050, 이후 0/4",
+        "baseline_run_id": "RUN-001-SIM_HOLD",
+        "selected_run_id": "RUN-003-SIM_SP19_DN050",
+        "selected_action_id": "SIM_SP19_DN050",
+        "since_incumbent": 0,
+        "tested": 2,
+        "remaining": 4,
+        "steps": [
+          {
+            "run_id": "RUN-002-SIM_SP19_UP050",
+            "action_id": "SIM_SP19_UP050",
+            "beats_baseline": false,
+            "vs_baseline": "부적격(final_window_inside)",
+            "beats_incumbent": null,
+            "vs_incumbent": null,
+            "incumbent_after": null
+          },
+          {
+            "run_id": "RUN-003-SIM_SP19_DN050",
+            "action_id": "SIM_SP19_DN050",
+            "beats_baseline": true,
+            "vs_baseline": "상대가 부적격, 이쪽은 적격",
+            "beats_incumbent": null,
+            "vs_incumbent": null,
+            "incumbent_after": "RUN-003-SIM_SP19_DN050"
+          }
+        ]
+      }
+    },
+    "unavailable_options": [
+      {
+        "option_id": "UNMAPPED:XMV(6) 100% 수동 개방",
+        "status": "excluded",
+        "reason": "registered=fail: 등록되지 않은 행동 'XMV(6) 100% 수동 개방' — 실행하지 않음"
+      },
+      {
+        "option_id": "QUERY_PURGE_ANALYZER",
+        "status": "excluded",
+        "reason": "query_needed=fail: 대상 센서가 모두 최신"
+      },
+      {
+        "option_id": "SIM_HOLD",
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      {
+        "option_id": "SIM_SP19_UP050",
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      {
+        "option_id": "SIM_SP19_DN050",
+        "status": "excluded",
+        "reason": "not_duplicate=fail: 같은 snapshot(SNAP-TEP-0001-T21600)에서 이미 완료"
+      },
+      {
+        "option_id": "SIM_SP19_UP150",
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화)"
+      },
+      {
+        "option_id": "SIM_SP19_UP200",
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화)"
+      },
+      {
+        "option_id": "SIM_CHANGE_PRODUCTION_TARGET",
+        "status": "excluded",
+        "reason": "supported=fail: tool=run_simulation, supported=False, 연결됨=True; condition:COND_PRODUCT_QUALITY_OK=unknown: SC-PRODUCT-QUALITY-IN-SPEC: unknown (external_rule_engine (example))"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_HOLD",
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_UP050",
+        "status": "excluded",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; alarm_recovery=fail: 원래 알람 회복(예측)=False; no_limit_exceedance=fail: 한계 초과 1건(예측)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_DN050",
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_UP100",
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_DN100",
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_UP150",
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -39.04%p → -2.84% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_DN150",
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_UP200",
+        "status": "excluded",
+        "reason": "setpoint_envelope=fail: XMV(6) 36.2% -52.05%p → -15.8533% (밸브 포화); case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      },
+      {
+        "option_id": "RECOMMEND:SIM_SP19_DN200",
+        "status": "deferred",
+        "reason": "case_selection=fail: 탐색 계속: 최선 RUN-003-SIM_SP19_DN050, 이후 0/4; run_succeeded=fail: 성공한 실험 결과 없음 (미실행/실패)"
+      }
+    ],
+    "budget_remaining": {
+      "decisions": 11,
+      "tool_calls": 7,
+      "simulations": 7
+    }
+  },
+  "questions": {
+    "next_action": {
+      "type": "choice",
+      "instructions": "현재 사건 상태, 실제 관측, 가상 실험 결과와 이전 판단 이력을 보고 다음 분석 또는 권고 행동 하나를 선택하라. criteria 에 있는 선택지만 고를 수 있다.",
+      "criteria": {
+        "SIM_SP19_UP100": "case: 퍼지 B 목표를 14.823 mol% 로 올린 경우 4시간 예측 | 목적: 퍼지 B 목표 14.823 mol% 응답 시험 | case CASE-SP19-UP100: propose_setpoint (SETPT(19) 목표 14.823 mol%) | 근거: EV:team-sop/tep-studio-closed-loop/S05#p1, EV:team-sop/tep-studio-closed-loop/S08#p2",
+        "SIM_SP19_DN100": "case: 퍼지 B 목표를 12.823 mol% 로 낮춘 경우 4시간 예측 | 목적: 퍼지 B 목표 12.823 mol% 응답 시험 | case CASE-SP19-DN100: propose_setpoint (SETPT(19) 목표 12.823 mol%) | 근거: EV:team-sop/tep-studio-closed-loop/S05#p1, EV:team-sop/tep-studio-closed-loop/S08#p2",
+        "SIM_SP19_DN150": "case: 퍼지 B 목표를 12.323 mol% 로 낮춘 경우 4시간 예측 | 목적: 퍼지 B 목표 12.323 mol% 응답 시험 | case CASE-SP19-DN150: propose_setpoint (SETPT(19) 목표 12.323 mol%) | 근거: EV:team-sop/tep-studio-closed-loop/S05#p1, EV:team-sop/tep-studio-closed-loop/S08#p2",
+        "SIM_SP19_DN200": "case: 퍼지 B 목표를 11.823 mol% 로 낮춘 경우 4시간 예측 | 목적: 퍼지 B 목표 11.823 mol% 응답 시험 | case CASE-SP19-DN200: propose_setpoint (SETPT(19) 목표 11.823 mol%) | 근거: EV:team-sop/tep-studio-closed-loop/S05#p1, EV:team-sop/tep-studio-closed-loop/S08#p2",
+        "QUERY_LOOP_RELATIONS": "CONTRL19 상·하위 루프 및 압력 우선 제어 관계 조회",
+        "REQUEST_HUMAN_REVIEW": "현재까지의 근거·불확실성을 정리해 운영자 검토 요청 (설정값은 유지)"
+      }
+    }
+  }
+}

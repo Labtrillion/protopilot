@@ -6,15 +6,20 @@ import logging
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from threading import Event, RLock, Thread
+from threading import BoundedSemaphore, Event, RLock, Thread
 from urllib.parse import parse_qs, urlsplit
 
 from .alarm_studies import AlarmStudies
 from .catalog import CHANNELS, METADATA
 from .plant import Plant, TICK_SECONDS
 from .recording import ArchivedRecording, encode
+from .rollout import Rollout
+from .setpoint_decision import analyze_setpoints, capture_point
 
 ROOT = Path(__file__).resolve().parents[1]
+ZORO_STUDY = BoundedSemaphore()
+SETPOINT_STUDY = BoundedSemaphore()
+ROLLOUT_STUDY = BoundedSemaphore()
 
 
 class ConsoleHandler(SimpleHTTPRequestHandler):
@@ -72,7 +77,8 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         path = urlsplit(self.path).path
-        if path not in {"/api/command", "/api/alarm-response"}:
+        if path not in {"/api/command", "/api/alarm-response", "/api/setpoint-decision", "/api/rollout",
+                        "/api/zoro-agent"}:
             self.send_error(404)
             return
         if self.headers.get_content_type() != "application/json":
@@ -87,6 +93,15 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
                 raise ValueError("요청 형식을 확인하세요.")
             if path == "/api/alarm-response":
                 self.alarm_response(body)
+                return
+            if path == "/api/setpoint-decision":
+                self.setpoint_decision(body)
+                return
+            if path == "/api/rollout":
+                self.rollout(body)
+                return
+            if path == "/api/zoro-agent":
+                self.zoro_agent(body)
                 return
             with self.lock:
                 self.plant.command(body)
@@ -124,6 +139,82 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             self.respond({"error": "대응 방안 계산에 실패했습니다. 다시 비교를 눌러 주세요."}, 500)
             return
         self.respond(result)
+
+    def setpoint_decision(self, body):
+        """Decide setpoint changes for the live plant now; `apply: true` also sends Zoro-1's changes to the plant."""
+        with self.lock:
+            if body.get("run") != self.plant.recording.id:
+                self.respond({"error": "현재 실행 기록의 ID를 지정하세요."}, 404)
+                return
+            if len(self.plant.history) < 2:
+                self.respond({"error": "판단에 필요한 계측 이력이 아직 없습니다. 실행 후 다시 시도하세요."}, 409)
+                return
+            point = capture_point(self.plant)
+        if not SETPOINT_STUDY.acquire(blocking=False):
+            self.respond({"error": "다른 설정값 판단을 계산 중입니다. 잠시 후 다시 시도하세요."}, 409)
+            return
+        try:
+            result = analyze_setpoints(point, self.plant.root / "agent-trace.jsonl")
+        finally:
+            SETPOINT_STUDY.release()
+        if body.get("apply") and not result["decision"]["fallback"]:
+            with self.lock:
+                if self.plant.recording.id == point.run_id:
+                    for change in result["decision"]["changes"]:
+                        self.plant.command({"op": "setpoint", "id": change["setpoint"], "value": change["to"]})
+                    result["applied"] = bool(result["decision"]["changes"])
+        self.respond(result)
+
+    def rollout(self, body):
+        """`start` anchors hold/rule baselines at the live state; `compare` reports live vs baselines; `stop` ends it."""
+        op = body.get("op")
+        with self.lock:
+            if body.get("run") != self.plant.recording.id:
+                self.respond({"error": "현재 실행 기록의 ID를 지정하세요."}, 404)
+                return
+            if op == "start":
+                if self.plant.rollout is not None:
+                    self.plant.rollout.close()
+                self.plant.rollout = Rollout(self.plant)
+                self.respond({"started": True, "anchor_step": self.plant.step,
+                              "baselines": list(self.plant.rollout.shadows)})
+                return
+            rollout = self.plant.rollout
+            if rollout is None:
+                self.respond({"error": "진행 중인 비교가 없습니다. 먼저 start를 보내세요."}, 409)
+                return
+            if op == "stop":
+                self.plant.rollout = None
+                rollout.close()
+                self.respond({"stopped": True})
+                return
+            if op != "compare":
+                raise ValueError("op은 start, compare, stop 중 하나여야 합니다.")
+            step, timeline, live = rollout.snapshot(self.plant)
+        if not ROLLOUT_STUDY.acquire(blocking=False):
+            self.respond({"error": "다른 비교를 계산 중입니다. 잠시 후 다시 시도하세요."}, 409)
+            return
+        try:
+            self.respond(rollout.compare(step, timeline, live))
+        finally:
+            ROLLOUT_STUDY.release()
+
+    def zoro_agent(self, body):
+        # Imported here so the console still starts when the agent package is absent.
+        from .zoro_bridge import run_zoro_agent
+
+        alarm_id = body.get("alarm_id")
+        if type(alarm_id) is not int or not isinstance(body.get("run"), str):
+            raise ValueError("실행 ID와 알람 식별자를 확인하세요.")
+        if not ZORO_STUDY.acquire(blocking=False):
+            self.respond({"error": "다른 Zoro 판단을 계산 중입니다. 잠시 후 다시 시도하세요."}, 409)
+            return
+        try:
+            self.respond(run_zoro_agent(self.plant, self.lock, body["run"], alarm_id, self.plant.root / "agent-trace.jsonl"))
+        except LookupError as error:
+            self.respond({"error": str(error)}, 404)
+        finally:
+            ZORO_STUDY.release()
 
     def archive(self, path, query):
         try:

@@ -13,6 +13,8 @@ from uuid import uuid4
 import numpy as np
 from tep_studio import TennesseeEastmanProcess
 
+from .agent_config import CONFIG
+from .alarm_rules import AlarmMonitor
 from .assistant import FALLBACK, append_trace, zoro_choices
 from .catalog import CHANNELS, OPERATING_LIMITS
 from .plant import COOLING_TAGS, control_action, finite_metrics
@@ -20,7 +22,7 @@ from .recording import timestamp
 from .scenario import KERNEL_REVISION, STEP_HOURS, adjustment
 
 SOPS = json.loads(Path(__file__).with_name("demo-sops.json").read_text(encoding="utf-8"))
-HORIZON_HOURS = 3.75
+HORIZON_HOURS = CONFIG["alarm_branch_hours"]
 SWEEP_DELAY_MINUTES = (0, 15, 30, 45, 60)
 SWEEP_REDUCTION_PCT = (1, 2.5, 5, 7.5, 10)
 FINAL_WINDOW_HOURS = 1
@@ -130,6 +132,11 @@ def run_branch(checkpoint, candidate):
     protected_steps = 0
     shutdown = None
     applied = False
+    cost = 0.0
+    offsets = {tag: checkpoint.observed[tag] - float(checkpoint.measurements[i])
+               for i, tag in enumerate(f"XMEAS({k})" for k in range(1, 42))
+               if checkpoint.observed.get(tag) is not None and abs(checkpoint.observed[tag] - checkpoint.measurements[i]) > 1e-9}
+    monitor = AlarmMonitor(checkpoint.limits)
     sim = TennesseeEastmanProcess()
     try:
         sim.restore(checkpoint.native)
@@ -152,6 +159,8 @@ def run_branch(checkpoint, candidate):
             alarm_signal = result.implemented_action if group == "manipulated_variables" else getattr(result, group)
             alarm_samples.append(alarm_signal[signal_index])
             protected_steps += int(any(control.overrides_active.values()))
+            cost += step_cost(result)
+            monitor.update(sim.time, measurements, offsets, controller.setpoints, STEP_HOURS)
             if result.shutdown_status["terminated"]:
                 shutdown = result.shutdown_status
                 break
@@ -159,8 +168,58 @@ def run_branch(checkpoint, candidate):
         return {**identity, "error": "이 조건에서 분기를 계산할 수 없습니다."}
     finally:
         sim.kernel.close()
-    matrix = np.asarray(rows)
-    violations = np.zeros(len(rows) - 1, dtype=bool)
+    summary = branch_summary(np.asarray(rows), protected_steps, shutdown, cost=cost,
+                             reference=checkpoint.controller.setpoints.production_rate,
+                             horizon_hours=HORIZON_HOURS, alarm=monitor.summary())
+    return {
+        **identity, **summary, **alarm_recovery(alarm_samples, checkpoint.limits[alarm_tag]),
+        "production_target": float(target), "action_applied": applied,
+    }
+
+
+def alarm_recovery(samples, limits):
+    series = np.asarray(samples, dtype=float)
+    low, high = limits
+    outside = ~np.isfinite(series)
+    if low is not None:
+        outside |= series < low
+    if high is not None:
+        outside |= series > high
+    final_steps = min(len(series) - 1, round(FINAL_WINDOW_HOURS / STEP_HOURS))
+    outside_steps = np.flatnonzero(outside)
+    recovery_step = int(outside_steps[-1]) + 1 if outside_steps.size else 0
+    return {
+        "alarm_final_window_inside": not bool(np.any(outside[-final_steps:])),
+        "alarm_recovery_minutes": None if outside[-1] else recovery_step * STEP_HOURS * 60,
+    }
+
+
+def step_cost(result):
+    """TEP's internal operating cost ($/h) over one control step, as MetricsAccumulator integrates it."""
+    return float(result.objective_terms.get("operating_cost_internal_per_hour", 0.0)) * STEP_HOURS
+
+
+def branch_summary(matrix, protected_steps, shutdown, *, cost=0.0, reference=None, horizon_hours=None, alarm=None):
+    """Outcome of one branch: `matrix` is the starting measurements followed by one row per control step.
+
+    Production loss = `reference` target x the full horizon - produced volume, so a branch that trips
+    early is charged for the rest of the horizon. `alarm` is the branch's AlarmMonitor summary (minutes on
+    true values, plus what the operator would have seen).
+    """
+    produced = float(np.sum(matrix[1:, 16]) * STEP_HOURS)
+    horizon = horizon_hours if horizon_hours is not None else (len(matrix) - 1) * STEP_HOURS
+    return finite_metrics({
+        **_base_summary(matrix, protected_steps, shutdown),
+        **(alarm or {}),
+        "operating_cost": float(cost),
+        "produced_m3": produced,
+        "production_loss_m3": None if reference is None else float(reference) * horizon - produced,
+        "cost_per_m3": float(cost) / produced if produced > 0 else None,
+    })
+
+
+def _base_summary(matrix, protected_steps, shutdown):
+    violations = np.zeros(len(matrix) - 1, dtype=bool)
     for tag, (low, high) in OPERATING_LIMITS.items():
         series = matrix[1:, int(tag[6:-1]) - 1]
         violations |= ~np.isfinite(series)
@@ -169,30 +228,18 @@ def run_branch(checkpoint, candidate):
         if high is not None:
             violations |= series > high
     final_steps = min(len(violations), round(FINAL_WINDOW_HOURS / STEP_HOURS))
-    alarm_series = np.asarray(alarm_samples, dtype=float)
-    low, high = checkpoint.limits[alarm_tag]
-    outside = ~np.isfinite(alarm_series)
-    if low is not None:
-        outside |= alarm_series < low
-    if high is not None:
-        outside |= alarm_series > high
-    outside_steps = np.flatnonzero(outside)
-    recovery_step = int(outside_steps[-1]) + 1 if outside_steps.size else 0
-    return finite_metrics({
-        **identity, "shutdown": shutdown,
-        "window_hours": round((len(rows) - 1) * STEP_HOURS, 6),
+    return {
+        "shutdown": shutdown,
+        "window_hours": round((len(matrix) - 1) * STEP_HOURS, 6),
         "violation_minutes": float(violations.sum() * STEP_HOURS * 60),
         "final_window_inside": not bool(np.any(violations[-final_steps:])),
-        "alarm_final_window_inside": not bool(np.any(outside[-final_steps:])),
-        "alarm_recovery_minutes": None if outside[-1] else recovery_step * STEP_HOURS * 60,
         "protection_minutes": protected_steps * STEP_HOURS * 60,
         "peak_pressure": float(np.max(matrix[:, 6])),
         "peak_temperature": float(np.max(matrix[:, 8])),
         "temperature_sd": float(np.std(matrix[1:, 8])),
         "peak_separator_level": float(np.max(matrix[:, 11])),
         "mean_production": float(np.mean(matrix[1:, 16])),
-        "production_target": float(target), "action_applied": applied,
-    })
+    }
 
 
 def evaluate_alarm(checkpoint):

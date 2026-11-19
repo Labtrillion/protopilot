@@ -1,0 +1,155 @@
+[
+  {
+    "id": "cost-total",
+    "title": "운전비 J의 네 항목과 총비용",
+    "text": "운전비 J는 퍼지 손실, 제품에 섞인 성분 손실, 압축기 동력, 스트리퍼 스팀 비용의 합이다. APMonitor는 네 항목과 합계를 $/h로 기록한다. 현재 비용과 운전 시작 이후 평균 비용을 구분한다.",
+    "tags": [
+      "cost_usd_h",
+      "cost_mean_usd_h",
+      "운전비 구성",
+      "총비용",
+      "operating cost breakdown"
+    ],
+    "kind": "cost_model",
+    "source": {
+      "id": "apmonitor",
+      "section": "Model / Operating cost; Logged data and CSV export"
+    }
+  },
+  {
+    "id": "cost-purge",
+    "title": "퍼지 손실 비용",
+    "text": "퍼지로 배출되는 성분의 몰유량에 성분별 단가를 적용해 합산한다. 같은 퍼지 유량에서도 조성에 따라 손실이 바뀐다. 유량과 퍼지 조성 분석값을 함께 확인한다.",
+    "tags": [
+      "cost_purge_usd_h",
+      "XMEAS(10)",
+      "XMEAS(29)–(36)",
+      "purge loss"
+    ],
+    "kind": "cost_model",
+    "source": {
+      "id": "downs",
+      "section": "Table 9 / purge losses"
+    }
+  },
+  {
+    "id": "cost-product",
+    "title": "제품에 섞여 나가는 D·E·F 성분 손실 비용",
+    "text": "제품 유출에 포함된 D, E, F 성분의 양을 각각 가격으로 환산한다. 제품 분석값과 제품 유량 추정을 함께 사용한다. APMonitor 구현은 스트리퍼 제품 밸브로 몰 생산량을 추정한다.",
+    "tags": [
+      "cost_product_usd_h",
+      "XMEAS(37)",
+      "XMEAS(38)",
+      "XMEAS(39)",
+      "XMV(8)",
+      "product losses",
+      "제품 불순물"
+    ],
+    "kind": "cost_model",
+    "source": {
+      "id": "apmonitor",
+      "section": "Model / Operating cost"
+    }
+  },
+  {
+    "id": "cost-power",
+    "title": "압축기 동력 비용",
+    "text": "재순환 압축기 동력 XMEAS(20)의 kW에 벤치마크 단가 0.0536 $/kWh를 곱하면 시간당 동력비가 된다. 비교 구간의 누적 전력 비용은 이 비용률을 시간에 대해 적분한다.",
+    "tags": [
+      "cost_power_usd_h",
+      "XMEAS(20)",
+      "compressor power electricity",
+      "전력비"
+    ],
+    "kind": "cost_model",
+    "source": {
+      "id": "downs",
+      "section": "Table 9 / compressor costs"
+    }
+  },
+  {
+    "id": "cost-steam",
+    "title": "스트리퍼 스팀 사용 비용",
+    "text": "스트리퍼 스팀 유량 XMEAS(19)의 kg/h에 벤치마크 단가 0.0318 $/kg를 곱하면 $/h 단위 스팀비가 된다. 스팀 밸브 명령과 실제 유량은 단위가 다르다.",
+    "tags": [
+      "cost_steam_usd_h",
+      "XMEAS(19)",
+      "steam utility cost",
+      "증기비"
+    ],
+    "kind": "cost_model",
+    "source": {
+      "id": "downs",
+      "section": "Table 9 / stripper steam costs"
+    }
+  },
+  {
+    "id": "eval-pair",
+    "title": "SOP 단독과 SOP+Zoro 짝비교 조건",
+    "text": "동일한 초기 상태, 외란 시퀀스와 난수 시드, 시뮬레이터 버전, SOP 버전, 허용 조작 및 목표를 사용한다. 비교 기간과 생산량·제품 품질·공정 제약 기준을 실행 전에 정한다. 각 시드에서 두 정책을 한 쌍으로 시험한다.",
+    "tags": [
+      "baseline",
+      "대조군",
+      "SOP 단독",
+      "실험 설계",
+      "같은 조건"
+    ],
+    "kind": "evaluation_rule",
+    "source": {
+      "id": "evaluation",
+      "section": "비교 계약"
+    }
+  },
+  {
+    "id": "eval-savings",
+    "title": "누적 절감액·절감률과 비용 항목별 기여",
+    "text": "각 실행의 시간별 비용률을 실제 기록 간격으로 적분한다. SOP 누적비용에서 Zoro 누적비용을 뺀 값이 양수면 해당 실행에서 절감이다. 음수는 비용 증가다. 항목별 차이를 같은 방향으로 계산하고, 총비용 차이와 대조한다. 생산량당 비용도 함께 제시한다.",
+    "tags": [
+      "절감률",
+      "절감액",
+      "경제성 비교",
+      "savings",
+      "누적 비용"
+    ],
+    "kind": "evaluation_rule",
+    "source": {
+      "id": "evaluation",
+      "section": "평가 지표"
+    }
+  },
+  {
+    "id": "eval-gates",
+    "title": "조기 종료·생산 감축·품질 이탈 판정",
+    "text": "같은 기간을 완주했는지, 셧다운과 공정 제약 위반이 있었는지, 요구 생산량과 품질을 달성했는지 먼저 판정한다. 실패 또는 조건 미확인 실행은 별도 보고한다. 비용표에는 실패까지의 비용도 남기되 그 값으로 경제적 우위를 선언하지 않는다.",
+    "tags": [
+      "shutdown",
+      "품질",
+      "생산 목표",
+      "조기 종료",
+      "비교 가능"
+    ],
+    "kind": "evaluation_rule",
+    "source": {
+      "id": "evaluation",
+      "section": "실행 적격성"
+    }
+  },
+  {
+    "id": "cost-studio-table9",
+    "title": "TEP Studio 계측으로 표 9 기준 운전비 계산",
+    "kind": "cost_model",
+    "source": {
+      "id": "downs",
+      "section": "Table 9 / nominal flow conversions and component prices"
+    },
+    "tags": [
+      "TEP Studio",
+      "퍼지 손실",
+      "제품 손실",
+      "XMEAS(17)",
+      "표 9",
+      "비용 환산"
+    ],
+    "text": "이 프로젝트의 Studio 평가는 표 9의 기준 환산을 사용한다. 퍼지 몰유량은 44.79 × XMEAS(10), 제품 몰유량은 9.21 × XMEAS(17)로 추정한다(각각 kmol/h). 몰분율당 단가 $/kmol은 A/B/C/D/E/F/G/H 순으로 2.206/0/6.177/22.06/14.56/17.89/30.44/22.94다. 퍼지는 전 성분, 제품은 D·E·F만 손실에 포함한다. 팀 계산은 분석기 음수를 0으로 제한하고 스트림별 합으로 정규화한다. 동력과 스팀은 0.0536 × XMEAS(20), 0.0318 × XMEAS(19) $/h다. APMonitor의 제품 밸브 환산과는 계산 경로가 다르다. 두 정책에는 같은 환산을 적용한다."
+  }
+]

@@ -1,0 +1,165 @@
+{
+  "event_id": "DEMO-IDV8-COST-0001",
+  "timestamp": "2026-11-19T14:00:00+09:00",
+  "source": "synthetic_demo_fixture",
+  "alarms": [
+    {
+      "alarm_id": "FEED_A_COMPOSITION_HIGH",
+      "tag": "XMEAS(23)",
+      "severity": "warning",
+      "current_value": 36.2,
+      "unit": "mol%",
+      "threshold": 35.0,
+      "direction": "high",
+      "equipment": "feed",
+      "measured_at": "2026-11-19T13:59:00+09:00",
+      "quality": "good",
+      "sample_id": "DEMO-FEED-SAMPLE-0007",
+      "activated_at": "2026-11-19T13:59:10+09:00",
+      "deadband_clear_value": 34.5
+    },
+    {
+      "alarm_id": "PURGE_RATE_HIGH",
+      "tag": "XMEAS(10)",
+      "severity": "warning",
+      "current_value": 52.0,
+      "unit": "kscmh",
+      "threshold": 48.0,
+      "direction": "high",
+      "equipment": "purge",
+      "measured_at": "2026-11-19T14:00:00+09:00",
+      "quality": "good",
+      "sample_id": null,
+      "activated_at": "2026-11-19T13:59:30+09:00",
+      "deadband_clear_value": 46.0
+    },
+    {
+      "alarm_id": "OPERATING_COST_HIGH",
+      "severity": "warning",
+      "current_value": 180.0,
+      "unit": "$/h",
+      "threshold": 175.0,
+      "direction": "high",
+      "equipment": "purge",
+      "measured_at": "2026-11-19T14:00:00+09:00",
+      "quality": "good",
+      "sample_id": null,
+      "activated_at": "2026-11-19T13:59:30+09:00",
+      "deadband_clear_value": 172.0
+    }
+  ],
+  "process_state": {
+    "XMEAS(7)": {
+      "value": 2715.0,
+      "unit": "kPa(g)",
+      "measured_at": "2026-11-19T14:00:00+09:00",
+      "quality": "good",
+      "sample_id": null
+    },
+    "XMEAS(9)": {
+      "value": 120.4,
+      "unit": "degC",
+      "measured_at": "2026-11-19T14:00:00+09:00",
+      "quality": "good",
+      "sample_id": null
+    },
+    "XMEAS(10)": {
+      "value": 52.0,
+      "unit": "kscmh",
+      "measured_at": "2026-11-19T14:00:00+09:00",
+      "quality": "good",
+      "sample_id": null
+    },
+    "XMEAS(23)": {
+      "value": 36.2,
+      "unit": "mol%",
+      "measured_at": "2026-11-19T13:59:00+09:00",
+      "quality": "good",
+      "sample_id": "DEMO-FEED-SAMPLE-0007"
+    },
+    "XMEAS(24)": {
+      "value": 9.1,
+      "unit": "mol%",
+      "measured_at": "2026-11-19T13:59:00+09:00",
+      "quality": "good",
+      "sample_id": "DEMO-FEED-SAMPLE-0007"
+    },
+    "XMEAS(25)": {
+      "value": 24.3,
+      "unit": "mol%",
+      "measured_at": "2026-11-19T13:59:00+09:00",
+      "quality": "good",
+      "sample_id": "DEMO-FEED-SAMPLE-0007"
+    },
+    "XMEAS(17)": {
+      "value": 22.9,
+      "unit": "m3/h",
+      "measured_at": "2026-11-19T14:00:00+09:00",
+      "quality": "good",
+      "sample_id": null
+    },
+    "XMEAS(40)": {
+      "value": 53.7,
+      "unit": "mol%",
+      "measured_at": "2026-11-19T13:59:00+09:00",
+      "quality": "good",
+      "sample_id": "DEMO-PRODUCT-SAMPLE-0003"
+    },
+    "OPERATING_COST": {
+      "value": 180.0,
+      "unit": "$/h",
+      "measured_at": "2026-11-19T14:00:00+09:00",
+      "quality": "good",
+      "sample_id": null
+    },
+    "REACTOR_PRESSURE_SETPOINT": {
+      "value": 2705.0,
+      "unit": "kPa(g)",
+      "measured_at": "2026-11-19T14:00:00+09:00",
+      "quality": "good",
+      "sample_id": null
+    }
+  },
+  "recent_changes": [
+    {
+      "simulation_time_h": 1.0,
+      "kind": "injected_disturbance",
+      "disturbance_id": "IDV(8)",
+      "description": "Synthetic IDV8 activation; not a diagnosis inferred from alarms."
+    }
+  ],
+  "simulation_context": {
+    "disturbance_id": "IDV(8)",
+    "disturbance_basis": "synthetic injected simulator state, not alarm-inferred",
+    "simulation_time_h": 2.0,
+    "controller_mode": "AUTO",
+    "physical_action_executed": false
+  },
+  "scenario_id": "IDV8-PRESSURE-COST",
+  "sop_document_id": "demo-sop-idv8-pressure-cost",
+  "demo_metadata": {
+    "synthetic": true,
+    "measurements_and_alarm_thresholds": "invented for demo; not official alarm limits",
+    "baseline": {
+      "reactor_pressure_setpoint_kpag": 2705.0,
+      "purge_rate_kscmh": 42.3,
+      "operating_cost_usd_per_h": 170.7
+    },
+    "baseline_status": "synthetic comparator; not a simulation executed in this run",
+    "added_fields": "Snapshot/sample IDs, measurement metadata, objective, activation times and deadband clear values are synthetic demo data; no actual snapshot was saved."
+  },
+  "snapshot_id": "DEMO-SNAPSHOT-IDV8-T2H-0001",
+  "active_objective": {
+    "objective_id": "DEMO-OBJ-COST-001",
+    "metric": "mean_operating_cost_usd_per_h",
+    "direction": "minimize",
+    "target_value": null,
+    "unit": "$/h",
+    "applied_at": "2026-11-19T13:00:00+09:00",
+    "description": "Minimize operating cost under pressure margin, production and quality constraints.",
+    "constraints": {
+      "maximum_peak_pressure_kpag": 2900,
+      "minimum_pressure_margin_kpa": 100
+    }
+  }
+}

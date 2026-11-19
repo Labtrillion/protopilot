@@ -1,0 +1,7 @@
+{
+  "_comment": "평가 전용. 에이전트/모델 입력에 절대 넣지 않는다 (scenario loader 가 읽지 않음).",
+  "fault_id": "IDV(6)",
+  "hidden_cause": "A 원료 공급 상실 (가상 배정)",
+  "fault_schedule": [{"at_s": 25200, "fault_id": "IDV(4)"}],
+  "seed": 4651207995
+}

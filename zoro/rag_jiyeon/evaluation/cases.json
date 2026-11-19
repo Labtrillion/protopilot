@@ -1,0 +1,146 @@
+[
+  {
+    "label_status": "draft_manually_unverified",
+    "event": {
+      "event_id": "EVAL-IDV8",
+      "source": "synthetic_evaluation_fixture",
+      "alarms": [
+        {
+          "alarm_id": "FEED_COMPOSITION_VARIATION",
+          "tag": "XMEAS(4)",
+          "severity": "warning"
+        }
+      ],
+      "simulation_context": {
+        "disturbance_id": "IDV(8)"
+      }
+    },
+    "expected_variable_ids": [
+      "XMEAS_4"
+    ],
+    "expected_source_contains": [
+      "idv_catalog",
+      "TEP_Disturbance_Knowledge"
+    ],
+    "expected_evidence_types": [
+      "DISTURBANCE"
+    ],
+    "expected_evidence": [
+      {
+        "source_contains": "idv_catalog",
+        "text_contains": [
+          "IDV_8",
+          "random"
+        ],
+        "evidence_type": "DISTURBANCE"
+      },
+      {
+        "source_contains": "README.md",
+        "text_contains": [
+          "XMEAS(4)",
+          "A and C Feed"
+        ],
+        "evidence_type": "MEASUREMENT"
+      }
+    ]
+  },
+  {
+    "label_status": "draft_manually_unverified",
+    "event": {
+      "event_id": "EVAL-PRESSURE",
+      "source": "synthetic_evaluation_fixture",
+      "alarms": [
+        {
+          "alarm_id": "REACTOR_PRESSURE_HIGH",
+          "tag": "XMEAS(7)",
+          "severity": "warning"
+        }
+      ]
+    },
+    "expected_variable_ids": [
+      "XMEAS_7"
+    ],
+    "expected_source_contains": [
+      "README",
+      "APMonitor"
+    ],
+    "expected_evidence_types": [
+      "MEASUREMENT",
+      "SAFETY"
+    ],
+    "expected_evidence": [
+      {
+        "source_contains": "README.md",
+        "text_contains": [
+          "XMEAS(7)",
+          "Reactor Pressure"
+        ],
+        "evidence_type": "MEASUREMENT"
+      },
+      {
+        "source_contains": "APMonitor_Instructions.html",
+        "text_contains": [
+          "Reactor pressure shutdown",
+          "3000"
+        ],
+        "evidence_type": "SAFETY"
+      }
+    ]
+  },
+  {
+    "label_status": "draft_manually_unverified",
+    "event": {
+      "event_id": "EVAL-IDV6",
+      "source": "synthetic_evaluation_fixture",
+      "alarms": [
+        {
+          "alarm_id": "A_FEED_LOSS",
+          "tag": "XMEAS(1)"
+        }
+      ],
+      "simulation_context": {
+        "disturbance_id": "IDV(6)"
+      }
+    },
+    "expected_evidence": [
+      {
+        "source_contains": "idv_catalog",
+        "text_contains": [
+          "IDV_6"
+        ],
+        "evidence_type": "DISTURBANCE"
+      }
+    ],
+    "expected_evidence_types": [
+      "DISTURBANCE"
+    ]
+  },
+  {
+    "label_status": "draft_manually_unverified",
+    "event": {
+      "event_id": "EVAL-IDV14",
+      "source": "synthetic_evaluation_fixture",
+      "alarms": [
+        {
+          "alarm_id": "REACTOR_TEMPERATURE_DEVIATION",
+          "tag": "XMEAS(9)"
+        }
+      ],
+      "simulation_context": {
+        "disturbance_id": "IDV(14)"
+      }
+    },
+    "expected_evidence": [
+      {
+        "source_contains": "idv_catalog",
+        "text_contains": [
+          "IDV_14"
+        ],
+        "evidence_type": "DISTURBANCE"
+      }
+    ],
+    "expected_evidence_types": [
+      "DISTURBANCE"
+    ]
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "schema_version": "zoro-alarm-event-v1",
+  "event_id": "TEP-EVT-0001",
+  "source": "tep_original_simulator",
+  "simulation_time_seconds": 3600,
+  "alarm_variant": "deadband",
+  "event_type": "alarm_activated",
+  "alarms": [
+    {
+      "alarm_id": "XMEAS7_HI",
+      "raw_tag": "PIR100",
+      "canonical_id": "XMEAS7",
+      "name": "Reactor Pressure",
+      "alarm_level": "HI",
+      "status": "active",
+      "current_value": 2905.0,
+      "threshold": 2895.0,
+      "unit": "kPa(g)"
+    }
+  ],
+  "process_state": {
+    "XMEAS7": 2905.0,
+    "XMEAS9": 145.0,
+    "XMV10": 42.0
+  },
+  "recent_changes": [],
+  "simulation_context": {
+    "disturbance_id": "IDV(6)"
+  }
+}
