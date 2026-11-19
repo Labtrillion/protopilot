@@ -2,6 +2,7 @@
 
 import math
 from collections import deque
+from uuid import UUID
 from dataclasses import replace
 
 import numpy as np
@@ -28,6 +29,7 @@ class Plant:
         self.root = root
         self.version = 0
         self.speed = 60
+        self.recording_pages = deque(maxlen=128)
         self.reset(running=True)
 
     def reset(self, running):
@@ -84,6 +86,8 @@ class Plant:
             "time_utc": timestamp(), "time_hours": round(self.sim.time, 8), "sample": self.samples,
             "values": values, "native_values": {tag: native[tag] for tag in self.offsets},
             "offsets": self.offsets.copy(), "disturbances": self.active_disturbances(),
+            "setpoints": {name: getattr(self.controller.setpoints, name) for name in SETPOINTS},
+            "actuators": {f"XMV({i + 1})": float(value) for i, value in enumerate(self.sim.state[38:50])},
         }
         self.recording.sample(self.latest)
 
@@ -136,14 +140,32 @@ class Plant:
             "running": self.running, "shutdown": self.shutdown, "error": self.error,
             "alarms": list(self.active.values()), "events": list(self.events),
             "manual": {f"XMV({i + 1})": value for i, value in self.manual.items()},
-            "setpoints": {name: getattr(self.controller.setpoints, name) for name in SETPOINTS},
             "limits": self.limits, "disturbances": self.active_disturbances(),
         }
+
+    def rotate_recording(self, page_id):
+        if not isinstance(page_id, str):
+            raise ValueError("화면 식별자가 필요합니다.")
+        key = UUID(page_id).hex
+        if key in self.recording_pages:
+            return
+        recording = Recording(self.root)
+        self.recording = recording
+        self.samples = 0
+        self.events.clear()
+        self.event("change", "화면 연결 · 새 로컬 기록", "plant")
+        for alarm in self.active.values():
+            self.events.appendleft(alarm)
+            self.recording.event(alarm)
+        self.capture()
+        self.recording_pages.append(key)
 
     def command(self, body):
         op = body.get("op")
         if op == "reset":
             self.reset(running=False)
+        elif op == "new_recording":
+            self.rotate_recording(body.get("page_id"))
         elif op == "run":
             if self.shutdown["terminated"] or self.error:
                 raise ValueError("초기화한 뒤 다시 실행하세요.")
@@ -182,6 +204,7 @@ class Plant:
             target = getattr(self.base_setpoints, tag) if value is None else numeric(value, lo, hi)
             self.controller.setpoints = replace(self.controller.setpoints, **{tag: target})
             self.event("change", label + " 설정값 변경", area, tag=tag, value=target)
+            self.capture()
         elif op == "disturbance" and tag in {v.legacy_symbol for v in TEP_SCHEMA.disturbances}:
             i = int(tag[4:-1]) - 1
             activation = numeric(value, 0, 1)

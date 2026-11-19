@@ -47,6 +47,11 @@ SETPOINTS = {
 }
 
 # Downs & Vogel Table 6 operating limits. The engine separately reports actual shutdowns.
+PV_TAGS = {
+    "reactor_pressure": 7, "reactor_temperature": 9, "reactor_level": 8,
+    "separator_level": 12, "stripper_level": 15, "production_rate": 17, "pct_g": 40,
+}
+
 OPERATING_LIMITS = {
     "XMEAS(7)": (None, 2895), "XMEAS(8)": (50, 100), "XMEAS(9)": (None, 150),
     "XMEAS(12)": (30, 100), "XMEAS(15)": (30, 100),
@@ -103,7 +108,7 @@ METADATA = {
         for v in TEP_SCHEMA.disturbances
     ],
     "setpoints": [
-        {"id": key, "label": label, "unit": unit, "area": area, "min": lo, "max": hi}
+        {"id": key, "label": label, "unit": unit, "area": area, "min": lo, "max": hi, "pv": f"XMEAS({PV_TAGS[key]})"}
         for key, (label, unit, area, lo, hi) in SETPOINTS.items()
     ],
 }
