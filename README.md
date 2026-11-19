@@ -97,7 +97,9 @@ ProtoPilot은 Tennessee Eastman Process(TEP)에서 알람 발생 시점의 공�
 
 ## 데모 영상
 
-데모 영상 링크는 등록 예정입니다. 라이브 데모에서 시나리오 4의 재생, 알람 대응 검토 및 분기 비교를 확인할 수 있습니다. [Brev 라이브 데모](https://protopilot-rx8cin03n.gobrev.dev/)
+[해커톤 데모 영상 보기 · 2분 30초](docs/media/protopilot-demo.mp4)
+
+라이브 데모에서 시나리오 4의 재생, 알람 대응 검토 및 분기 비교를 확인할 수 있습니다. [Brev 라이브 데모](https://protopilot-rx8cin03n.gobrev.dev/)
 
 ## 시나리오 4 검증 결과
 
