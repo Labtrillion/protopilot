@@ -11,6 +11,12 @@ export function reading(value, unit) {
   if (!Number.isFinite(value)) return '—';
   return (unit === 'mol fraction' || (Math.abs(value) < 1 && value !== 0) ? fine : number).format(value);
 }
+export function pressureReading(status, tag) {
+  const value = reading(status.values[tag], 'kPa(g)');
+  const alarm = status.alarms.find((item) => item.tag === tag);
+  const state = [alarm && '알람', tag in status.offsets && '시험'].filter(Boolean).join(' · ');
+  return { value, alarm, state };
+}
 export function flowReading(status, stream) {
   const tag = codeFor(stream.tag);
   return `${reading(status.values[tag])} ${stream.media === 'gas' ? 'kscm/h' : 'm³/h'}${tag in status.offsets ? ' · 시험' : ''}`;

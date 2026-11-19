@@ -5,7 +5,7 @@ import { AREAS, CORE_PRESSURES, FEED_TAGS, MEDIA, STREAMS, codeFor, streamMatche
 import { buildInternals } from './internals.js';
 import { EQUIPMENT_LAYOUT, FEED_OFFSETS, FLOW_POINTS, LABEL_POINTS, OVERVIEW, PORTS_3D, ROUTES_3D, SAMPLE_ROUTES_3D,
   VESSELS, pipePath, scenePoint, valvePosition } from './layout.js';
-import { flowReading, reading } from './ui.js';
+import { flowReading, pressureReading } from './ui.js';
 import { readColor } from './palette.js';
 import { FEEDS } from './schematic.js';
 import * as geo from './geometry.js';
@@ -172,13 +172,14 @@ function createLabels(host, onSelect) {
     button.setAttribute('aria-label', `${AREAS[key].code} ${AREAS[key].name}`);
     const caption = `<small>${AREAS[key].code}</small><b>${AREAS[key].name}</b>`;
     button.innerHTML = hasPressure ? `
-      <span class="model-pressure-value"><strong>—</strong> kPa(g)</span>
-      <span class="model-tag-caption">${caption}<span class="model-pressure-test">시험</span></span>` : caption;
+      <span class="model-tag-caption">${caption}<span class="model-pressure-state" id="model-pressure-state-${key}"></span></span>
+      <span class="model-pressure-value" id="model-pressure-${key}"><strong>—</strong> <span class="model-pressure-unit">kPa(g)</span></span>` : caption;
+    if (hasPressure) button.setAttribute('aria-describedby', `model-pressure-${key} model-pressure-state-${key}`);
     button.addEventListener('click', () => onSelect(key));
     host.append(button);
     labels[key] = {
       button, position, width: 70, height: 36,
-      value: button.querySelector('.model-pressure-value strong'), test: button.querySelector('.model-pressure-test'),
+      value: button.querySelector('.model-pressure-value strong'), state: button.querySelector('.model-pressure-state'),
     };
   }
   return labels;
@@ -576,13 +577,12 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     for (const { el, def } of flowLabels) el.textContent = flowReading(status, def);
     for (const [area, id] of Object.entries(CORE_PRESSURES)) {
       const tag = codeFor(id);
-      const { value, test } = labels[area];
-      const pressure = reading(status.values[tag], 'kPa(g)');
-      if (value.textContent !== pressure) {
-        value.textContent = pressure;
-        value.parentElement.title = `${pressure} kPa(g)`;
-      }
-      test.classList.toggle('active', tag in status.offsets);
+      const label = labels[area];
+      const { value, alarm, state } = pressureReading(status, tag);
+      if (label.value.textContent !== value) label.value.textContent = value;
+      if (label.state.textContent !== state) label.state.textContent = state;
+      label.value.parentElement.title = alarm ? `${value} kPa(g) · ${alarm.label}` : `${value} kPa(g)`;
+      label.button.classList.toggle('pressure-alarm', Boolean(alarm));
     }
     alertAreas.clear();
     status.alarms.forEach((a) => alertAreas.add(a.area));
@@ -699,7 +699,14 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       frame = { zoom: saved.zoom, offset: saved.offset.clone(), panX: saved.panX ?? 0 };
     },
     flow(enabled) { showFlow = enabled; },
-    pressure(enabled) { host.classList.toggle('show-pressure', enabled); },
+    pressure(enabled) {
+      host.classList.toggle('show-pressure', enabled);
+      for (const area of Object.keys(CORE_PRESSURES)) {
+        const { button } = labels[area];
+        if (enabled) button.setAttribute('aria-describedby', `model-pressure-${area} model-pressure-state-${area}`);
+        else button.removeAttribute('aria-describedby');
+      }
+    },
     circuit(id) { activeCircuit = id || ''; container.dataset.circuit = activeCircuit; },
     display(enabled) {
       displayed = enabled;

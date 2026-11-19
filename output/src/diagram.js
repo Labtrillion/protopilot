@@ -1,6 +1,6 @@
 import { AREAS, CORE_PRESSURES, FEED_TAGS, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { ANCHORS, BODIES, BOUNDARY_PORTS, FEEDS, FLOW_READOUTS, JUNCTIONS, ROUTES, SAMPLES, VALVES, VIEWBOX } from './schematic.js';
-import { flowReading, reading } from './ui.js';
+import { flowReading, pressureReading } from './ui.js';
 
 // Orthogonal routing reads left-to-right. Only solid dots indicate a pipe junction.
 const routePath = (points) => 'M' + points.map(([x, y]) => `${x} ${y}`).join('L');
@@ -73,7 +73,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
       <rect x="${x}" y="${datum}" width="${w}" height="0"/><line x1="${x + 4}" x2="${x + w - 4}" y1="${datum}" y2="${datum}"/></g>`;
   }).join('');
   const readouts = anchors.filter(([id]) => id in CORE_PRESSURES).map(([id, [x, y]]) =>
-    `<text class="pfd-pressure" data-pressure="${id}" x="${x + 32}" y="${y - 8}"></text>`
+    `<text class="pfd-pressure" data-pressure="${id}" x="${x + 32}" y="${y - 8}"><tspan>—</tspan><tspan class="pfd-pressure-unit" dx="5">kPa(g)</tspan><tspan class="pfd-pressure-state" dx="7"></tspan></text>`
   ).join('');
   const flowReadouts = Object.entries(FLOW_READOUTS).map(([id, [x, y]]) =>
     `<text class="pfd-flow-reading" data-flow-reading="${id}" x="${x}" y="${y}"></text>`
@@ -176,8 +176,6 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
     flow(on) { svg.classList.toggle('show-flow', on); },
     pressure(on) { svg.classList.toggle('show-pressure', on); },
     update(status) {
-      // Displayed numbers carry a visible marker while a sensor test offset is active.
-      const testMark = (tag) => (tag && tag in status.offsets ? ' · 시험' : '');
       svg.classList.toggle('running', status.running);
       for (const stream of STREAMS) {
         const tag = codeFor(stream.tag);
@@ -190,8 +188,8 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
         const label = flowByStream.get(stream.id);
         if (label) label.textContent = flowReading(status, stream);
       }
-      for (const node of svg.querySelectorAll('.pfd-unit,.pfd-symbol,.pfd-pressure')) {
-        const area = node.dataset.area ?? node.dataset.symbol ?? node.dataset.pressure;
+      for (const node of svg.querySelectorAll('.pfd-unit,.pfd-symbol')) {
+        const area = node.dataset.area ?? node.dataset.symbol;
         node.classList.toggle('in-alarm', status.alarms.some((alarm) => alarm.area === area));
       }
       const normalized = (value) => Math.max(0, Math.min(100, value ?? 0)) / 100;
@@ -207,7 +205,11 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
       }
       for (const node of svg.querySelectorAll('.pfd-pressure')) {
         const tag = codeFor(CORE_PRESSURES[node.dataset.pressure]);
-        node.textContent = `${reading(status.values[tag])} kPa(g)${testMark(tag)}`;
+        const { value, alarm, state } = pressureReading(status, tag);
+        const [number, , indicator] = node.children;
+        if (number.textContent !== value) number.textContent = value;
+        if (indicator.textContent !== state) indicator.textContent = state;
+        node.classList.toggle('in-alarm', Boolean(alarm));
       }
     },
   };
