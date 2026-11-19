@@ -62,7 +62,7 @@ export function drawResponseChart(canvas, { points, start, end }, { actual, targ
   canvas.height = Math.round(h * dpr);
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
-  ctx.font = '11px ui-monospace, monospace';
+  ctx.font = `11px ${getComputedStyle(canvas).fontFamily}`;
   ctx.fillStyle = COLORS.label;
 
   const left = 64, right = w - 13, top = 10, bottom = h - (showTime ? 23 : 10);
