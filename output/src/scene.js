@@ -40,9 +40,9 @@ function setupSite(scene) {
   scene.add(floor);
   const ground = geo.box(floor, [40, 0.27, 22], [0, -0.19, -0.63], geo.base, true);
   ground.castShadow = false;
-  const slab = new T.MeshStandardMaterial({ color: 0x23251f, roughness: 0.99 });
+  const slab = new T.MeshStandardMaterial({ color: readColor('--model-floor'), roughness: 0.99 });
   geo.box(floor, [38.9, 0.035, 20.9], [0, -0.045, -0.65], slab, true).castShadow = false;
-  const grid = new T.GridHelper(40, 40, 0x74776b, 0x62645a);
+  const grid = new T.GridHelper(40, 40, readColor('--control-line'), readColor('--line'));
   grid.position.set(0, 0.002, -0.65);
   grid.scale.z = 0.52;
   grid.material.transparent = true;
@@ -50,7 +50,7 @@ function setupSite(scene) {
   scene.add(grid);
   const lines = new T.LineSegments(
     new T.EdgesGeometry(new T.BoxGeometry(40, 0.29, 22)),
-    new T.LineBasicMaterial({ color: 0x5d6056 }),
+    new T.LineBasicMaterial({ color: readColor('--line') }),
   );
   lines.position.set(0, -0.18, -0.63);
   scene.add(lines);
@@ -111,7 +111,7 @@ function buildStreams(scene, groups) {
   return STREAMS.map((def) => {
     const path = pathFor(def.points), length = path.getLength();
     const color = new T.Color(readColor(MEDIA[def.media].colorToken));
-    const pipeColor = color.clone().lerp(geo.edge.color, 0.55);
+    const pipeColor = color.clone().lerp(geo.edge.color, 0.32);
     const material = new T.MeshStandardMaterial({
       color: pipeColor, emissive: color, emissiveIntensity: 0.08, roughness: 0.50, metalness: 0.32,
     });
@@ -228,8 +228,8 @@ export function mountScene(container, host, select, pick = () => {}) {
   renderer.domElement.style.touchAction = 'pan-y';
   controls.update();
 
-  scene.add(new T.HemisphereLight(0xf4f2eb, 0x77776e, 2.27));
-  const key = new T.DirectionalLight(0xfffaf0, 2.55);
+  scene.add(new T.HemisphereLight(0xf2f6fc, 0x727983, 2.27));
+  const key = new T.DirectionalLight(0xffffff, 2.55);
   key.position.set(-10, 24, 13);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
@@ -240,7 +240,7 @@ export function mountScene(container, host, select, pick = () => {}) {
   key.shadow.camera.far = 67;
   key.shadow.normalBias = 0.08;
   scene.add(key);
-  const rim = new T.DirectionalLight(0xe4e6e0, 1.05);
+  const rim = new T.DirectionalLight(0xe3ebf6, 1.05);
   rim.position.set(8, 6, -12);
   scene.add(rim);
 

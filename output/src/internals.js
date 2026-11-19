@@ -4,7 +4,7 @@ import { CORE_PRESSURES, INTERIOR_PARTS, codeFor } from './topology.js';
 import { readColor } from './palette.js';
 
 const glass = new T.MeshPhysicalMaterial({
-  color: 0xd2d8ce, roughness: 0.30, metalness: 0.30,
+  color: 0xd1d9e3, roughness: 0.30, metalness: 0.30,
   transparent: true, opacity: 0.11, depthWrite: false, side: T.FrontSide,
 });
 const liquid = new T.MeshStandardMaterial({

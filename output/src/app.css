@@ -2,50 +2,51 @@
   color-scheme: dark;
   font-family: "Inter", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   /* Console surfaces and controls */
-  --back: #171815;
-  --panel: #22231f;
-  --inset: #1c1d19;
-  --stage: #191a17;
-  --raised: #2a2b26;
-  --hover: #34362f;
-  --line: #404238;
-  --line-soft: #32342d;
-  --control-line: #6a6d61;
-  --text: #eeece4;
-  --subtext: #cdcabe;
-  --muted: #aaa99d;
-  --text-inverse: #24251e;
-  --accent: #e2dece;
-  --accent-hover: #f4f0e2;
-  --selected: #3c3e34;
-  --selected-line: #868877;
-  --scrim: #11120fc9;
+  --back: #101216;
+  --panel: #181b20;
+  --inset: #14171c;
+  --stage: #111419;
+  --raised: #20242b;
+  --hover: #2a3039;
+  --line: #363d48;
+  --line-soft: #282e37;
+  --control-line: #748092;
+  --text: #edf1f6;
+  --subtext: #c6ceda;
+  --muted: #a0aaba;
+  --text-inverse: #0d1726;
+  --accent: #8ebaff;
+  --accent-hover: #adcfff;
+  --selected: #273141;
+  --selected-line: #72839b;
+  --scrim: #0b0e14c9;
   --shadow: #0006;
 
   /* Operator states */
-  --ok: #a3c394;
-  --ok-bg: #2a3527;
-  --tracked: #e5c87a;
-  --tracked-bg: #383224;
-  --tracked-line: #8c7b50;
-  --warning: #f5ad77;
-  --warning-bg: #3b2c21;
-  --warning-line: #a06a49;
-  --danger: #f19791;
-  --danger-bg: #3c2826;
-  --danger-line: #a2605c;
+  --ok: #89cfaa;
+  --ok-bg: #1e3029;
+  --tracked: #78d5e6;
+  --tracked-bg: #192d36;
+  --tracked-line: #508a98;
+  --warning: #ffc276;
+  --warning-bg: #37291e;
+  --warning-line: #a67a50;
+  --danger: #ffa19a;
+  --danger-bg: #392427;
+  --danger-line: #a9676b;
 
   /* Process media, equipment, and chart series */
-  --process-gas: #96bdb0;
-  --process-liquid: #c2ae94;
-  --process-water: #87aed3;
-  --process-steam: #c98d7c;
-  --process-mixed: #afbd84;
-  --plot-pv: #a4ccbe;
-  --plot-sp: #a4b8e4;
+  --process-gas: #83b6a5;
+  --process-liquid: #c7bba5;
+  --process-water: #7fa8e1;
+  --process-steam: #bc9db8;
+  --process-mixed: #abb67f;
+  --plot-pv: #a6e2d4;
+  --plot-sp: #a1b9ee;
   --plot-grid: var(--line);
-  --equipment-fill: #30332b;
-  --equipment-line: #96998b;
+  --equipment-fill: #2b333e;
+  --equipment-line: #9aa6b5;
+  --model-floor: #191e27;
   --mono: "SF Mono", "Cascadia Code", ui-monospace, monospace;
   --control-size: 2.47rem;
   --map-tag-size: 2.47rem;
@@ -128,7 +129,8 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .heading-inline > span:first-child { color: var(--muted); height: 1.18rem; display: flex; }
 .segments { display: flex; align-items: center; border: 1px solid var(--line); padding: 0.15rem; border-radius: 6px; background: var(--inset); }
 .segments button { border-color: transparent; background: transparent; color: var(--muted); }
-.segments button[aria-pressed=true], .icon-button[aria-pressed=true] { background: var(--selected); color: var(--accent); border-color: var(--selected-line); }
+.segments button[aria-pressed=true], .icon-button[aria-pressed=true] { background: var(--selected); color: var(--text); border-color: var(--selected-line); }
+.view-switch button[aria-pressed=true] { color: var(--accent); }
 .stage {
   display: flex; flex-direction: column; min-width: 0; height: clamp(335px, 50vh, 658px); overflow: hidden; border-top: 1px solid var(--line);
 }
@@ -308,7 +310,7 @@ dialog::backdrop { background: var(--scrim); }
 .circuit-controls, .layer-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; min-width: 0; }
 .toolbar-label { font-weight: 650; color: var(--muted); margin-right: 0.38rem; font-size: 0.81rem; }
 .circuit-controls button, .layer-controls button { padding: 0.26rem 0.56rem; font-size: 0.81rem; }
-.circuit-controls button[aria-pressed=true], .layer-controls button[aria-pressed=true] { color: var(--accent); border-color: var(--selected-line); background: var(--selected); }
+.circuit-controls button[aria-pressed=true], .layer-controls button[aria-pressed=true] { color: var(--text); border-color: var(--selected-line); background: var(--selected); }
 .circuit-controls [data-circuit=recycle] { --route-color: var(--process-gas); }
 .circuit-controls [data-circuit=cooling] { --route-color: var(--process-water); }
 .circuit-controls [data-circuit=steam] { --route-color: var(--process-steam); }

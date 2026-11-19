@@ -5,18 +5,18 @@ export const v3 = (coordinates) => new T.Vector3(...coordinates);
 const material = (color, roughness = 0.55, metalness = 0.18) =>
   new T.MeshStandardMaterial({ color, roughness, metalness });
 
-export const steel = material(0xb0b1a8, 0.34, 0.66);
-export const lightSteel = material(0xc7c8bf, 0.35, 0.53);
-export const edge = material(0x65685e, 0.42, 0.42);
-export const dark = material(0x31342e, 0.74);
-export const base = material(0x2d3029, 0.81);
-export const gold = material(0xad9b76);
-const valveColor = material(0x756f61);
-const black = material(0x21231e);
-const dialFace = material(0xe9e6dc, 0.57, 0.06);
+export const steel = material(0xa6aeb9, 0.34, 0.66);
+export const lightSteel = material(0xc0c8d2, 0.35, 0.53);
+export const edge = material(0x596573, 0.42, 0.42);
+export const dark = material(0x303943, 0.74);
+export const base = material(readColor('--equipment-fill'), 0.81);
+export const gold = material(0x9b927d);
+const valveColor = material(0x6b7179);
+const black = material(0x20262e);
+const dialFace = material(0xe3e8ed, 0.57, 0.06);
 const pointerRed = material(0xbd5947, 0.41, 0.25);
-const instrumentHousing = material(0x585e55);
-const display = new T.MeshStandardMaterial({ color: readColor('--process-liquid'), emissive: 0x77634e, emissiveIntensity: 0.6 });
+const instrumentHousing = material(0x535e6c);
+const display = new T.MeshStandardMaterial({ color: readColor('--process-liquid'), emissive: readColor('--process-liquid'), emissiveIntensity: 0.13 });
 const UP = new T.Vector3(0, 1, 0);
 
 function mesh(group, geometry, mat, location, shadow = false) {
