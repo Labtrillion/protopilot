@@ -212,14 +212,13 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .canvas-error { position: absolute; inset: 35% 12% auto; text-align: center; padding: 1rem; border: 1px solid var(--line); background: var(--surface); }
 
 .pipe-details {
-  display: flex; flex-direction: column; flex: none; block-size: 9.5rem;
+  flex: none; min-block-size: 17.5rem;
   border-top: 1px solid var(--line-soft);
 }
-.pipe-details h2 { flex: none; padding: 0.57rem 0.65rem 0.12rem; font-size: 0.83rem; }
-.pipe-details-content, .event-monitor-content { flex: 1; overscroll-behavior: contain; }
+.pipe-details h2 { padding: 0.57rem 0.65rem 0.12rem; font-size: 0.83rem; }
 .pipe-details-content { padding: 0 0.65rem 0.57rem; }
-:is(.pipe-details-content, .event-monitor-content, .table-scroll) { overflow: auto; min-height: 0; scrollbar-width: thin; }
-:is(.pipe-details-content, .event-monitor-content, .table-scroll):focus-visible { outline-offset: -2px; }
+:is(.event-monitor-content, .table-scroll) { overflow: auto; min-height: 0; scrollbar-width: thin; }
+:is(.event-monitor-content, .table-scroll):focus-visible { outline-offset: -2px; }
 .pipe-empty, .monitor-message { padding-block: 0.4rem; color: var(--muted); font-size: 0.83rem; }
 .pipe-equipment { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.52rem; padding: 0.44rem 0 0.61rem; color: var(--subtext); font-size: 0.83rem; }
 .pipe-equipment code { color: var(--text); font: 650 0.76rem var(--mono); }
@@ -229,9 +228,15 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .inspect-stream .line-id i { width: 0.48rem; margin-right: 0.14rem; }
 .inspect-stream > :last-child { color: var(--subtext); overflow-wrap: anywhere; }
 
+@container (min-width: 34rem) {
+  .pipe-details { min-block-size: 12.5rem; }
+  .inspect-streams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1rem; }
+}
+
 .event-monitor { display: flex; flex-direction: column; max-height: 28rem; }
 .event-monitor-controls { flex: none; gap: 0.35rem; padding: 0 0.7rem 0.48rem; border-bottom: 1px solid var(--line-soft); }
 .event-monitor-controls button { padding-inline: 0.56rem; font-size: 0.81rem; }
+.event-monitor-content { flex: 1; overscroll-behavior: contain; }
 .monitor-message { padding: 0.65rem 0.7rem; }
 .event-list { list-style: none; margin: 0; padding: 0; }
 .event-list li + li { border-top: 1px solid var(--line-soft); }
@@ -292,10 +297,7 @@ tr.alarm-row :is(.numeric > span, .channel-state) { color: var(--warning); }
 .empty-cell { padding-block: 1.5rem; color: var(--muted); text-align: center; }
 
 .setpoint-panel { display: flex; flex-direction: column; }
-.setpoint-list {
-  flex: 1; min-height: 0; padding: 0; margin: 0; list-style: none;
-  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
-}
+.setpoint-list { padding: 0; margin: 0; list-style: none; }
 .setpoint-control { padding: 0.36rem 0.68rem; border-top: 1px solid var(--line-soft); }
 .setpoint-readout { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0.35rem; }
 .setpoint-readout label { color: var(--subtext); font-size: 0.82rem; font-weight: 650; }
@@ -519,22 +521,20 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 @container (max-width: 720px) {
   .model-tag:not(.selected, .tracked, .in-alarm, .pressure-tag) b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 }
-/* Keep the model and its readouts visible together on the desktop console. */
+/* Fill the desktop viewport and let the page grow if the setpoint rows need more room. */
 @media (min-width: 960px) and (min-height: 540px) {
-  body { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100dvh; overflow: hidden; }
+  body { display: grid; grid-template-rows: auto 1fr; min-height: 100dvh; }
   .console {
     grid-template-columns: clamp(284px, 21vw, 300px) minmax(0, 1fr) clamp(14.3rem, 17vw, 19.4rem);
-    grid-template-rows: minmax(0, 1fr);
     grid-template-areas: "telemetry plant sidebar";
   }
-  .plant-sidebar { grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; }
+  .plant-sidebar { grid-template-rows: minmax(11rem, 1fr) auto; align-content: stretch; }
   .event-monitor { max-height: none; }
-  .setpoint-panel { max-height: calc(100dvh - 13rem); }
-  .stage { flex: 1; min-height: 0; height: auto; }
+  .stage { flex: 1; min-height: 18rem; height: auto; }
   .pfd-svg { min-width: 0; min-height: 0; }
-  .table-scroll { height: auto; flex: 1; }
-  .table-scroll { overscroll-behavior: contain; }
+  .table-scroll { height: auto; flex: 1; overscroll-behavior: contain; }
   .response-chart-wrap { height: auto; flex: 1; min-height: 0; }
+  :is(.event-monitor-content, .table-scroll, .response-chart-wrap) { contain: size; }
   .topbar { min-width: 0; }
 }
 

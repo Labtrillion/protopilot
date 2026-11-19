@@ -98,7 +98,6 @@ export function renderPipeDetails(areaKey, circuit) {
   if (route) {
     const paths = route.paths.map((path) => `<li>${path.map((item) => `<span>${escape(item)}</span>`).join('<i aria-hidden="true">→</i>')}</li>`).join('');
     root.innerHTML = `<ul class="circuit-paths" role="list">${paths}</ul><p class="circuit-note">${escape(route.info)}</p>`;
-    root.scrollTop = 0;
     return;
   }
   if (areaKey === 'plant') {
@@ -114,7 +113,6 @@ export function renderPipeDetails(areaKey, circuit) {
   }).join('');
   root.innerHTML = `<p class="pipe-equipment"><code>${escape(code)}</code><span>${escape(name)}</span></p>
     ${routes ? `<ul class="inspect-streams" role="list">${routes}</ul>` : '<p class="pipe-empty">표시할 연결 배관이 없습니다.</p>'}`;
-  root.scrollTop = 0;
 }
 
 export function renderRows(channels, status, selected, recentReadings) {
