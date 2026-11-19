@@ -1,16 +1,17 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { AREAS, CORE_PRESSURES, MEDIA, PORTS, STREAMS, codeFor, streamMatchesTag } from './topology.js';
+import { ANALYZER_TAPS, AREAS, CORE_PRESSURES, MEDIA, PORTS, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { buildInternals } from './internals.js';
+import { OVERVIEW, VESSELS, pipePath, sampleRoute, valvePosition } from './layout.js';
 import { reading } from './ui.js';
 import { readColor } from './palette.js';
 import * as geo from './geometry.js';
 
-const initialOffset = new T.Vector3(6.8, 18, 28);
+const initialOffset = geo.v3(OVERVIEW.offset);
 const initialOrbit = new T.Spherical().setFromVector3(initialOffset);
 const orbitLimit = T.MathUtils.degToRad(25);
-const home = new T.Vector3(0, 2.76, -0.8);
+const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
 const primary = {
   feeds: 2.2, reactor: 7.05, condenser: 4.9, separator: 6.2, compressor: 2.55,
@@ -18,22 +19,6 @@ const primary = {
   gc_feed: 2.05, gc_purge: 2.05, gc_product: 2.05, pump_sep: 1.28, pump_prod: 1.28,
 };
 const visibleLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'compressor', 'stripper', 'product', 'purge']);
-
-function pathFor(points) {
-  const segments = new T.CurvePath();
-  let start = geo.v3(points[0]);
-  for (let i = 1; i < points.length - 1; i++) {
-    const corner = geo.v3(points[i]), before = geo.v3(points[i - 1]), after = geo.v3(points[i + 1]);
-    const radius = Math.min(0.21, corner.distanceTo(before) * 0.35, corner.distanceTo(after) * 0.35);
-    const entry = corner.clone().add(before.sub(corner).setLength(radius));
-    const exit = corner.clone().add(after.sub(corner).setLength(radius));
-    if (start.distanceToSquared(entry) > 1e-6) segments.add(new T.LineCurve3(start, entry));
-    segments.add(new T.QuadraticBezierCurve3(entry, corner, exit));
-    start = exit;
-  }
-  segments.add(new T.LineCurve3(start, geo.v3(points.at(-1))));
-  return segments;
-}
 
 function setupSite(scene) {
   const floor = new T.Group();
@@ -75,15 +60,14 @@ function buildEquipment(scene) {
     scene.add(group);
   }
   geo.feeds(groups.feeds);
-  sight.reactor = { tag: 8, ...geo.vessel(groups.reactor, { radius: 1.47, bottom: 0.9, top: 5.28, deck: 4.35, seams: [2.5, 3.65], agitator: true }) };
-  sight.separator = { tag: 12, ...geo.vessel(groups.separator, { radius: 1.19, bottom: 0.84, top: 4.55, deck: 3.4, seams: [2.31] }) };
-  sight.stripper = { tag: 15, ...geo.vessel(groups.stripper, { radius: 1.04, bottom: 0.83, top: 7.22, deck: 4.45, seams: [1.85, 3.36, 5.56, 6.4] }) };
-  sight.reboiler = geo.vessel(groups.reboiler, { radius: 0.38, bottom: 0.51, top: 2.93, seams: [1.25, 2.24] });
+  for (const [area, spec] of Object.entries(VESSELS)) {
+    sight[area] = { tag: spec.levelTag, ...geo.vessel(groups[area], spec) };
+  }
   sight.condenser = geo.condenser(groups.condenser);
   geo.rotary(groups.compressor, 'compressor');
   geo.terminal(groups.product, 0.70);
   geo.terminal(groups.purge, 1.2);
-  for (const area of ['gc_feed', 'gc_purge', 'gc_product']) geo.analyzer(groups[area]);
+  for (const area of Object.keys(ANALYZER_TAPS)) geo.analyzer(groups[area]);
 
   for (const area of ['pump_sep', 'pump_prod']) {
     const model = new T.Group();
@@ -91,11 +75,11 @@ function buildEquipment(scene) {
     geo.rotary(model, 'pump');
     for (const z of [-0.76,0.80]) geo.flange(groups[area], [0,0.70,z], [0,0,1], 0.113);
   }
-  for (const [key, tap] of [['gc_feed', [-10.5,0.8,1.4]], ['gc_purge', [12.1,1.2,-5.6]], ['gc_product', [14.5,0.70,5.19]]]) {
-    const g = groups[key];
-    const endpoint = geo.v3(tap).sub(g.position).toArray();
-    g.add(new T.Mesh(new T.TubeGeometry(pathFor([[0.22,1.84,0],[0.22,2.04,0],[endpoint[0],2.04,endpoint[2]],endpoint]), 20, 0.028, 6),
-      geo.hardware));
+  for (const area of Object.keys(ANALYZER_TAPS)) {
+    const group = groups[area];
+    const geometry = new T.TubeGeometry(pipePath(sampleRoute(area)), 20, 0.028, 6);
+    geometry.translate(-group.position.x, -group.position.y, -group.position.z);
+    group.add(new T.Mesh(geometry, geo.hardware));
   }
   return { groups, sight };
 }
@@ -104,7 +88,7 @@ function buildStreams(scene, groups) {
   const markerGeometry = new T.ConeGeometry(0.103, 0.31, 9);
   const markerMaterial = new T.MeshBasicMaterial({ color: readColor('--flow-marker'), toneMapped: false });
   return STREAMS.map((def) => {
-    const path = pathFor(def.points), length = path.getLength();
+    const path = pipePath(def.points), length = path.getLength();
     const color = new T.Color(readColor(MEDIA[def.media].colorToken));
     // Diagram and 3D pipes use the same media colors under any scene lighting.
     const material = new T.MeshBasicMaterial({ color, toneMapped: false });
@@ -125,9 +109,8 @@ function buildStreams(scene, groups) {
     }
     let valve = null;
     if (def.valve) {
-      const [number, meter] = def.valve;
-      const fraction = Math.min(0.88, meter / length);
-      const point = path.getPointAt(fraction), tangent = path.getTangentAt(fraction);
+      const [number, distance] = def.valve;
+      const { point, tangent } = valvePosition(path, distance, length);
       const group = groups[def.area];
       valve = geo.controlValve(group, point.sub(group.position), tangent, number);
     }
@@ -289,7 +272,7 @@ export function mountScene(container, host, select, pick = () => {}) {
     width = Math.max(1, container.clientWidth);
     height = Math.max(1, container.clientHeight);
     const aspect = width / height;
-    const half = Math.max(8.9, 22.2 / aspect);
+    const half = Math.max(OVERVIEW.halfHeight, OVERVIEW.halfWidth / aspect);
     camera.left = -half * aspect;
     camera.right = half * aspect;
     camera.top = half;

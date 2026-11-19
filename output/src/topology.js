@@ -36,11 +36,25 @@ const recycleOut = [0.45, 1.13, -7.1];
 const recycleIn = [2.98, 1.13, -7.1];
 const waterIn = [-11.7, 0.52, 6.65];
 const waterOut = [-11.7, 0.52, 7.75];
+const feedA = [-10.5, 0.8, -3.45];
+const feedD = [-10.5, 0.8, -1.25];
+const feedE = [-10.5, 0.8, 0.95];
+
+export const PIPE_JUNCTIONS = [
+  feedA, feedD, feedE, mix, split, overheadTie, inletTee, dischargeTee, sumpTee, waterIn, waterOut,
+];
+
+export const ANALYZER_TAPS = {
+  gc_feed: mix,
+  gc_purge: [AREAS.gc_purge.position[0], 1.2, split[2]],
+  gc_product: [AREAS.gc_product.position[0], 0.70, 5.19],
+};
+
 const PIPES = [
-  { id: '01', name: 'A 원료', area: 'feeds', media: 'gas', tag: 1, nominal: 0.25, valve: [3, 2], points: [[-13.7,0.78,-3.45],[-10.86,0.78,-3.45],[-10.5,0.8,-3.45]] },
-  { id: '02', name: 'D 원료', area: 'feeds', media: 'gas', tag: 2, nominal: 3664, valve: [1, 2], points: [[-13.7,0.8,-1.25],[-10.86,0.8,-1.25],[-10.5,0.8,-1.25]] },
-  { id: '03', name: 'E 원료', area: 'feeds', media: 'gas', tag: 3, nominal: 4509, valve: [2, 2], points: [[-13.7,0.8,0.95],[-10.86,0.8,0.95],[-10.5,0.8,0.95]] },
-  { id: 'M', name: 'A/D/E 혼합 헤더', area: 'feeds', media: 'gas', points: [[-10.5,0.8,-3.45],[-10.5,0.8,1.4]] },
+  { id: '01', name: 'A 원료', area: 'feeds', media: 'gas', tag: 1, nominal: 0.25, valve: [3, 2], points: [[-13.7,0.78,-3.45],[-10.86,0.78,-3.45],feedA] },
+  { id: '02', name: 'D 원료', area: 'feeds', media: 'gas', tag: 2, nominal: 3664, valve: [1, 2], points: [[-13.7,0.8,-1.25],[-10.86,0.8,-1.25],feedD] },
+  { id: '03', name: 'E 원료', area: 'feeds', media: 'gas', tag: 3, nominal: 4509, valve: [2, 2], points: [[-13.7,0.8,0.95],[-10.86,0.8,0.95],feedE] },
+  { id: 'M', name: 'A/D/E 혼합 헤더', area: 'feeds', media: 'gas', points: [feedA,mix] },
   { id: '04', name: 'A/C 원료 → 스트리퍼', area: 'feeds', media: 'gas', tag: 4, nominal: 9.35, valve: [4, 1.65], points: [[-13.7,0.77,3.15],[-12.1,0.77,3.15],[-12.1,0.77,5.45],[8.16,0.77,5.45],[8.16,2.08,5.45],[8.16,2.08,2.5],[9.06,2.08,2.5]] },
   { id: '05', name: '스트리퍼 상부 환류', area: 'stripper', media: 'gas', points: [[10.1,7.74,2.5],[10.1,8.17,2.5],[10.1,8.17,-7.1],[-2.7,8.17,-7.1],overheadTie] },
   { id: '06', name: '혼합 원료 → 반응기', area: 'reactor', media: 'gas', tag: 6, nominal: 42.34, points: [mix,[-9.25,0.8,1.4],[-9.25,1.25,1.4],[-8.64,1.25,1.4]] },
@@ -60,7 +74,7 @@ const PIPES = [
   { id: 'CWR', name: '공용 냉각수 회수', area: 'plant', media: 'water', points: [waterOut,[-13.4,0.52,7.75]] },
   { id: '12I', name: '반응기 냉각수 공급', area: 'reactor', media: 'water', tag: 'XMEASADD(6)', nominal: 93.37, points: [waterIn,[-5.73,0.52,6.65],[-5.73,0.52,1.4],[-5.73,3.42,1.4]] },
   { id: '12', name: '반응기 냉각수 회수', area: 'reactor', media: 'water', tag: 'XMEASADD(6)', nominal: 93.37, valve: [10, 5], points: [[-5.73,2.03,1.4],[-5.25,2.03,1.4],[-5.25,2.03,7.75],[-5.25,0.52,7.75],waterOut] },
-  { id: '13I', name: '응축기 냉각수 공급', area: 'condenser', media: 'water', tag: 'XMEASADD(8)', nominal: 49.37, points: [[-11.7,0.52,6.65],[-11.7,0.52,-9.3],[-0.12,0.52,-9.3],[-0.12,0.52,-3.95],[-0.12,3.24,-3.95]] },
+  { id: '13I', name: '응축기 냉각수 공급', area: 'condenser', media: 'water', tag: 'XMEASADD(8)', nominal: 49.37, points: [waterIn,[-11.7,0.52,-9.3],[-0.12,0.52,-9.3],[-0.12,0.52,-3.95],[-0.12,3.24,-3.95]] },
   { id: '13', name: '응축기 냉각수 회수', area: 'condenser', media: 'water', tag: 'XMEASADD(8)', nominal: 49.37, valve: [11, 3.55], points: [[-1.95,3.22,-3.96],[-1.95,0.42,-3.96],[-1.95,0.42,-10.1],[-12.25,0.42,-10.1],[-12.25,0.42,7.75],waterOut] },
   { id: 'ST', name: '재비기 스팀', area: 'reboiler', media: 'steam', tag: 19, nominal: 230.31, valve: [9, 3.6], points: [[17.3,1.24,6.7],[15.2,1.24,6.7],[15.2,1.24,2.5],[13.78,1.24,2.5]] },
   { id: 'CD', name: '스팀 응축수', area: 'reboiler', media: 'steam', points: [[13.67,0.83,2.77],[13.67,0.83,4.35],[17.3,0.83,4.35]] },
