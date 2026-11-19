@@ -36,7 +36,14 @@ const METERS = [
 ];
 const DOTS = [[190,170], [190,214], [190,258], [190,306], [550,76], [517,76], [675,76],
   [729,139], [382,409], [355,447], [890,393]];
-const pressureOffset = { reactor: 24, separator: 24, stripper: 24 };
+const LEVELS = {
+  reactor: { tag: 8, body: [252, 228, 86, 133], datum: 354, range: 65 },
+  separator: { tag: 12, body: [695, 188, 68, 94], datum: 278, range: 42 },
+  stripper: { tag: 15, body: [856, 248, 68, 136], datum: 379, range: 41 },
+};
+const FLOW_READOUTS = {
+  '06': [205, 326], '08R': [510, 63], '10': [747, 310], '11': [971, 400],
+};
 const symbol = (area, shape) => `<g class="pfd-symbol" data-symbol="${area}">${shape}</g>`;
 const rect = (x,y,w,h,r = 4) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/>`;
 const path = (d) => `<path d="${d}"/>`;
@@ -85,14 +92,23 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     return `<g class="pfd-unit" role="button" tabindex="0" data-area="${id}" aria-label="${code} ${name}" transform="translate(${x} ${y})">
       <title>${name}</title><rect x="-22" y="-12" width="44" height="17" rx="3"/><text y="0">${code}</text></g>`;
   }).join('');
+  const levelClips = Object.entries(LEVELS).map(([id, { body }]) => `<clipPath id="level-clip-${id}">${vessel(...body)}</clipPath>`).join('');
+  const levelLayers = Object.entries(LEVELS).map(([id, { body, datum }]) => {
+    const [x, , w] = body;
+    return `<g class="pfd-level" data-level="${id}" clip-path="url(#level-clip-${id})" aria-hidden="true">
+      <rect x="${x}" y="${datum}" width="${w}" height="0"/><line x1="${x + 4}" x2="${x + w - 4}" y1="${datum}" y2="${datum}"/></g>`;
+  }).join('');
   const readouts = anchors.filter(([id]) => id in CORE_PRESSURES).map(([id, [x, y]]) =>
-    `<text class="pfd-pressure" data-pressure="${id}" x="${x + 32}" y="${y - pressureOffset[id] / 3}"></text>`
+    `<text class="pfd-pressure" data-pressure="${id}" x="${x + 32}" y="${y - 8}"></text>`
+  ).join('');
+  const flowReadouts = Object.entries(FLOW_READOUTS).map(([id, [x, y]]) =>
+    `<text class="pfd-flow-reading" data-flow-reading="${id}" x="${x}" y="${y}"></text>`
   ).join('');
   host.innerHTML = `<svg role="group" aria-label="Downs와 Vogel Fig. 1 공정 흐름도" class="pfd-svg" viewBox="0 0 1140 476">
-    <defs>${arrows}</defs>${lines}
+    <defs>${arrows}${levelClips}</defs>${lines}
     <g class="pfd-samples">${path('M220 306V331M1001 139V154M1019 414V428')}</g>
     <g class="pfd-junctions">${DOTS.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3"/>`).join('')}</g>
-    ${equipment()}${valves}${portsMarkup}${meterMarkup}${labels}${readouts}</svg>`;
+    ${equipment()}${levelLayers}${valves}${portsMarkup}${meterMarkup}${labels}${readouts}${flowReadouts}</svg>`;
   const svg = host.firstElementChild;
   function activate(target) {
     const valve = target.closest('[data-valve]');
@@ -108,6 +124,10 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     event.preventDefault();
     activate(event.target);
   });
+  const levelByArea = [...svg.querySelectorAll('[data-level]')].map((node) => ({
+    area: node.dataset.level, rect: node.querySelector('rect'), line: node.querySelector('line'),
+  }));
+  const flowByStream = new Map([...svg.querySelectorAll('[data-flow-reading]')].map((node) => [node.dataset.flowReading, node]));
   const linesById = new Map([...svg.querySelectorAll('.pfd-stream')].map((line) => [line.dataset.stream, line]));
   return {
     focus(area, reset) {
@@ -130,10 +150,23 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
         const line = linesById.get(stream.id);
         line.classList.toggle('no-flow', ratio < 0.015);
         line.style.setProperty('--speed', `${Math.min(5, 1.5 / Math.max(0.28, ratio))}s`);
+        const label = flowByStream.get(stream.id);
+        if (label) label.textContent = `${reading(value)} ${stream.media === 'gas' ? 'kscm/h' : 'm³/h'}`;
       }
       for (const node of svg.querySelectorAll('.pfd-unit,.pfd-symbol,.pfd-pressure')) {
         const area = node.dataset.area ?? node.dataset.symbol ?? node.dataset.pressure;
         node.classList.toggle('in-alarm', status.alarms.some((alarm) => alarm.area === area));
+      }
+      const normalized = (value) => Math.max(0, Math.min(100, value ?? 0)) / 100;
+      for (const { area, rect, line } of levelByArea) {
+        const { tag, datum, range } = LEVELS[area];
+        const channel = codeFor(tag);
+        const fill = range * normalized(status.native_values[channel] ?? status.values[channel]);
+        rect.setAttribute('height', fill);
+        rect.setAttribute('y', datum - fill);
+        const y = datum - range * normalized(status.setpoints[`${area}_level`]);
+        line.setAttribute('y1', y);
+        line.setAttribute('y2', y);
       }
       for (const node of svg.querySelectorAll('.pfd-pressure')) {
         node.textContent = `${reading(status.values[codeFor(CORE_PRESSURES[node.dataset.pressure])])} kPa(g)`;

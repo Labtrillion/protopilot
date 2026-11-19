@@ -347,3 +347,14 @@ dialog::backdrop { background: #091117c9; }
   .response-values { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .response-values b { font-size: 0.87rem; }
 }
+.pfd-level rect { fill: #d4ac6a; opacity: 0.42; }
+.pfd-level line { stroke: #cfdaff; stroke-width: 1.4px; stroke-dasharray: 4 3; }
+.pfd-flow-reading {
+  display: none; fill: #b9cfd6; font: 650 10px var(--mono); text-anchor: start;
+  paint-order: stroke; stroke: #142330; stroke-width: 4px; stroke-linejoin: round;
+}
+.pfd-svg.show-flow .pfd-flow-reading { display: block; }
+.diagram-hint { display: none; color: #adc2cc; padding: 0.26rem 0.36rem; background: #14222dea; font-size: 0.76rem; white-space: nowrap; }
+@media (max-width: 760px) {
+  .stage[data-view="2d"] .diagram-hint { display: inline-block; }
+}

@@ -155,7 +155,8 @@ function createLabels(host, onSelect) {
     const position = geo.v3(AREAS[key].position);
     position.y = y;
     if (key === 'compressor') position.x -= 1.0;
-    if (key === 'separator') position.x += 0.54;
+    if (key === 'separator') position.x += 0.22;
+    if (key === 'stripper') position.x += 1.15;
     labels[key] = { button, position, value: button.querySelector('span') };
   }
   return labels;
