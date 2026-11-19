@@ -1,6 +1,6 @@
 # TEP Studio 센서별 대응 SOP (생성 문서)
 
-`scripts/build_tep_studio_sop.py` 가 `server/tep_control.py`(tep-rust tepsim-control 이식)에서 생성합니다. RAG 용 원본은 `rag_jiyeon/examples/tep_studio/knowledge/tep_studio_braatz_sop.json` 입니다.
+`scripts/build_tep_studio_sop.py` 가 `server/tep_control.py`(tep-rust tepsim-control 이식)에서 생성합니다. RAG 용 원본은 `rag/examples/tep_studio/knowledge/tep_studio_braatz_sop.json` 입니다.
 
 원본 코드: <https://github.com/jkitchin/tep-rust/blob/0735ad3b5bb7fdd367a8a31da1db8a209dac2a15/crates/tepsim-control/src/lib.rs>
 

@@ -4,13 +4,13 @@
 
 제어 구조·증분 계산은 server/tep_control.py(= tep-rust tepsim-control 이식)에서 가져온다.
 출력
-- rag_jiyeon/examples/tep_studio/knowledge/tep_studio_braatz_sop.json  (지연님 RAG protocol 형식)
+- rag/examples/tep_studio/knowledge/tep_studio_braatz_sop.json  (지연님 RAG protocol 형식)
 - docs/SOP_TEP_STUDIO.md                                             (사람이 읽는 표)
 
 원칙
 - 코드에서 나온 사실(어느 루프가 어느 계측을 읽고 어디에 쓰는지, P/PI, 주기, 오버라이드, 증분식)과
   공정 가설(퍼지를 늘리면 반응기 압력이 내려간다 등)을 구분해 적는다. 가설은 시뮬레이션으로 확인한다.
-- 벤치마크 공유 목표(생산·품질·반응기 온도·세 액위)는 바꾸지 않는다(rag_jiyeon/legacy/STUDIO.md).
+- 벤치마크 공유 목표(생산·품질·반응기 온도·세 액위)는 바꾸지 않는다(rag/legacy/STUDIO.md).
 - 후보 변경폭·순서·허용 범위는 예시 설정이다.
 """
 from __future__ import annotations
@@ -26,7 +26,7 @@ from server.tep_control import (  # noqa: E402
     OVERRIDE_HIGH, OVERRIDE_LOW, OVERRIDE_RELEASE, OVERRIDE_RESET_SETPOINT, OVERRIDE_RESET_VALVE, SOURCE,
     cascade_response, chain_for_measurement, loop_reading, owner_of, preset, top_level_setpoints, writer_of)
 
-OUT_JSON = ROOT / "rag_jiyeon" / "examples" / "tep_studio" / "knowledge" / "tep_studio_braatz_sop.json"
+OUT_JSON = ROOT / "rag" / "examples" / "tep_studio" / "knowledge" / "tep_studio_braatz_sop.json"
 OUT_MD = ROOT / "docs" / "SOP_TEP_STUDIO.md"
 DOC_ID = "tep-studio-braatz-sensor-response"
 VERSION = "1.0"
@@ -53,7 +53,7 @@ XMV = {1: "D Feed Flow", 2: "E Feed Flow", 3: "A Feed Flow", 4: "A and C Feed Fl
        6: "Purge Valve", 7: "Separator Pot Liquid Flow", 8: "Stripper Liquid Product Flow", 9: "Stripper Steam Valve",
        10: "Reactor Cooling Water Flow", 11: "Condenser Cooling Water Flow", 12: "Agitator Speed"}
 
-# 벤치마크에서 두 정책이 공유하는 목표(바꾸면 비교가 무의미해짐). rag_jiyeon/legacy/STUDIO.md
+# 벤치마크에서 두 정책이 공유하는 목표(바꾸면 비교가 무의미해짐). rag/legacy/STUDIO.md
 FIXED = {11: "생산 목표(제품 유량)", 20: "제품 품질 목표(제품 E)", 18: "반응기 온도 목표",
          17: "반응기 액위 목표", 7: "분리기 액위 목표", 8: "스트리퍼 액위 목표"}
 # 감독기가 바꿀 수 있게 열어 둔 상위 목표와 시험 격자(예시). 나머지 최상위 목표는 격자 미정.
@@ -263,8 +263,8 @@ def build() -> dict:
                      "terminals": [{"id": "review_completed", "meaning_ko": "검토 완료. 실제 적용은 감독기 결정"}]},
         "provenance": {"source_registry": {
             "studio_control_src": {"url": SOURCE, "note": "PRESET, Loop::increment, Override::step, Scheme::run"},
-            "team_sop": {"file": "rag_jiyeon/legacy/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json", "version": "1.0"},
-            "studio_md": {"file": "rag_jiyeon/legacy/STUDIO.md", "section": "Zoro 입력, 출력, 실행 경계"},
+            "team_sop": {"file": "rag/legacy/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json", "version": "1.0"},
+            "studio_md": {"file": "rag/legacy/STUDIO.md", "section": "Zoro 입력, 출력, 실행 경계"},
             "downs_vogel": {"file": "zoro_rag_knowledge/01_Process_Knowledge/Downs_Vogel_1993.pdf", "locator": "Table 6"},
             "variables": {"file": "zoro_rag_knowledge/03_Control_and_Variables/README.md"},
             "benchmark": {"file": "docs/BENCHMARK.md"}}},

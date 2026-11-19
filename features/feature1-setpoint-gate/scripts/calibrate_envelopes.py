@@ -5,7 +5,7 @@ tep-sops envelopes were measured over 0-2 h of one prefault run in the source re
 On this Plant, fault-free signals leave those bands for much of a 9 h run (e.g. XMEAS(15) 70 %,
 XMEAS(1) 48 %), so they flag faults that are not there. This script applies the same procedure
 (min/max of fault-free observations) on this Plant, over CALIBRATION_SEEDS x 0-END_H, and writes
-the result into rag_jiyeon/sop-index.json as `live_envelopes`. The calibration seeds are disjoint from
+the result into rag/sop-index.json as `live_envelopes`. The calibration seeds are disjoint from
 the evaluation seeds in scripts/eval_sop_align.py. The source envelope stays in the index.
 
 usage: python scripts/calibrate_envelopes.py
@@ -21,7 +21,7 @@ from server.plant import Plant  # noqa: E402
 from setpoint_rag.sop_align import observed_value  # noqa: E402
 from server.scenario import DEFAULT_FLAGS, LIVE_FORMAT, STEP_HOURS, live_scenario  # noqa: E402
 
-INDEX = ROOT / "rag_jiyeon" / "sop-index.json"
+INDEX = ROOT / "rag" / "sop-index.json"
 CALIBRATION_SEEDS = (11, 12, 13)
 END_H = 9.0
 

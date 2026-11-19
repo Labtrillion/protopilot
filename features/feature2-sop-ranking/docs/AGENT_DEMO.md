@@ -9,7 +9,7 @@ SOP 근거(RAG) → 허용 선택지 구성 → Zoro-1 Choice 판단 → 등록 
 
 ## 폴더 안내
 
-알람 대응 예제는 [에이전트](../sop_ranking/agent.py)와 [분기 연결 코드](../sop_ranking/zoro_bridge.py)에 있습니다. SOP 검색기는 [Feature 1 RAG](../../feature1-setpoint-gate/rag_jiyeon/README.md)에서 관리합니다. `--rag jiyeon`은 미리 저장한 RAG 출력 JSON을 읽습니다.
+알람 대응 예제는 [에이전트](../sop_ranking/agent.py)와 [분기 연결 코드](../sop_ranking/zoro_bridge.py)에 있습니다. SOP 검색기는 [Feature 1 RAG](../../feature1-setpoint-gate/rag/README.md)에서 관리합니다. `--rag jiyeon`은 미리 저장한 RAG 출력 JSON을 읽습니다.
 
 ## 실행
 
@@ -21,7 +21,7 @@ python examples/run_demo.py --sop-only --rag jiyeon  # SOP 대응안 한 가지 
 python examples/run_demo.py --rag jiyeon   # 지연님 RAG 실제 출력(rag_jiyeon_result.json)으로 실행
 python -m pytest -q tests                  # 핵심 테스트
 python scripts/export_schemas.py     # docs/schemas/*.schema.json, docs/examples/*.json 재생성
-python scripts/benchmark_pair.py ../feature1-setpoint-gate/rag_jiyeon/legacy/validation/nominal.csv ../feature1-setpoint-gate/rag_jiyeon/legacy/validation/cooling_combined.csv  # 심슨 vs Zoro 짝비교
+python scripts/benchmark_pair.py ../feature1-setpoint-gate/rag/legacy/validation/nominal.csv ../feature1-setpoint-gate/rag/legacy/validation/cooling_combined.csv  # 심슨 vs Zoro 짝비교
 ```
 
 실제 Zoro-1 서버 연결(도구는 여전히 가짜):

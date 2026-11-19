@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Build rag_jiyeon/sop-index.json from a Labtrillion/tep-sops checkout.
+"""Build rag/sop-index.json from a Labtrillion/tep-sops checkout.
 
 The index holds, per IDV SOP, its observation predicates with tags rewritten to ProtoPilot's
 observed keys, plus the compact Zoro records (idv-sops-zoro/, sensor-sops-zoro/) that the alarm
-pipeline sends to Zoro. rag_jiyeon/sop_align.py reads only this file at runtime.
+pipeline sends to Zoro. rag/sop_align.py reads only this file at runtime.
 
 Tag rewriting (tep-sops -> ProtoPilot observed key):
   XMEAS(n)                    -> XMEAS(n)
@@ -19,7 +19,7 @@ import re
 import subprocess
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parents[1] / "rag_jiyeon" / "sop-index.json"
+OUT = Path(__file__).resolve().parents[1] / "rag" / "sop-index.json"
 ENVELOPE_OPS = {"outside_reference_range", "greater_than_reference_maximum", "less_than_reference_minimum"}
 THRESHOLD_OPS = {"gt", "gte", "lt", "lte"}
 COMPACT_KEYS = ("id", "revision", "kind", "title", "tags", "side", "severity", "activation_threshold",

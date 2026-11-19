@@ -2,6 +2,16 @@
 
 입력은 알림에서 추출한 JSON입니다. **BGE-M3 + BM25 → Qwen3 리랭커**로 관련 문헌과 SOP 검토 계획을 찾습니다.
 
+## 실제 모델 검증
+
+이 폴더에서 다음 Python 명령을 실행하면 TEP Studio와 IDV(8) 예제를 CPU에서 검증합니다.
+
+```bash
+.venv/bin/python scripts/verify_rag.py --device cpu
+```
+
+터미널에 BGE-M3 임베딩 차원과 dense 검색 결과, BM25 검색 결과, Qwen 리랭킹 점수, SOP 검토 계획을 출력합니다. 전체 알람 결과는 `artifacts/verification/tep_studio/result.json`과 `artifacts/verification/idv8/result.json`에 저장합니다. 각 예제의 검증 인덱스도 같은 폴더 아래에 저장하여 재사용합니다. 한 예제만 확인할 때는 `--scenario tep_studio` 또는 `--scenario idv8`을 붙입니다.
+
 ## TEP Studio 센서별 SOP로 실행 (2026-11-19 추가)
 
 ```bash

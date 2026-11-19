@@ -1,6 +1,6 @@
 # Aligning live alarms with tep-sops
 
-`rag_jiyeon/sop_align.py` picks the SOP that `analyze_alarm` sends to Zoro. It reads the alarm and the
+`rag/sop_align.py` picks the SOP that `analyze_alarm` sends to Zoro. It reads the alarm and the
 observed history kept by `Plant`. It replaces the tag-only `find_sop` lookup. The injected IDV vector
 is never an input.
 
@@ -23,14 +23,14 @@ retrieval method cannot use the SOP content it retrieves (2).
 
 - **`plant.py`**: each checkpoint now carries the last 2 h of observations (`history`) and the
   actual positions of all 12 valves (`XMV(n):actual`).
-- **`scripts/build_sop_index.py`**: builds `rag_jiyeon/sop-index.json` from a tep-sops checkout. The
+- **`scripts/build_sop_index.py`**: builds `rag/sop-index.json` from a tep-sops checkout. The
   index stores the IDV SOP conditions with their tags rewritten to Plant keys, together with the
   compact Zoro records from `idv-sops-zoro/` and `sensor-sops-zoro/`.
 - **`scripts/calibrate_envelopes.py`**: repeats the SOPs' own "measured nominal envelope"
   procedure (min/max of fault-free observations) on this Plant. It uses seeds 11–13 over 0–9 h,
   disjoint from the evaluation seeds. It also covers the SOP mechanism signals. The source
   envelopes stay in the index.
-- **`rag_jiyeon/sop_align.py`** scores each IDV SOP as follows:
+- **`rag/sop_align.py`** scores each IDV SOP as follows:
   - A condition holds when at least half of the last 0.25 h of samples violate it.
   - Each rule follows its own `all`/`any` logic.
   - A held rule scores 2 if it adds evidence beyond the active operating-limit alarm, otherwise 1.

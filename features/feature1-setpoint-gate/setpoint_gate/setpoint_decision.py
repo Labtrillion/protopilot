@@ -1,18 +1,5 @@
-"""Zoro-1 setpoint decisions on the live plant, checked on isolated TEP branches.
+"""Zoro-1 selects two in-range setpoint changes for an isolated TEP comparison."""
 
-Two typed questions, no generated text:
-
-1. one yes/no (`noul`) per adjustable Ricker setpoint -- "does it need to change now?";
-   select up to two setpoints at or above `NEED_THRESHOLD` in descending gate order;
-2. for each selected setpoint, one `choice` over five direction/size categories
-   (decrease a lot / slightly, keep, increase slightly / a lot).
-
-The state holds only what an operator sees: published sensors as a 2 h summary, setpoints
-with their change since the run started and whether a ramped change is still taking effect,
-controller commands, protection, active alarms (without their source) and the operating
-procedures retrieved from `setpoint-sops.json` by observable symptoms. No disturbance names.
-Without a Zoro-1 server, or on any model error, a local rule decides and the trace says so.
-"""
 
 import json
 import os
@@ -20,8 +7,8 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass, replace
 from hashlib import sha256
 from pathlib import Path
+from subprocess import SubprocessError
 from time import perf_counter
-from urllib.error import URLError
 from uuid import uuid4
 
 import numpy as np
@@ -30,18 +17,18 @@ from tep_studio import TEP_SCHEMA, TennesseeEastmanProcess
 from server.agent_config import CONFIG
 from server.branch_metrics import branch_summary, step_cost
 from server.sop_lookup import find_sop
-from server.assistant import FALLBACK, append_trace
+from server.assistant import append_trace
 from setpoint_rag import evaluation_policy
 from setpoint_rag.sop_align import match_sensor_sop
-from zoro.client import zoro_decide
 from server.catalog import PV_TAGS, SETPOINTS
 from server.plant import MEASUREMENT_TAGS, control_action
 from server.recording import timestamp
 from server.scenario import KERNEL_REVISION, STEP_HOURS, adjustment
 
+from . import zoro_inference
+
 RULEBOOK = json.loads(Path(CONFIG["rulebook_path"]).read_text(encoding="utf-8"))
 NEED_THRESHOLD = CONFIG["need_threshold"]
-MAX_CHANGED_SETPOINTS = 2
 BRANCH_HOURS = CONFIG["branch_hours"]
 TREND_WINDOW_HOURS = CONFIG["trend_window_hours"]
 # (small, large) relative moves per decision; production follows the SOP's 5 % steps.
@@ -57,7 +44,9 @@ SITUATION = (
     "plant underneath you. You may change operator setpoints of its loops, or hold. production_rate is ramped at "
     "a rate limit, so it takes hours to take effect; the other setpoints act at the next control step. The plant "
     "trips if reactor pressure reaches 3000 kPa, reactor temperature 175 degC, or a reactor / separator / stripper "
-    "level reaches 0 % or 100 %. Production lost to a cut or a trip is a loss. Avoid unnecessary changes."
+    "level reaches 0 % or 100 %. Production lost to a cut or a trip is a loss. Avoid unnecessary changes. "
+    "Use the documented evidence with the observed plant state. RAG scores measure retrieval relevance. "
+    "Use only simulator-compatible SOP plans with confirmed inputs to support a change."
 )
 
 
@@ -298,39 +287,41 @@ def local_rule(point, table):
     return []
 
 
-def decide(point, *, timeout):
+def decide(point, *, timeout, checkpoint, request_id):
     started = perf_counter()
     rules = retrieve_rules(point)
     state = decision_state(point, rules)
     table = state["setpoints"]
-    result = {"retrieved_rules": [r["id"] for r in rules], "gate": None, "moves": {}, "reason": None}
+    result = {"request_id": request_id, "retrieved_rules": [r["id"] for r in rules],
+              "gate": None, "moves": {}, "reason": None, "rag_status": "no_active_alarms"}
+    rag_result = None
+    changes = []
     try:
-        gate = zoro_decide(state, gate_questions(table), timeout=timeout)
-        result["gate"] = {name: round(float(answer["noul"]), 4) for name, answer in gate.items()}
-        ranked = sorted(result["gate"], key=result["gate"].get, reverse=True)
-        selected = {name: result["gate"][name] for name in ranked[:MAX_CHANGED_SETPOINTS]
-                    if result["gate"][name] >= NEED_THRESHOLD}
-        changes = []
-        if selected:
-            questions, keymap = move_questions(table, selected)
-            answers = zoro_decide({**state, "setpoints_to_change": selected}, questions, timeout=timeout)
-            for name, answer in answers.items():
-                move = keymap[name][answer["choice"]]
-                result["moves"][name] = {
-                    "choice": answer["choice"], "move": move, "confidence": answer.get("confidence"),
-                    "probabilities": {f"{keymap[name][k] * 100:+.0f}%": round(float(v), 4)
-                                      for k, v in answer.get("probabilities", {}).items()},
-                }
-                if move:
-                    row = table[name]
-                    changes.append({"setpoint": name, "from": row["setpoint"],
-                                    "to": round(row["setpoint"] * (1 + move), 6), "move": move})
-        model = "Zoro-1"
-    except (AttributeError, KeyError, IndexError, TypeError, ValueError, URLError, TimeoutError) as error:
-        changes, model = local_rule(point, table), FALLBACK
-        result["reason"] = type(error).__name__ if os.environ.get("ZORO_BASE_URL") else "not_configured"
-    return {**result, "model": model, "fallback": model == FALLBACK, "changes": changes,
-            "decision_ms": round((perf_counter() - started) * 1000, 2)}, state
+        if point.alarms:
+            result["rag_status"] = "error"
+            rag_timeout = float(os.environ.get("PROTOPILOT_RAG_TIMEOUT_SECONDS", "150"))
+            rag_result = zoro_inference.retrieve_alarm(point, checkpoint, timeout=rag_timeout)
+            state["rag"] = zoro_inference.evidence_for_zoro(rag_result)
+            result["rag_status"] = rag_result["status"]
+            result["rag_event_id"] = rag_result["event_id"]
+        if result["rag_status"] == "insufficient_evidence":
+            result["reason"] = "insufficient_rag_evidence"
+        elif result["rag_status"] == "error":
+            result["reason"] = "rag_error"
+        else:
+            questions, moves = move_questions(table, table)
+            changes = zoro_inference.decide_pair(
+                state, gate_questions(table), questions, moves, threshold=NEED_THRESHOLD,
+                timeout=timeout, request_id=request_id, result=result,
+            )
+    except (OSError, SubprocessError, AttributeError, KeyError, TypeError, ValueError) as error:
+        if result["rag_status"] == "error":
+            result["reason"] = f"rag_error:{type(error).__name__}"
+        else:
+            result["reason"] = type(error).__name__ if os.environ.get("ZORO_BASE_URL") else "not_configured"
+    return {**result, "model": "Zoro-1", "fallback": False, "changes": changes,
+            "status": "ready" if changes else "human_review",
+            "decision_ms": round((perf_counter() - started) * 1000, 2)}, state, rag_result
 
 
 def setpoint_alternatives(table):
@@ -376,17 +367,51 @@ def run_setpoint_branch(point, label, changes):
             "production_target": float(controller.setpoints.production_rate)}
 
 
+def alternative_evaluation_state(state):
+    rag = state.get("rag")
+    if rag is None:
+        return state
+
+    plant = state["plant"]
+    measured_tags = {f"XMEAS({number})" for number in PV_TAGS.values()}
+    measured_tags.update(alarm["tag"] for alarm in plant["alarms_active"])
+    sensor_names = {variable.name for tag, variable in zip(MEASUREMENT_TAGS, TEP_SCHEMA.measurements)
+                    if tag in measured_tags}
+    evidence = {
+        "event_id": rag["event_id"],
+        "evidence": [
+            {key: item[key] for key in ("evidence_id", "statement", "source_document", "reranker_score")}
+            for item in rag["evidence"]
+        ],
+        "sop_plans": [
+            {"evidence_id": action["evidence_id"], "status": action["status"],
+             "parameter": action["plan"].get("parameter")}
+            for action in rag["candidate_actions"]
+        ],
+    }
+    return {
+        **state,
+        "plant": {**plant, "sensors": [row for row in plant["sensors"] if row["name"] in sensor_names]},
+        "operating_procedures": [
+            *state["operating_procedures"],
+            {"id": rag["event_id"], "title": "Alarm RAG evidence", "rag": evidence},
+        ],
+    }
+
+
 def analyze_setpoints(point, trace_path, *, timeout=None, evaluate_alternatives=None):
     timeout = timeout or float(os.environ.get("ZORO_SETPOINT_TIMEOUT", CONFIG["zoro_timeout_seconds"]))
-    decision, state = decide(point, timeout=timeout)
+    decision_id = uuid4().hex
+    checkpoint = sha256(point.native.model_bytes).hexdigest()[:12]
+    decision, state, rag_result = decide(point, timeout=timeout, checkpoint=checkpoint, request_id=decision_id)
     rule_changes = local_rule(point, state["setpoints"])
     candidates = [("hold", []), ("rule", rule_changes)]
-    if not decision["fallback"]:
+    if decision["status"] == "ready":
         candidates.append(("zoro", decision["changes"]))
     branches = [run_setpoint_branch(point, label, changes) for label, changes in candidates]
     result = {
-        "decision_id": uuid4().hex, "decision": decision, "branches": branches,
-        "start": {"checkpoint": sha256(point.native.model_bytes).hexdigest()[:12], "run_id": point.run_id,
+        "decision_id": decision_id, "decision": decision, "branches": branches,
+        "start": {"checkpoint": checkpoint, "run_id": point.run_id,
                   "step": point.step, "time_hours": round(point.time_hours, 8), "horizon_hours": BRANCH_HOURS},
     }
     result["handoff"] = {
@@ -394,9 +419,16 @@ def analyze_setpoints(point, trace_path, *, timeout=None, evaluate_alternatives=
         "baseline_changes": decision["changes"],
         "alternatives": setpoint_alternatives(state["setpoints"]),
         "evaluation_policy": evaluation_policy(),
+        "rag_result": rag_result,
     }
     if evaluate_alternatives is not None:
-        result["feature2"] = evaluate_alternatives(point, result["handoff"], state, timeout=timeout)
+        if decision["status"] == "ready":
+            result["feature2"] = evaluate_alternatives(
+                point, result["handoff"], alternative_evaluation_state(state), timeout=timeout,
+            )
+        else:
+            result["feature2"] = {"status": "human_review", "reason": "feature1_pair_unavailable",
+                                  "evaluated": [], "recommended": None}
     trace = {
         **result, "time_utc": timestamp(), "flow": "live_setpoint_decision", "kernel_revision": KERNEL_REVISION,
         "rulebook": RULEBOOK["name"], "setpoint_table": state["setpoints"],

@@ -27,24 +27,51 @@ class SetpointDecisionTest(unittest.TestCase):
         run_until(self.plant, 2.5)
 
     def test_zoro_gate_and_moves_drive_multi_setpoint_branches(self):
-        point = capture_point(self.plant)
+        point = replace(capture_point(self.plant), alarms=({"tag": "XMEAS(7)", "side": "high", "value": 2905.0},))
         self.assertIn("FEEDA-1", [rule["id"] for rule in retrieve_rules(point)])
+        rag_result = {
+            "event_id": "test-pressure", "status": "evidence_retrieved",
+            "evidence": [{
+                "evidence_id": "PRESSURE", "evidence_type": "MEASUREMENT", "statement": "Reactor pressure.",
+                "source_document": "TEP", "source_section": None, "source_page": 1,
+                "source_version": "test", "source_url": None, "provenance": {"reranker_score": 0.95},
+            }],
+            "candidate_actions": [], "missing_evidence": [], "unresolved_questions": [],
+        }
 
-        def reply(url, payload, *, timeout):
+        def reply(url, payload, *, timeout, request_id):
             questions = payload["questions"]
+            self.assertEqual(payload["state"]["rag"]["evidence"][0]["reranker_score"], 0.95)
             if all(q["type"] == "noul" for q in questions.values()):
-                return {"answers": {name: {"type": "noul", "noul": 0.93 if name == "production_rate" else 0.08}
+                scores = {"production_rate": 0.93, "reactor_temperature": 0.9, "reactor_pressure": 0.8}
+                self.assertTrue(request_id.endswith("-noul"))
+                return {"answers": {name: {"type": "noul", "noul": scores.get(name, 0.08)}
                                     for name in questions}}
+            self.assertTrue(request_id.endswith("-choice"))
+            self.assertEqual(set(questions), {"production_rate", "reactor_temperature"})
+            self.assertTrue(all("keep" not in q["criteria"] for q in questions.values()))
             return {"answers": {name: {"type": "choice", "choice": "decrease_small", "confidence": 0.61,
                                        "probabilities": {k: (0.61 if k == "decrease_small" else 0.1) for k in q["criteria"]}}
                                 for name, q in questions.items()}}
 
         log = self.root / "agent-trace.jsonl"
-        with patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}):
-            with patch("zoro.client._request", side_effect=reply) as request:
-                with patch("setpoint_gate.setpoint_decision.BRANCH_HOURS", 20 * STEP_HOURS):
-                    result = analyze_setpoints(point, log)
+        with (
+            patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}),
+            patch("setpoint_gate.zoro_inference.retrieve_alarm", return_value=rag_result) as retrieval,
+            patch("zoro.client._request", side_effect=reply) as request,
+            patch("setpoint_gate.setpoint_decision.BRANCH_HOURS", 20 * STEP_HOURS),
+        ):
+            def evaluate(_, handoff, state, *, timeout):
+                self.assertEqual(handoff["rag_result"], rag_result)
+                self.assertEqual(state["operating_procedures"][-1]["rag"]["event_id"], "test-pressure")
+                return {"status": "verified"}
+
+            result = analyze_setpoints(point, log, evaluate_alternatives=evaluate)
         decision = result["decision"]
+        retrieval.assert_called_once()
+        self.assertEqual(decision["status"], "ready")
+        self.assertEqual(len(decision["changes"]), 2)
+        self.assertEqual(result["feature2"]["status"], "verified")
         self.assertFalse(decision["fallback"])
         self.assertEqual(decision["changes"][0]["setpoint"], "production_rate")
         self.assertAlmostEqual(decision["changes"][0]["move"], -0.05)
@@ -63,17 +90,35 @@ class SetpointDecisionTest(unittest.TestCase):
         self.assertEqual(trace["simulation_context"]["evaluation_faults"], ["IDV(6)"])
         self.assertTrue(result["logged"])
 
-    def test_without_zoro_the_local_rule_decides_and_is_logged(self):
-        point = capture_point(self.plant)
+    def test_without_zoro_feature1_requires_review_and_compares_the_local_rule(self):
+        point = replace(capture_point(self.plant), alarms=())
         log = self.root / "agent-trace.jsonl"
         with patch.dict("os.environ", {"ZORO_BASE_URL": ""}):
             with patch("setpoint_gate.setpoint_decision.BRANCH_HOURS", 20 * STEP_HOURS):
                 result = analyze_setpoints(point, log)
         decision = result["decision"]
-        self.assertTrue(decision["fallback"])
+        self.assertEqual(decision["status"], "human_review")
+        self.assertEqual(decision["changes"], [])
         self.assertEqual(decision["reason"], "not_configured")
         self.assertEqual([b["id"] for b in result["branches"]], ["hold", "rule"])
-        self.assertTrue(json.loads(log.read_text())["decision"]["fallback"])
+        self.assertEqual(json.loads(log.read_text())["decision"]["status"], "human_review")
+
+    def test_one_passing_noul_does_not_propose_a_partial_pair(self):
+        point = replace(capture_point(self.plant), alarms=())
+
+        def reply(_, payload, **kwargs):
+            return {"answers": {name: {"noul": 0.9 if name == "production_rate" else 0.49}
+                                for name in payload["questions"]}}
+
+        with (
+            patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}),
+            patch("zoro.client._request", side_effect=reply) as request,
+            patch("setpoint_gate.setpoint_decision.BRANCH_HOURS", 20 * STEP_HOURS),
+        ):
+            result = analyze_setpoints(point, self.root / "agent-trace.jsonl")
+        self.assertEqual(result["decision"]["reason"], "fewer_than_two_eligible_setpoints")
+        self.assertEqual(result["handoff"]["baseline_changes"], [])
+        self.assertEqual(request.call_count, 1)
 
     def test_branch_cost_loss_and_alarm_minutes_match_the_live_plant(self):
         plant = self.plant
