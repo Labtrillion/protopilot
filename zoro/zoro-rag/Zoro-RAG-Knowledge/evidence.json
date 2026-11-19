@@ -1,0 +1,313 @@
+[
+  {
+    "id": "tep-process",
+    "source": {
+      "id": "downs",
+      "section": "Process description / Fig. 1",
+      "page": 246
+    },
+    "kind": "process",
+    "title": "TEP 공정 흐름과 재순환",
+    "text": "반응기, 응축기, 기액 분리기, 재순환 압축기, 제품 스트리퍼가 연결된다. 분리기 기상은 재순환되고 퍼지로 불활성 B의 축적을 제어한다. 분리기 액상은 스트리퍼로 공급된다. 반응기 냉각과 응축기 냉각은 서로 다른 공정 위치에 영향을 준다.",
+    "tags": [
+      "reactor",
+      "condenser",
+      "separator",
+      "stripper",
+      "purge"
+    ]
+  },
+  {
+    "id": "tep-constraints",
+    "source": {
+      "id": "downs",
+      "section": "Table 6",
+      "page": 249
+    },
+    "kind": "constraint",
+    "title": "정상 운전 상한과 셧다운 한계",
+    "text": "반응기 압력 정상 상한 2895 kPa, 셧다운 상한 3000 kPa. 반응기 온도 정상 상한 150 °C, 셧다운 상한 175 °C. 표는 반응기·분리기·스트리퍼 레벨의 정상 및 셧다운 한계도 각각 제시한다.",
+    "tags": [
+      "operating limit",
+      "pressure",
+      "safety",
+      "interlock",
+      "XMEAS(7)",
+      "XMEAS(9)",
+      "압력",
+      "셧다운"
+    ],
+    "constraints": [
+      "반응기 압력 정상 상한 2895 kPa, 셧다운 상한 3000 kPa (TEP Table 6)",
+      "반응기 온도 정상 상한 150 °C, 셧다운 상한 175 °C (TEP Table 6)"
+    ]
+  },
+  {
+    "id": "tep-disturbance-comparison",
+    "source": {
+      "id": "downs",
+      "section": "Table 8 / Dynamic performance comparisons",
+      "page": 250
+    },
+    "kind": "case_study",
+    "title": "논문에서 제안한 복합 외란 비교",
+    "text": "기본 운전점 Mode 1의 비교 사례에는 IDV(12) 응축기 냉각수 입구 온도 랜덤 변화와 IDV(15) 응축기 냉각수 밸브 고착의 동시 적용이 포함된다. 외란 14–20은 다른 외란이나 설정점 변경과 함께 시험할 것을 제안한다.",
+    "ids": [
+      12,
+      15
+    ],
+    "preconditions": [
+      "논문의 기본 비교 운전점은 Mode 1이다."
+    ],
+    "tags": [
+      "cooling",
+      "condenser",
+      "stiction",
+      "복합",
+      "응축기"
+    ]
+  },
+  {
+    "id": "ap-cost-5",
+    "source": {
+      "id": "apmonitor",
+      "section": "Operating the app / The cost of a random feed (Case 5)",
+      "anchor": "the-cost-of-a-random-feed"
+    },
+    "kind": "case_study",
+    "title": "Case 5 · IDV(8) 원료 조성 변동 비용 비교",
+    "text": "APMonitor의 IDV(8) 단독 실습에서 24시간 평균 비용은 176.1 $/h이고 무외란 기준은 170.7 $/h다. 반응기 압력 설정값을 2705에서 2800 kPa g로 바꾼 비교 실험에서는 146.3 $/h, 최고 압력 2827 kPa g가 보고됐다. 퍼지 손실과 반응기 압력 여유의 상충관계를 보여준다.",
+    "ids": [
+      8
+    ],
+    "tags": [
+      "case 5",
+      "cost",
+      "purge",
+      "압력",
+      "비용",
+      "절감",
+      "setpoint",
+      "XMEAS(7)",
+      "XMEAS(10)"
+    ],
+    "procedure": [
+      "APMonitor에서 Case 5를 선택해 Auto와 IDV(8) On 상태로 24시간 평균 비용을 비교한다.",
+      "같은 IDV(8) 조건에서 압력 설정값의 두 실습값 2705와 2800 kPa g를 비교하고 최고 압력을 기록한다."
+    ],
+    "preconditions": [
+      "APMonitor Case 5의 단일 IDV(8) 실습, 동일 외란 조건."
+    ],
+    "constraints": [
+      "보고된 비용과 최고 압력은 해당 실습 조건에 한정된다."
+    ]
+  },
+  {
+    "id": "ap-feed-4",
+    "source": {
+      "id": "apmonitor",
+      "section": "Operating the app / The analyzers (Case 4)",
+      "anchor": "the-analyzers"
+    },
+    "kind": "case_study",
+    "title": "Case 4 · A/C 원료비와 분석기 지연",
+    "text": "IDV(1) A/C 조성 스텝에 대한 APMonitor 사례다. 반응기 원료 조성 분석기는 6분마다 결과를 갱신하며 시료 채취에서 결과까지 추가로 6분이 걸린다. 설정에 따른 성분 A의 일시 하락과 반응기 최고 압력을 비교한다.",
+    "ids": [
+      1
+    ],
+    "tags": [
+      "composition",
+      "analyzer",
+      "delay",
+      "분석기",
+      "원료",
+      "XMEAS(23)"
+    ],
+    "preconditions": [
+      "APMonitor Case 4, IDV(1) 단독"
+    ],
+    "constraints": [
+      "분석기 측정 시각과 시료 채취 시각에는 지연이 존재한다."
+    ]
+  },
+  {
+    "id": "ap-kinetics-6",
+    "source": {
+      "id": "apmonitor",
+      "section": "Operating the app / A slow drift (Case 6)",
+      "anchor": "a-slow-drift"
+    },
+    "kind": "case_study",
+    "title": "Case 6 · 느린 반응 속도 변화",
+    "text": "APMonitor의 IDV(13) 단독 실습에서 반응 속도가 서서히 달라진다. 압력과 퍼지 동작, 평균 비용을 함께 비교하면 작은 계측 편차에도 보상 동작과 비용이 달라질 수 있음을 확인할 수 있다.",
+    "ids": [
+      13
+    ],
+    "tags": [
+      "reaction kinetics",
+      "drift",
+      "반응",
+      "비용",
+      "purge"
+    ]
+  },
+  {
+    "id": "ap-valve-7",
+    "source": {
+      "id": "apmonitor",
+      "section": "Operating the app / A sticking valve (Case 7)",
+      "anchor": "a-sticking-valve"
+    },
+    "kind": "case_study",
+    "title": "Case 7 · 반응기 냉각수 밸브 고착",
+    "text": "IDV(14) 단독 모델 실습에서 냉각 밸브 고착이 반응기 온도의 반복 진동으로 나타난다. 이 예시의 압력 변화는 작았으며, 온도 응답과 압력 응답을 함께 확인하는 참고 사례다.",
+    "ids": [
+      14
+    ],
+    "tags": [
+      "oscillation",
+      "cooling",
+      "stiction",
+      "밸브",
+      "고착",
+      "XMEAS(9)",
+      "XMV(10)"
+    ]
+  },
+  {
+    "id": "ap-feed-8",
+    "source": {
+      "id": "apmonitor",
+      "section": "Operating the app / A lost feed and the override (Case 8)",
+      "anchor": "a-lost-feed-and-the-override"
+    },
+    "kind": "case_study",
+    "title": "Case 8 · A 원료 상실과 압력 오버라이드",
+    "text": "APMonitor Case 8은 IDV(6)로 A 원료 공급을 잃은 뒤 생산 감량과 압력 오버라이드 구성에 따라 압력 및 스트리퍼 레벨로 인한 종료 여부가 달라지는 실습이다. 이 오버라이드는 APMonitor 앱의 별도 제어 구조다.",
+    "ids": [
+      6
+    ],
+    "tags": [
+      "supply",
+      "override",
+      "feed loss",
+      "재고",
+      "압력",
+      "원료"
+    ],
+    "preconditions": [
+      "APMonitor Case 8의 앱 제어 구조"
+    ],
+    "constraints": [
+      "압력 오버라이드의 실행 여부는 앱에서 선택한 Auto 구조에 의존한다."
+    ]
+  },
+  {
+    "id": "braatz-tags",
+    "source": {
+      "id": "braatz",
+      "section": "Continuous Process Measurements / Manipulated Variables",
+      "anchor": "continuous-process-measurements"
+    },
+    "kind": "control",
+    "title": "TEP 태그와 물리량",
+    "text": "XMEAS(1) A 원료 유량, XMEAS(4) A/C 원료 유량, XMEAS(7) 반응기 압력(kPa gauge), XMEAS(9) 반응기 온도(°C), XMEAS(10) 퍼지 유량, XMEAS(11) 분리기 온도, XMEAS(12) 분리기 레벨, XMEAS(15) 스트리퍼 레벨, XMEAS(17) 제품 유량, XMEAS(18) 스트리퍼 온도, XMEAS(19) 스트리퍼 스팀 유량, XMEAS(21) 반응기 냉각수 출구 온도, XMEAS(22) 분리기 냉각수 출구 온도. XMV(6) 퍼지 밸브, XMV(7) 분리기 액상 유출, XMV(8) 스트리퍼 제품 유출, XMV(9) 스팀 밸브, XMV(10) 반응기 냉각수, XMV(11) 응축기 냉각수.",
+    "tags": [
+      "XMEAS",
+      "XMV",
+      "control",
+      "변수",
+      "밸브",
+      "냉각",
+      "압력",
+      "purge"
+    ]
+  },
+  {
+    "id": "braatz-sampling",
+    "source": {
+      "id": "braatz",
+      "section": "Sampled Process Measurements",
+      "anchor": "sampled-process-measurements"
+    },
+    "kind": "control",
+    "title": "조성 분석기 샘플링과 데드타임",
+    "text": "XMEAS(23)–(28)은 반응기 유입 조성이고 XMEAS(29)–(36)은 퍼지 조성이다. 둘 모두 샘플링 주기와 데드타임이 각각 0.1 h다. 제품 조성 XMEAS(37)–(41)은 각각 0.25 h다.",
+    "tags": [
+      "composition",
+      "analyzer",
+      "sampling",
+      "delay",
+      "조성",
+      "분석기",
+      "XMEAS(23)",
+      "XMEAS(40)",
+      "XMEAS(41)"
+    ]
+  },
+  {
+    "id": "manca-alarm",
+    "source": {
+      "id": "manca",
+      "section": "§3 Alarm Management",
+      "page": 14
+    },
+    "kind": "constraint",
+    "title": "알람 임계값과 정상화 검증",
+    "text": "Manca의 TEP 알람 벤치마크는 기본 운전 모드와 측정 및 조작 변수를 기준으로 알람 임계값을 여러 번 개정한다. 데드밴드와 반복 알람, 알람 폭주를 분석한다. 실제 공정 상태, 알람 발생, 모델 셧다운을 별도 이벤트로 기록할 때 참고할 수 있다.",
+    "tags": [
+      "alarm",
+      "deadband",
+      "trip",
+      "알람",
+      "셧다운",
+      "정상화"
+    ],
+    "preconditions": [
+      "Manca 데이터셋의 운전 모드와 알람 개정판을 명시한다."
+    ],
+    "constraints": [
+      "알람 연구용 임계값과 Downs–Vogel의 모델 셧다운 한계는 별도로 기록한다."
+    ]
+  },
+  {
+    "id": "manca-combined",
+    "source": {
+      "id": "manca",
+      "section": "§5.1–5.2 Additional Tests / Used combined IDV-root cause disturbances",
+      "page": 38
+    },
+    "kind": "case_study",
+    "title": "동시 결함 벤치마크 설계",
+    "text": "Manca의 추가 시험은 동시 외란 시나리오를 포함하고 외란을 가하는 구간과 정상화 구간을 구분한다. 시작·종료 시각을 기록하고 단일 결함, 복합 결함의 알람 결과를 비교하는 실험 설계의 참고 문헌이다.",
+    "tags": [
+      "alarm",
+      "multiple faults",
+      "compound",
+      "normalization",
+      "복합",
+      "동시",
+      "외란",
+      "알람"
+    ]
+  },
+  {
+    "id": "braatz-idv-compatibility",
+    "source": {
+      "id": "braatz",
+      "section": "Differences between the code and its description in the paper"
+    },
+    "kind": "control",
+    "title": "Braatz 코드의 외란 조합 지원",
+    "text": "Braatz README는 배포 코드에서 IDV(14)–(20)을 포함해 외란을 단독 또는 조합으로 적용할 수 있다고 설명한다. 이 문장은 API의 조합 지원에 관한 것이고 조합별 제어 성능은 시뮬레이션으로 확인한다.",
+    "tags": [
+      "IDV",
+      "disturbance",
+      "combination",
+      "compound",
+      "복합",
+      "조합",
+      "외란"
+    ]
+  }
+]

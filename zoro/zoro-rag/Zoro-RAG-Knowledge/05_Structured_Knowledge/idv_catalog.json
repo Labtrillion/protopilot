@@ -1,0 +1,293 @@
+[
+  {
+    "id": 1,
+    "name_ko": "A/C 원료비 변화, B 조성 일정 (스트림 4)",
+    "name_en": "A/C feed ratio, constant B (stream 4)",
+    "type": "step",
+    "category": "feed_composition",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 2,
+    "name_ko": "B 조성 변화, A/C 원료비 일정 (스트림 4)",
+    "name_en": "B composition, constant A/C ratio (stream 4)",
+    "type": "step",
+    "category": "feed_composition",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 3,
+    "name_ko": "D 원료 온도 (스트림 2)",
+    "name_en": "D feed temperature (stream 2)",
+    "type": "step",
+    "category": "feed_temperature",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 4,
+    "name_ko": "반응기 냉각수 입구 온도",
+    "name_en": "Reactor cooling water inlet temperature",
+    "type": "step",
+    "category": "cooling",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 5,
+    "name_ko": "응축기 냉각수 입구 온도",
+    "name_en": "Condenser cooling water inlet temperature",
+    "type": "step",
+    "category": "cooling",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 6,
+    "name_ko": "A 원료 공급 상실 (스트림 1)",
+    "name_en": "A feed loss (stream 1)",
+    "type": "step",
+    "category": "feed_supply",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 7,
+    "name_ko": "C 헤더 압력 저하·공급 가용량 감소 (스트림 4)",
+    "name_en": "C header pressure loss, reduced availability (stream 4)",
+    "type": "step",
+    "category": "feed_supply",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 8,
+    "name_ko": "A·B·C 원료 조성 (스트림 4)",
+    "name_en": "A, B and C feed composition (stream 4)",
+    "type": "random",
+    "category": "feed_composition",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 9,
+    "name_ko": "D 원료 온도 (스트림 2)",
+    "name_en": "D feed temperature (stream 2)",
+    "type": "random",
+    "category": "feed_temperature",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 10,
+    "name_ko": "C 원료 온도 (스트림 4)",
+    "name_en": "C feed temperature (stream 4)",
+    "type": "random",
+    "category": "feed_temperature",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 11,
+    "name_ko": "반응기 냉각수 입구 온도",
+    "name_en": "Reactor cooling water inlet temperature",
+    "type": "random",
+    "category": "cooling",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 12,
+    "name_ko": "응축기 냉각수 입구 온도",
+    "name_en": "Condenser cooling water inlet temperature",
+    "type": "random",
+    "category": "cooling",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 13,
+    "name_ko": "반응 속도 특성",
+    "name_en": "Reaction kinetics",
+    "type": "slow_drift",
+    "category": "kinetics",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 14,
+    "name_ko": "반응기 냉각수 밸브 고착",
+    "name_en": "Reactor cooling water valve sticking",
+    "type": "sticking",
+    "category": "cooling",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 15,
+    "name_ko": "응축기 냉각수 밸브 고착",
+    "name_en": "Condenser cooling water valve sticking",
+    "type": "sticking",
+    "category": "cooling",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    }
+  },
+  {
+    "id": 16,
+    "name_ko": "원본 정의 미공개",
+    "name_en": "Unknown",
+    "type": "unknown",
+    "category": "unknown",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    },
+    "apmonitor": {
+      "name_ko": "스트리퍼 스팀 열전달",
+      "name_en": "Stripper steam heat transfer",
+      "type": "random",
+      "source": {
+        "id": "apmonitor",
+        "section": "Disturbances",
+        "anchor": "disturbances"
+      }
+    }
+  },
+  {
+    "id": 17,
+    "name_ko": "원본 정의 미공개",
+    "name_en": "Unknown",
+    "type": "unknown",
+    "category": "unknown",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    },
+    "apmonitor": {
+      "name_ko": "반응기 열전달",
+      "name_en": "Reactor heat transfer",
+      "type": "random",
+      "source": {
+        "id": "apmonitor",
+        "section": "Disturbances",
+        "anchor": "disturbances"
+      }
+    }
+  },
+  {
+    "id": 18,
+    "name_ko": "원본 정의 미공개",
+    "name_en": "Unknown",
+    "type": "unknown",
+    "category": "unknown",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    },
+    "apmonitor": {
+      "name_ko": "응축기 열전달",
+      "name_en": "Condenser heat transfer",
+      "type": "random",
+      "source": {
+        "id": "apmonitor",
+        "section": "Disturbances",
+        "anchor": "disturbances"
+      }
+    }
+  },
+  {
+    "id": 19,
+    "name_ko": "원본 정의 미공개",
+    "name_en": "Unknown",
+    "type": "unknown",
+    "category": "unknown",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    },
+    "apmonitor": {
+      "name_ko": "재순환·분리기·스트리퍼·스팀 밸브 고착",
+      "name_en": "Recycle, separator, stripper and steam valve sticking",
+      "type": "sticking",
+      "source": {
+        "id": "apmonitor",
+        "section": "Disturbances",
+        "anchor": "disturbances"
+      }
+    }
+  },
+  {
+    "id": 20,
+    "name_ko": "원본 정의 미공개",
+    "name_en": "Unknown",
+    "type": "unknown",
+    "category": "unknown",
+    "source": {
+      "id": "downs",
+      "section": "Table 8",
+      "page": 250
+    },
+    "apmonitor": {
+      "name_ko": "반응기에서 분리기로 가는 유량",
+      "name_en": "Reactor-to-separator flow",
+      "type": "random",
+      "source": {
+        "id": "apmonitor",
+        "section": "Disturbances",
+        "anchor": "disturbances"
+      }
+    }
+  }
+]
+
