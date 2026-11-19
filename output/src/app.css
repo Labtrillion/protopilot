@@ -97,7 +97,7 @@ select {
 .brand { display: inline-flex; align-items: center; min-height: var(--control-size); gap: 0.65rem; font-size: 1.06rem; font-weight: 800; letter-spacing: 0.12em; }
 .brand-mark { width: 1.48rem; height: 1.48rem; background: var(--accent); clip-path: polygon(28% 0, 100% 0, 100% 27%, 43% 27%, 26% 44%, 26% 100%, 0 100%, 0 29%); position: relative; }
 .brand-mark::after { content: ""; position: absolute; width: 0.45rem; height: 0.45rem; bottom: 0.18rem; right: 0.18rem; background: var(--text); }
-.site-label { padding-left: 1.25rem; border-left: 1px solid var(--line); color: var(--subtext); font-size: 0.89rem; }
+.site-label { color: var(--subtext); font-size: 0.89rem; }
 .site-label span, .context-label span, .orbit-hint span { color: var(--selected-line); padding-inline: 0.28rem; }
 .global-status { margin-left: auto; display: flex; gap: 1rem; align-items: center; white-space: nowrap; }
 .status { display: inline-flex; align-items: center; gap: 0.43rem; color: var(--muted); font-size: 0.87rem; }
@@ -322,8 +322,7 @@ dialog::backdrop { background: var(--scrim); }
 .model-tag.in-alarm span { color: var(--warning); }
 .legend .level-key { background: none; height: 0; border-top: 2px dashed var(--plot-sp); }
 .pressure-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 0.58rem; border: 1px solid var(--line); border-radius: 5px; background: var(--inset); }
-.pressure-overview button { display: grid; text-align: left; justify-content: start; min-width: 0; gap: 0.20rem; padding: 0.43rem 0.29rem 0.40rem; color: var(--subtext); border: 0; border-right: 1px solid var(--line); border-radius: 0; background: none; }
-.pressure-overview button:last-child { border-right: 0; }
+.pressure-overview button { display: grid; text-align: left; justify-content: start; min-width: 0; gap: 0.20rem; padding: 0.43rem 0.29rem 0.40rem; color: var(--subtext); border: 0; border-radius: 0; background: none; }
 .pressure-overview button span { font: 0.71rem var(--mono); }
 .pressure-overview button b { color: var(--text); font: 700 clamp(0.72rem, 0.8vw, 0.91rem) var(--mono); }
 .pressure-overview button small { display: block; color: var(--muted); font-size: 0.65rem; font-weight: 400; }
@@ -449,7 +448,6 @@ dialog::backdrop { background: var(--scrim); }
 .signal-source, .signal-trace, .signal-destination { padding: 0.58rem 0.72rem; min-width: 0; }
 .signal-source { background: var(--inset); }
 .signal-detail.alarming .signal-source { background: var(--warning-bg); }
-.signal-trace, .signal-destination { border-left: 1px solid var(--line-soft); }
 .signal-title, .signal-reading, .signal-effect, .signal-actions { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.36rem 0.54rem; }
 .signal-title code { color: var(--tracked); font: 650 0.81rem var(--mono); }
 .signal-title b { font-size: 0.86rem; overflow-wrap: anywhere; }
@@ -479,7 +477,7 @@ dialog::backdrop { background: var(--scrim); }
   .model-toolbar button { padding-inline: 0.38rem; gap: 0.26rem; }
   .model-toolbar button svg { width: 1rem; height: 1rem; }
   .signal-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .signal-destination { grid-column: 1 / -1; display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.55rem; border-left: 0; border-top: 1px solid var(--line-soft); }
+  .signal-destination { grid-column: 1 / -1; display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.55rem; border-top: 1px solid var(--line-soft); }
   .signal-destination p { margin: 0; }
   .signal-actions { margin: 0; }
 }
@@ -488,7 +486,7 @@ dialog::backdrop { background: var(--scrim); }
 }
 @media (max-width: 440px) {
   .signal-detail { grid-template-columns: minmax(0, 1fr); }
-  .signal-trace { border-left: 0; border-top: 1px solid var(--line-soft); }
+  .signal-trace { border-top: 1px solid var(--line-soft); }
   .signal-head, .signal-source, .signal-trace, .signal-destination { padding-inline: 0.7rem; }
 }
 
