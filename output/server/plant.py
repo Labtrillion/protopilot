@@ -18,6 +18,15 @@ TICK_SECONDS = 0.6
 REACTION_FEED_VALVES = frozenset((0, 1, 2, 3))
 
 
+def finite_metrics(metrics):
+    return {
+        key: finite_metrics(value) if isinstance(value, dict)
+        else None if isinstance(value, float) and not math.isfinite(value)
+        else value
+        for key, value in metrics.items()
+    }
+
+
 class Plant:
     def __init__(self, root):
         self.root = root
@@ -148,6 +157,7 @@ class Plant:
             "control": asdict(self.control) if self.control is not None else None,
             "protection": self.protection.copy(), "limited_manual": sorted(self.limited_manual),
             "shutdown": dict(self.shutdown),
+            "metrics": finite_metrics(self.metrics.finalize()),
         }
         self.recording.sample(self.latest)
 
@@ -202,7 +212,7 @@ class Plant:
             "manual": {f"XMV({i + 1})": value for i, value in self.manual.items()},
             "limits": self.limits, "disturbances": self.active_disturbances(),
             "replay_end": self.replay_end, "scheduled_changes": len(self.pending),
-            "step_hours": STEP_HOURS, "metrics": self.metrics.finalize(),
+            "step_hours": STEP_HOURS,
         }
 
     def scenario(self):
