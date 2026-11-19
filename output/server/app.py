@@ -25,7 +25,7 @@ class ConsoleServer(ThreadingHTTPServer):
         WSGIServer.setup_environ(self)
 
 
-class ConsoleHandler(SimpleHTTPRequestHandler, WSGIRequestHandler):
+class ConsoleHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, plant, lock, experiments, **kwargs):
         self.plant = plant
         self.lock = lock
@@ -37,7 +37,8 @@ class ConsoleHandler(SimpleHTTPRequestHandler, WSGIRequestHandler):
             super().log_message(format, *args)
 
     def serve_experiments(self):
-        handler = ServerHandler(self.rfile, self.wfile, sys.stderr, self.get_environ(), multithread=True)
+        environ = WSGIRequestHandler.get_environ(self)
+        handler = ServerHandler(self.rfile, self.wfile, sys.stderr, environ, multithread=True)
         handler.request_handler = self
         handler.run(self.experiments)
 
@@ -68,6 +69,12 @@ class ConsoleHandler(SimpleHTTPRequestHandler, WSGIRequestHandler):
             self.download(path.rsplit("/", 1)[1])
         else:
             super().do_GET()
+
+    def do_HEAD(self):
+        if urlsplit(self.path).path.startswith(EXPERIMENTS_PATH):
+            self.serve_experiments()
+        else:
+            super().do_HEAD()
 
     def do_POST(self):
         if urlsplit(self.path).path.startswith(EXPERIMENTS_PATH):
