@@ -392,12 +392,13 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
 
   const closeupCamera = new T.OrthographicCamera(-1, 1, 1, -1, camera.near, camera.far);
   const closeupCenter = new T.Vector3(), closeupSize = new T.Vector3();
-  let closeupViewport, closeupBounds, closeupDirty = false, closeupReady = false;
+  let closeupViewport, closeupArea = '', closeupDirty = false, closeupReady = false;
   const closeupObserver = new ResizeObserver(() => { closeupDirty = true; });
 
   function frameCloseup() {
     const w = closeupViewport.clientWidth, h = closeupViewport.clientHeight;
     if (!w || !h) return false;
+    const closeupBounds = equipmentBounds[closeupArea];
     closeupBounds.getCenter(closeupCenter);
     closeupCamera.position.subVectors(camera.position, controls.target).add(closeupCenter);
     closeupCamera.lookAt(closeupCenter);
@@ -414,8 +415,12 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   }
 
   function showCloseup(area, viewport) {
-    closeupBounds = equipmentBounds[area];
-    if (!closeupBounds || displayed) {
+    const nextArea = !displayed && equipmentBounds[area] ? area : '';
+    if (nextArea !== closeupArea) {
+      closeupArea = nextArea;
+      if (!displayed) applyInternals();
+    }
+    if (!closeupArea) {
       if (closeupViewport) {
         closeupObserver.unobserve(closeupViewport);
         closeupViewport = undefined;
@@ -440,7 +445,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     const group = groups[area];
     focusedValve = streams.find((line) => line.valve?.userData.valve === tag && line.def.area === area)?.valve;
     updateLabelSelection();
-    if (showInternals) applyInternals();
+    if (displayed && showInternals) applyInternals();
     moveHighlight();
     desired.copy(group ? group.position : home);
     if (group) desired.y = Math.min(4, group.userData.top * 0.47);
@@ -479,9 +484,11 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     annotationsDirty = true;
   }
 
-  // A selected unit with an interior shows only its own section; otherwise every interior is shown.
   function applyInternals() {
-    openInteriors = internal.show(showInternals, focus in sight ? focus : '');
+    const area = displayed ? focus : closeupArea;
+    const section = area in sight ? area : '';
+    // The close-up opens its own section without changing the 3D view's layer setting.
+    openInteriors = internal.show(displayed ? showInternals : Boolean(section), section);
     container.dataset.internals = openInteriors.join(',');
     renderer.shadowMap.needsUpdate = true;
   }
@@ -735,7 +742,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   }
 
   function animateProcess(dt) {
-    if (showInternals && data?.running && !motionReduced) internal.animate(data, dt);
+    if (openInteriors.length && data?.running && !motionReduced) internal.animate(data, dt);
     for (const line of streams) {
       const { def, path, length, markers, material, color, valve, flanges } = line;
       const tag = codeFor(def.tag);
@@ -879,6 +886,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
         showCloseup();
         resizeMain();
       }
+      applyInternals();
     },
     tags(visible) {
       showLabels = visible;
