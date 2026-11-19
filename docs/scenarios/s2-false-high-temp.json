@@ -3,6 +3,7 @@
   "id": "s2-false-high-temp",
   "title": "시나리오 2. 고온 오경보에서 불필요한 감산 방지",
   "duration_min": 300,
+  "initial_speed": 240,
   "events": [
     {
       "at_min": 120,
