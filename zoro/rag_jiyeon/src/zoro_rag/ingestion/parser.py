@@ -134,7 +134,7 @@ def parse_protocol(data: dict, relative: str) -> list[DocumentBlock]:
             block_type="record", text=text, source_file=relative,
             heading_path=[document, "protocol", step["id"]],
             metadata={"source_type": source_type, "procedure": {
-                "document_id": document, "step_id": step["id"],
+                "document_id": document, "document_version": data.get("document_version"), "step_id": step["id"],
                 "instruction_ko": step.get("instruction_ko"),
                 "actor": step.get("actor"), "transitions": step.get("transitions", []),
                 "source_refs": step.get("source_refs", []),

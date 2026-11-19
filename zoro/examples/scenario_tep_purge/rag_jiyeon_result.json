@@ -172,6 +172,7 @@
         "source_type": "authored_review_protocol",
         "procedure": {
           "document_id": "tep-studio-braatz-sensor-response",
+          "document_version": "1.0",
           "step_id": "sensor_XMEAS_7",
           "instruction_ko": "XMEAS(7) Reactor Pressure [kPa gauge] 경보(높음/낮음) 대응. [코드] 반응기 압력을 읽는 루프는 없다. 이 구조에서 압력에 닿는 조작은 퍼지 경로 (CONTRL19 → SETPT(6) → CONTRL6 → XMV(6)) 와 분리기 압력 오버라이드뿐이다. [코드] 퍼지 B 목표를 낮추면 CONTRL19 가 SETPT(6)(퍼지 유량 목표)을 올린다(simulate_purge_b_cases 표). [가설] 퍼지가 늘면 반응기 압력이 내려간다. 시뮬레이션으로 확인한다. [문헌] 반응기 압력 셧다운 한계는 Downs & Vogel 표 6 의 3000 kPa(g). → check_purge_override 후 simulate_purge_b_cases.",
           "actor": "운영자 / Zoro AI",
@@ -276,6 +277,7 @@
         "source_type": "authored_review_protocol",
         "procedure": {
           "document_id": "tep-studio-braatz-sensor-response",
+          "document_version": "1.0",
           "step_id": "simulate_purge_b_cases",
           "instruction_ko": "SETPT(19) 를 현재값 대비 ±0.5~±2.0 mol% 바꾼 case 를 hold(SOP 단독)와 같은 조건에서 시뮬레이션한다. [코드] ΔSETPT(6)=K19·ΔSETPT(19)·100/26/100: −1 mol% → SETPT(6) +0.2133 kscmh, XMV(6) +26.03%p 즉시. 오차가 남으면 360 s 마다 SETPT(6) +0.01212. XMV(6)+즉시 변화가 0~100% 밖이면 시험하지 않는다. 오버라이드 래치 중에는 CONTRL6 이 돌지 않아 효과가 없다.",
           "actor": "Zoro AI 시뮬레이션 검토 모듈",

@@ -317,8 +317,8 @@ class HybridSearch:
         models = self.models
         candidate_count = max(limit * 3, 12)
         embedding = self.embedder.encode(keywords, normalize_embeddings=True).tolist()
-        selection = models.Filter(must=[models.FieldCondition(
-            key="kind", match=models.MatchValue(value=kind))]) if kind else None
+        condition = models.FieldCondition(key="kind", match=models.MatchValue(value=kind or "cost_model"))
+        selection = models.Filter(must=[condition]) if kind else models.Filter(must_not=[condition])
         prefetch = [models.Prefetch(query=embedding, using="dense", limit=candidate_count, filter=selection)]
         if weights:
             prefetch.append(models.Prefetch(query=self.sparse_vector(weights), using="bm25",
@@ -382,7 +382,7 @@ class EvidenceRAG:
         else:
             ranked = []
             for record, vector in zip(self.index["records"], self.index["sparse"], strict=True):
-                if kind and record["kind"] != kind:
+                if (kind and record["kind"] != kind) or (not kind and record["kind"] == "cost_model"):
                     continue
                 score = sum(vector.get(word, 0.0) for word in weights)
                 if score:

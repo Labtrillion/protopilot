@@ -12,7 +12,7 @@ from zoro_agent.outputs import TerminationReason
 from zoro_agent.protopilot_cases import build_alarm_catalog, build_benchmark, build_policy, sop_rag
 from zoro_agent.sim_tools import BranchOutcome, SimulationError, SimulationToolkit
 from zoro_agent.tools import ToolExecutor
-from zoro_agent.zoro import FakeZoroClient
+from zoro_agent.zoro import FakeZoroClient, ScriptedZoroClient
 
 # server/demo-sops.json 의 TEP-PRESSURE-01 과 같은 구조
 SOP = {"id": "TEP-PRESSURE-01", "revision": 1, "title": "반응기 압력 상한", "tags": ["XMEAS(7)"], "side": "high",
@@ -90,24 +90,41 @@ def test_catalog_from_team_sop():
 def test_agent_runs_branches_through_adapter_and_decides():
     runner = FakeRunner()
     catalog, policy, event, kit = setup(runner)
-    client = FakeZoroClient(["SIM_HOLD", "SIM_REDUCE_NOW", "RECOMMEND:SIM_REDUCE_NOW", "RECOMMEND:SIM_HOLD",
-                             "REQUEST_HUMAN_REVIEW"])
+    client = FakeZoroClient(["SIM_REDUCE_NOW", "RECOMMEND:SIM_REDUCE_NOW"])
     agent = ZoroAgent(catalog, policy, client, ToolExecutor(kit.tools(), virtual=False))
     rep = agent.run(event, sop_rag(SOP, catalog))
-    # 시뮬레이터에 넘어간 것: 등록 case 와 snapshot
-    assert [(s, c.case_id) for s, c, _ in runner.calls] == [("RUN1:7", "CASE-HOLD"), ("RUN1:7", "CASE-REDUCE_NOW")]
-    assert runner.calls[1][1].setpoint_changes[0].target_value == pytest.approx(22.89 * 0.95)
-    # 결과가 다음 판단에 반영됨: 유지는 경보 미회복, 감량은 회복 → 감량 권고
-    imps = {i.run_id.split("-", 2)[2]: i for i in rep.final_state.impacts}
-    assert imps["SIM_HOLD"].original_alarm_recovered is False and imps["SIM_HOLD"].exceedances
-    assert imps["SIM_REDUCE_NOW"].original_alarm_recovered is True
-    assert imps["SIM_REDUCE_NOW"].score.final_window_inside and imps["SIM_HOLD"].score.failed_gates
+    assert rep.sop_stage.final.sop_route == "PROVIDE_SOP"
+    assert rep.sop_stage.final.recommended_action_id == "SIM_REDUCE_NOW"
+    assert rep.sop_stage.tool_requests == []
+    assert "virtual_experiments" not in client.requests[0].state
+    assert {question.type for question in client.requests[0].questions.values()} == {"choice", "noul", "score"}
+    assert [c.case_id for _, c, _ in runner.calls] == ["CASE-REDUCE_NOW", *[
+        f"CASE-REDUCE_NOW:VARIANT:{i}" for i in range(2, 6)]]
+    assert all(snapshot == "RUN1:7" and horizon == policy.benchmark.horizon_s for snapshot, _, horizon in runner.calls)
+    assert [c.setpoint_changes[0].target_value for _, c, _ in runner.calls] == pytest.approx([
+        22.89 * 0.95 * (1 + step / 100) for step in [0, *policy.setpoint_variant_steps_pct]])
+    assert all(i.original_alarm_recovered and i.score.final_window_inside for i in rep.final_state.impacts)
     assert rep.final.recommended_action_id == "SIM_REDUCE_NOW"
     cmd = rep.final.setpoint_command
     assert cmd.decision == "propose_setpoint" and cmd.setpoint_changes[0].setpoint_id == "production_rate"
     assert rep.final.tools_virtual is False
     assert all(t.evaluation is not None for t in rep.tool_requests)
     assert "RECOMMEND:SIM_REDUCE_NOW" in client.requests[-1].questions["next_action"].criteria
+
+
+def test_sop_stage_requests_retrieval_after_low_applicability():
+    runner = FakeRunner()
+    catalog, policy, event, kit = setup(runner)
+    key = "PROVIDE_SOP:SIM_REDUCE_NOW"
+    client = ScriptedZoroClient([{"answers": {
+        "next_action": {"type": "choice", "choice": key, "confidence": 1, "probabilities": {key: 1}},
+        f"applicable:{key}": {"type": "noul", "noul": 0.1},
+        f"evidence:{key}": {"type": "score", "score": 2},
+    }}])
+    report = ZoroAgent(catalog, policy, client, ToolExecutor(kit.tools(), virtual=False)).run(event, sop_rag(SOP, catalog))
+    assert report.final.sop_route == "RETRIEVE_AGAIN"
+    assert report.final.recommended_action_id is None
+    assert runner.calls == []
 
 
 def test_simulation_errors_map_to_tool_errors():

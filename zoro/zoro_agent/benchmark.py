@@ -292,7 +292,7 @@ def select_case(baseline: RunScore, tested: list[tuple[RunScore, str | None]], r
                                  reason=f"시험할 case 소진, 최선 {best[0].run_id}", **common)
         if eligible(baseline, baseline, policy)[0]:
             return CaseSelection(status="select_baseline", selected_run_id=baseline.run_id, selected_action_id=None,
-                                 reason="심슨을 의미 있게 이긴 case 없음, 심슨은 적격 → hold", **common)
+                                 reason="기준안을 의미 있게 이긴 case 없음, 기준안은 적격", **common)
         return CaseSelection(status="none_acceptable", selected_run_id=None, selected_action_id=None,
                              reason="적격 case 없음, 심슨도 부적격 → 운영자 검토", **common)
     return CaseSelection(status="continue", selected_run_id=best[0].run_id if best else None,

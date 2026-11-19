@@ -35,7 +35,8 @@ def build_alarm_catalog(sop: dict[str, Any], setpoints: dict[str, float],
                         ranges: dict[str, tuple[str, float, float]], alarm_tags: list[str],
                         horizon_s: float = HORIZON_S) -> ActionCatalog:
     """sop: demo-sops.json 항목, setpoints: 현재 Ricker 설정값, ranges: server/catalog.SETPOINTS 의 (단위, 하한, 상한)."""
-    ref = [SopRef(sop_id=sop["id"], version=str(sop.get("revision", "")), step_id="candidates")]
+    revision = sop.get("revision")
+    ref = [SopRef(sop_id=sop["id"], version=str(revision) if revision is not None else "", step_id="candidates")]
     prod = setpoints["production_rate"]
     unit, lo, hi = ranges["production_rate"]
     specs = [SetpointSpec(
@@ -115,14 +116,18 @@ def build_policy(catalog: ActionCatalog, alarm_tags: list[str], benchmark: Bench
             required_fresh_sensors=list(alarm_tags), require_alarm_recovery=True,
             # 분기 시작 시점에 이미 경보 중이므로 구간 전체 초과 여부 대신 마지막 구간 적격 게이트로 판단
             block_if_limit_exceedance=False, require_rag_evidence=True),
-        budget=Budget(max_decisions=n_sims + 4, max_tool_calls=n_sims + 2, max_simulations=n_sims,
+        budget=Budget(max_decisions=max(n_sims, benchmark.max_cases + 1) + 5,
+                      max_tool_calls=max(n_sims, benchmark.max_cases + 1) + 2,
+                      max_simulations=max(n_sims, benchmark.max_cases + 1),
                       max_wall_time_s=None),
-        benchmark=benchmark)
+        benchmark=benchmark, sop_first=True)
 
 
 def sop_rag(sop: dict[str, Any], catalog: ActionCatalog) -> NormalizedRagResult:
     """팀 SOP 문서를 검색 결과로 정규화: 확인 항목이 근거, SOP 후보가 대응 후보(별칭 매핑)."""
-    ev = [Evidence(evidence_id=f"EV:{sop['id']}#check{i + 1}", doc_id=sop["id"], doc_version=str(sop.get("revision")),
+    revision = sop.get("revision")
+    ev = [Evidence(evidence_id=f"EV:{sop['id']}#check{i + 1}", doc_id=sop["id"],
+                   doc_version=str(revision) if revision is not None else None,
                    doc_title=sop.get("title"), clause=f"checks[{i + 1}]", text=text, source_uri=sop.get("source_url"))
           for i, text in enumerate(sop.get("checks", []))]
     ids = [e.evidence_id for e in ev]

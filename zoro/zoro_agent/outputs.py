@@ -11,6 +11,7 @@ from .benchmark import CaseSelection
 from .cases import CostDirection, CostItem, ResolvedSetpointChange, RevertRule, SopRef, ValuesStatus
 from .common import Model
 from .options import OptionSet
+from .rag import Evidence
 from .state import AgentState, Usage
 from .tool_io import ToolRequest, ToolResult
 from .zoro import Decision, ZoroRawResponse, ZoroRequest
@@ -117,6 +118,9 @@ class FinalOutput(Model):
     recommended_action_id: str | None = Field(description="null = 권고 없음(운영자 검토)")
     setpoint_command: SetpointCommand = Field(description="시뮬레이터/감독기로 넘길 hold 또는 propose_setpoint")
     summary: str
+    sop_route: Literal["PROVIDE_SOP", "REQUEST_INFO", "RETRIEVE_AGAIN", "ESCALATE"] | None = None
+    sop_sources: list[Evidence] = []
+    requested_sensor_ids: list[str] = []
     rationale: list[RationaleItem]
     rationale_note: str = "근거는 에이전트가 상태·정책·실험 결과로 구성한 것이며 모델이 생성한 설명이 아님"
     uncertainties: list[str]
@@ -150,3 +154,4 @@ class RunReport(Model):
     progress: list[ProgressStatus]
     log: list[LogEntry]
     final_state: AgentState
+    sop_stage: RunReport | None = None

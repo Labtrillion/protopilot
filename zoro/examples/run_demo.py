@@ -33,7 +33,7 @@ def main() -> int:
     client = client_from_env(sc.fake_model_preference)
     executor = ToolExecutor(FakeToolkit(sc.fake_tools).tools(), virtual=True)
     agent = ZoroAgent(sc.catalog, sc.policy, client, executor)
-    report = agent.run(sc.event, sc.rag)
+    report = agent.run_sop(sc.event, sc.rag) if "--sop-only" in sys.argv else agent.run(sc.event, sc.rag)
 
     print("=" * 78)
     print(f" ProtoPilot Zoro 데모 — 가상 시나리오 | 모델: {client.kind.upper()} | 도구: VIRTUAL")

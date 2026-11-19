@@ -44,11 +44,22 @@ class ChoiceQuestion(Model):
     criteria: dict[str, str] = Field(min_length=1)
 
 
+class NoulQuestion(Model):
+    type: Literal["noul"] = "noul"
+    instructions: str
+
+
+class ScoreQuestion(Model):
+    type: Literal["score"] = "score"
+    instructions: str
+    criteria: list[str] = Field(min_length=2)
+
+
 class ZoroRequest(Model):
     """Zoro 에 실제로 전송되는 본문 (공식 형식 그대로)."""
 
     state: dict[str, Any]
-    questions: dict[str, ChoiceQuestion]
+    questions: dict[str, ChoiceQuestion | NoulQuestion | ScoreQuestion]
 
 
 class ZoroRawResponse(Model):
@@ -67,6 +78,16 @@ class ChoiceAnswer(BaseModel):
     choice: str
     confidence: float = Field(ge=0, le=1)
     probabilities: dict[str, float]
+
+
+class NoulAnswer(BaseModel):
+    type: Literal["noul"]
+    noul: float = Field(ge=0, le=1)
+
+
+class ScoreAnswer(BaseModel):
+    type: Literal["score"]
+    score: float = Field(ge=0, le=2)
 
 
 class SelectionDistribution(Model):
@@ -113,7 +134,8 @@ class LeakError(RuntimeError):
     pass
 
 
-def build_zoro_request(state: AgentState, options: OptionSet, catalog: ActionCatalog, policy: AgentPolicy) -> ZoroRequest:
+def build_zoro_request(state: AgentState, options: OptionSet, catalog: ActionCatalog, policy: AgentPolicy,
+                       *, sop_only: bool = False) -> ZoroRequest:
     latest = []
     for sid in dict.fromkeys(o.sensor_id for o in state.observations):
         o = state.latest_observation(sid)
@@ -160,8 +182,8 @@ def build_zoro_request(state: AgentState, options: OptionSet, catalog: ActionCat
         "safety_checks": [s.model_dump() for s in state.safety_checks],
         "sop_evidence": [
             {"evidence_id": e.evidence_id, "doc_id": e.doc_id, "doc_version": e.doc_version,
-             "clause": e.clause, "excerpt": e.text[:300]}
-            for e in state.rag.evidence if e.evidence_id in ev_used
+             "sop_id": e.sop_id, "sop_version": e.sop_version, "clause": e.clause, "excerpt": e.text[:300]}
+            for e in state.rag.evidence if sop_only or e.evidence_id in ev_used
         ],
         "rag_unresolved": [u.model_dump() for u in state.rag.unresolved],
         "history": history,
@@ -189,6 +211,23 @@ def build_zoro_request(state: AgentState, options: OptionSet, catalog: ActionCat
         state=st,
         questions={QUESTION_ID: ChoiceQuestion(instructions=INSTRUCTIONS, criteria=criteria)},
     )
+    if sop_only:
+        for key in ("virtual_experiments", "budget_remaining"):
+            req.state.pop(key)
+        req.questions[QUESTION_ID].instructions = (
+            "알람, 관측, SOP 및 지식 근거로 가장 적합한 대응 한 가지를 선택하라. "
+            "필수 계측이 부족하면 REQUEST_INFO, 근거가 부족하면 RETRIEVE_AGAIN, "
+            "운영자 판단이 필요하면 ESCALATE를 선택하라."
+        )
+        for option in options.by_status(OptionStatus.OPEN):
+            if option.kind != OptionKind.RECOMMENDATION:
+                continue
+            key = option.option_id
+            req.questions[f"applicable:{key}"] = NoulQuestion(instructions=(
+                f"현재 알람과 확인된 계측에서 {criteria[key]}의 SOP 적용 조건이 충족되는가?"))
+            req.questions[f"evidence:{key}"] = ScoreQuestion(instructions=(
+                f"검색된 SOP와 지식이 {criteria[key]}의 대응을 어느 정도 뒷받침하는가?"),
+                criteria=["근거 없음 또는 모순", "간접 근거 또는 필수 정보 일부 누락", "현재 상황에 직접 적용되는 충분한 근거"])
     leaks = find_forbidden_keys(req.model_dump(mode="json"))
     if leaks:
         raise LeakError(f"모델 입력에 금지 키 포함: {leaks}")
@@ -233,24 +272,35 @@ class ZoroHttpConfig:
 
 
 class HttpZoroClient:
-    """trida-stack decide 서버(POST /v1/decide) 호출."""
+    """trida-stack decide 서버 호출: POST /v1/systemone, 이전 서버면 /v1/decide."""
 
     kind: Literal["real", "fake"] = "real"
 
     def __init__(self, config: ZoroHttpConfig):
         self.config = config
 
-    def decide(self, request: ZoroRequest, request_id: str) -> ZoroRawResponse:
-        url = f"{self.config.base_url}/v1/decide"
-        payload = {"request": request.model_dump(mode="json"), "reasoning": self.config.reasoning}
+    def _post(self, url: str, payload: dict, request_id: str) -> dict:
         headers = {"Content-Type": "application/json", "X-Request-Id": request_id}
         if self.config.api_key:
             headers["Authorization"] = f"Bearer {self.config.api_key}"
         req = urllib.request.Request(url, json.dumps(payload).encode(), headers, method="POST")
+        with urllib.request.urlopen(req, timeout=self.config.timeout_s) as resp:
+            return json.loads(resp.read().decode())
+
+    def decide(self, request: ZoroRequest, request_id: str) -> ZoroRawResponse:
+        """POST /v1/systemone (현재 계약). 서버가 404/405 면 이전 /v1/decide 로 한 번 더 보낸다."""
+        body_req = request.model_dump(mode="json")
+        url = f"{self.config.base_url}/v1/systemone"
         t0 = time.perf_counter()
         try:
-            with urllib.request.urlopen(req, timeout=self.config.timeout_s) as resp:
-                body = json.loads(resp.read().decode())
+            try:
+                body = self._post(url, {"model": self.config.model_label, **body_req,
+                                        "reasoning": self.config.reasoning}, request_id)
+            except urllib.error.HTTPError as e:
+                if e.code not in (404, 405):
+                    raise
+                url = f"{self.config.base_url}/v1/decide"
+                body = self._post(url, {"request": body_req, "reasoning": self.config.reasoning}, request_id)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
             raise ZoroClientError(f"Zoro 호출 실패: {e}") from e
         return ZoroRawResponse(
@@ -273,12 +323,18 @@ class FakeZoroClient:
     def decide(self, request: ZoroRequest, request_id: str) -> ZoroRawResponse:
         self.requests.append(request)
         allowed = list(request.questions[QUESTION_ID].criteria)
-        choice = next((p for p in self.preference if p in allowed), allowed[0])
+        preference = [key for p in self.preference for key in (p, f"PROVIDE_SOP:{p}", f"REQUEST_INFO:{p}")]
+        choice = next((p for p in preference if p in allowed), allowed[0])
         rest = [a for a in allowed if a != choice]
         probs = {choice: self.top_p if rest else 1.0}
         probs.update({a: round((1 - self.top_p) / len(rest), 4) for a in rest})
         body = {"answers": {QUESTION_ID: {"type": "choice", "choice": choice,
                                           "confidence": probs[choice], "probabilities": probs}}}
+        for key, question in request.questions.items():
+            if isinstance(question, NoulQuestion):
+                body["answers"][key] = {"type": "noul", "noul": 1.0}
+            elif isinstance(question, ScoreQuestion):
+                body["answers"][key] = {"type": "score", "score": 2.0}
         return ZoroRawResponse(request_id=request_id, client_kind="fake", model="fake-zoro",
                                received_at=datetime.now(timezone.utc), latency_ms=0.0, body=body)
 

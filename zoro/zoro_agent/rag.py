@@ -22,6 +22,9 @@ class Evidence(Model):
     clause: str | None = Field(description="조항/섹션 번호. null = 미제공")
     text: str = Field(description="원문 발췌")
     source_uri: str | None = None
+    economic: bool = False
+    sop_id: str | None = None
+    sop_version: str | None = None
     retrieval_score: float | None = Field(
         default=None, description="검색 관련도. 실행 가능성·안전성·정답 확률이 아님"
     )
@@ -60,6 +63,9 @@ class NormalizedRagResult(Model):
     def candidates_for(self, action_id: str) -> list[RagCandidate]:
         return [c for c in self.candidates if c.action_id == action_id]
 
+    def without_economic_evidence(self) -> NormalizedRagResult:
+        return self.model_copy(update={"evidence": [e for e in self.evidence if not e.economic]})
+
 
 class RagAdapter(Protocol):
     name: str
@@ -95,6 +101,7 @@ class ExampleRagV0Adapter:
                     clause=hit.get("section"),
                     text=hit.get("content", ""),
                     source_uri=hit.get("uri"),
+                    economic=hit.get("kind") == "cost_model" or doc.get("kind") == "cost_model",
                     retrieval_score=hit.get("score"),
                 )
             )
@@ -167,14 +174,17 @@ class JiyeonRagAdapter:
         evidence = []
         for e in raw.get("evidence", []):
             prov = e.get("provenance") or {}
+            procedure = prov.get("procedure") or {}
             clause = e.get("source_section") or (f"p.{e['source_page']}" if e.get("source_page") else None)
             if not e.get("source_version"):
                 warnings.append(f"{e['evidence_id']}: 문서 버전 미제공")
             evidence.append(Evidence(
                 evidence_id=e["evidence_id"], doc_id=e.get("source_document", "UNKNOWN"),
                 doc_version=e.get("source_version"), doc_title=e.get("source_document"), clause=clause,
-                text=e.get("statement") or e.get("supporting_quote", ""), source_uri=e.get("source_url"),
-                retrieval_score=prov.get("rrf_score")))
+                text=procedure.get("instruction_ko") or e.get("statement") or e.get("supporting_quote", ""),
+                source_uri=e.get("source_url"), sop_id=procedure.get("document_id"),
+                sop_version=procedure.get("document_version"),
+                retrieval_score=prov.get("rrf_score"), economic=e.get("evidence_type") == "ECONOMIC"))
         ev_ids = {e.evidence_id for e in evidence}
         candidates: list[RagCandidate] = []
         for act in raw.get("candidate_actions", []):

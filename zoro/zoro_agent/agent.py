@@ -9,6 +9,9 @@ import time
 from datetime import datetime, timezone
 from typing import Callable
 
+from pydantic import ValidationError
+
+from .case_variants import case1_search
 from .cases import resolve_case
 from .common import CheckStatus
 from .inputs import EventInput
@@ -34,6 +37,8 @@ from .tools import ToolExecutor
 from .zoro import (
     Decision,
     DecisionValidation,
+    NoulAnswer,
+    ScoreAnswer,
     ZoroClient,
     ZoroClientError,
     build_zoro_request,
@@ -54,24 +59,52 @@ class ZoroAgent:
         client: ZoroClient,
         executor: ToolExecutor,
         on_progress: Callable[[ProgressStatus], None] | None = None,
+        retrieve_again: Callable[[EventInput, NormalizedRagResult], NormalizedRagResult] | None = None,
     ):
         self.catalog = catalog
         self.policy = policy
         self.client = client
         self.executor = executor
         self.on_progress = on_progress
+        self.retrieve_again = retrieve_again
 
     # ------------------------------------------------------------ main loop
     def run(self, event: EventInput, rag: NormalizedRagResult) -> RunReport:
+        if not self.policy.sop_first:
+            return self._run(event, rag)
+        started_at = time.monotonic()
+        first = self._run(event, rag, sop_only=True, started_at=started_at)
+        action_id = first.final.recommended_action_id
+        if action_id is None or self.policy.benchmark is None or "run_simulation" not in self.executor.available():
+            return first
+        catalog, policy, search_rag = case1_search(self.catalog, self.policy, first.final_state.rag, action_id)
+        search = ZoroAgent(catalog, policy, self.client, self.executor, self.on_progress)
+        report = search._run(event, search_rag, case1_baseline=True, initial_state=first.final_state,
+                             started_at=started_at)
+        report.sop_stage = first
+        return report
+
+    def run_sop(self, event: EventInput, rag: NormalizedRagResult) -> RunReport:
+        """Evaluate SOP applicability and select one response before simulation."""
+        return self._run(event, rag, sop_only=True)
+
+    def _run(self, event: EventInput, rag: NormalizedRagResult, *, sop_only: bool = False,
+             case1_baseline: bool = False, initial_state: AgentState | None = None,
+             started_at: float | None = None) -> RunReport:
         self._log_entries: list[LogEntry] = []
         self._progress: list[ProgressStatus] = []
         self._decisions: list[Decision] = []
         self._exchanges: list[ZoroExchange] = []
         self._treqs: list[ToolRequest] = []
         self._tres: list[ToolResult] = []
-        t0 = time.monotonic()
-        st = AgentState.from_inputs(event, rag)
+        t0 = time.monotonic() if started_at is None else started_at
+        if sop_only:
+            rag = rag.without_economic_evidence()
+        st = (initial_state.model_copy(deep=True) if initial_state else AgentState.from_inputs(event, rag))
+        st.rag = rag
         self.state = st
+        self._sop_only = sop_only
+        retrieved_again = False
         self._log(LogStage.INPUT_RECEIVED, "사건·RAG 입력 수신", data={
             "alarms": [a.alarm_id for a in st.alarms if a.active],
             "rag_candidates": [(c.raw_ref, c.action_id, c.mapping) for c in rag.candidates],
@@ -87,14 +120,15 @@ class ZoroAgent:
             if budget.max_wall_time_s is not None and time.monotonic() - t0 > budget.max_wall_time_s:
                 return self._finish(TerminationReason.LIMIT_REACHED, opts, None, "실행 시간 한도 도달")
 
-            opts = build_options(st, self.catalog, self.policy, self.executor.available())
+            opts = build_options(st, self.catalog, self.policy, self.executor.available(),
+                                 sop_only=sop_only, case1_baseline=case1_baseline)
             self._log(LogStage.OPTIONS_BUILT, f"선택지 {len(opts.open_ids())}개 허용", data={
                 o.option_id: {"status": str(o.status), "reason": o.reason} for o in opts.options
             })
             self._emit(it, "options_built", opts)
 
             actionable = [o for o in opts.by_status(OptionStatus.OPEN) if o.kind != OptionKind.HUMAN_REVIEW]
-            if not actionable:
+            if not actionable and not (sop_only and opts.open_ids()):
                 budget_hit = any(
                     c.name == "budget" and c.status == CheckStatus.FAIL for o in opts.options for c in o.checks
                 )
@@ -102,9 +136,9 @@ class ZoroAgent:
                 d = self._policy_decision(opts, "운영자 검토 외 유효한 선택지 없음")
                 return self._finish(reason, opts, d, "운영자 검토 외 유효한 다음 선택지 없음")
 
-            decision_id = f"{st.event_id}-D{len(self._decisions) + 1:02d}"
+            decision_id = f"{st.event_id}-D{len(st.decisions) + 1:02d}"
             request_id = f"{decision_id}-ZQ"
-            req = build_zoro_request(st, opts, self.catalog, self.policy)
+            req = build_zoro_request(st, opts, self.catalog, self.policy, sop_only=sop_only)
             exch = ZoroExchange(request_id=request_id, decision_id=decision_id, state_version=st.state_version,
                                 options=opts, request=req, raw_response=None)
             self._exchanges.append(exch)
@@ -120,6 +154,21 @@ class ZoroAgent:
 
             dec = to_decision(raw=raw, decision_id=decision_id, tool_request_id=f"{decision_id}-T1",
                               state=st, options=opts, catalog=self.catalog, policy=self.policy)
+            if sop_only and dec.decision_kind == "recommendation":
+                answers = raw.body["answers"]
+                try:
+                    applicable = NoulAnswer.model_validate(answers.get(f"applicable:{dec.selected_option_id}"))
+                    evidence = ScoreAnswer.model_validate(answers.get(f"evidence:{dec.selected_option_id}"))
+                except ValidationError:
+                    dec.decision_kind = "human_review"
+                    dec.selected_option_id = dec.action_id = None
+                    dec.validation.valid = False
+                    dec.validation.errors.append("선택한 SOP의 Noul 또는 Score 응답 누락·형식 오류")
+                else:
+                    if applicable.noul <= 0.5 or evidence.score < 1.0:
+                        dec.decision_kind = "human_review"
+                        dec.selected_option_id, dec.action_id = "RETRIEVE_AGAIN", None
+                        dec.validation.warnings.append("선택한 SOP의 적용 가능성 또는 근거 강도 부족")
             self._record(dec)
             if not dec.validation.valid:
                 self._log(LogStage.DECISION_REJECTED, f"모델 선택 거부: {dec.validation.errors}",
@@ -134,6 +183,16 @@ class ZoroAgent:
             if dec.decision_kind == "recommendation":
                 return self._finish(TerminationReason.RECOMMENDATION_READY, opts, dec, "")
             if dec.decision_kind == "human_review":
+                if sop_only and dec.selected_option_id == "REQUEST_INFO":
+                    return self._finish(TerminationReason.HUMAN_REVIEW_SELECTED, opts, dec, "추가 센서 정보 요청")
+                if sop_only and dec.selected_option_id == "RETRIEVE_AGAIN":
+                    if self.retrieve_again and not retrieved_again:
+                        refreshed = self.retrieve_again(event, st.rag)
+                        st.rag = refreshed.without_economic_evidence()
+                        st.state_version += 1
+                        retrieved_again = True
+                        continue
+                    return self._finish(TerminationReason.HUMAN_REVIEW_SELECTED, opts, dec, "관련 SOP 및 지식 재검색 요청")
                 return self._finish(TerminationReason.HUMAN_REVIEW_SELECTED, opts, dec, "Zoro가 운영자 검토 선택")
 
             treq = dec.tool_request
@@ -176,7 +235,7 @@ class ZoroAgent:
     def _policy_decision(self, opts: OptionSet, why: str) -> Decision:
         hr = self.catalog.human_review_action()
         d = Decision(
-            decision_id=f"{self.state.event_id}-D{len(self._decisions) + 1:02d}", event_id=self.state.event_id,
+            decision_id=f"{self.state.event_id}-D{len(self.state.decisions) + 1:02d}", event_id=self.state.event_id,
             state_version=self.state.state_version, request_id=None, decided_by="policy", client_kind=None,
             decision_kind="human_review", selected_option_id=hr.action_id if hr else None,
             action_id=hr.action_id if hr else None,
@@ -211,7 +270,8 @@ class ZoroAgent:
 
     def _finish(self, reason: TerminationReason, opts: OptionSet | None, dec: Decision | None, detail: str) -> RunReport:
         final = build_final_output(self.state, reason, opts, dec, detail, self.catalog, self.policy,
-                                   self.client.kind if self._exchanges else None, self.executor.virtual)
+                                   self.client.kind if self._exchanges else None, self.executor.virtual,
+                                   sop_only=self._sop_only)
         self._log(LogStage.TERMINATED, f"종료: {reason} → {final.outcome}", data={"detail": detail})
         self._emit(len(self._progress), "finished", opts, reason)
         return RunReport(final=final, decisions=self._decisions, exchanges=self._exchanges,
@@ -230,11 +290,17 @@ def build_final_output(
     policy: AgentPolicy,
     client_kind,
     tools_virtual: bool,
+    *, sop_only: bool = False,
 ) -> FinalOutput:
     rp = policy.recommendation
     rationale: list[RationaleItem] = []
     unc: list[str] = []
     is_rec = reason == TerminationReason.RECOMMENDATION_READY and dec is not None
+    selected = opts.get(dec.selected_option_id) if opts and dec else None
+    sop_route = None
+    if sop_only:
+        sop_route = "PROVIDE_SOP" if is_rec else (
+            dec.selected_option_id if dec and dec.selected_option_id in {"REQUEST_INFO", "RETRIEVE_AGAIN"} else "ESCALATE")
     cmp = st.comparison
     compared = ([cmp.baseline_run_id] if cmp and cmp.baseline_run_id else []) + (cmp.comparable_run_ids if cmp else [])
 
@@ -262,10 +328,10 @@ def build_final_output(
                                            statement=f"[가상 예측] case 탐색 {sel.status}: {sel.reason}"))
             for s in sel.steps:
                 rationale.append(RationaleItem(basis="experiment", refs=[s.run_id], statement=(
-                    f"[가상 예측] {s.action_id}: 심슨 대비 {'승' if s.beats_baseline else '패'}({s.vs_baseline})"
+                    f"[가상 예측] {s.action_id}: 기준안 대비 {'승' if s.beats_baseline else '패'}({s.vs_baseline})"
                     + (f", 최선 대비 {'승' if s.beats_incumbent else '패'}({s.vs_incumbent})"
                        if s.beats_incumbent is not None else ""))))
-        opt = opts.get(dec.selected_option_id) if opts else None
+        opt = selected
         if opt:
             rationale.append(RationaleItem(basis="policy", refs=[c.name for c in opt.checks], statement=(
                 "권고 허용 정책의 필수 검사 통과: " + ", ".join(c.name for c in opt.checks))))
@@ -283,17 +349,23 @@ def build_final_output(
             if o:
                 rationale.append(RationaleItem(basis="observation", refs=[s], statement=(
                     f"[실제 관측] {s}={o.value} {o.unit} @ {o.measured_at_s}s (sample {o.sample_id})")))
-        summary = f"{aid} (case {spec.case_id if spec else '-'}) 권고 — 기준/후보 비교(가상 예측) 기반, 감독기·운영자 확인 필요"
+        if sop_only:
+            summary = f"SOP 대응안: {opt.description if opt else aid}"
+        else:
+            summary = f"{aid} (case {spec.case_id if spec else '-'}) 권고 — 기준/후보 비교(가상 예측) 기반, 감독기·운영자 확인 필요"
     else:
         summary = f"운영자 검토 요청: {reason}" + (f" — {detail}" if detail else "")
+        if sop_route in {"REQUEST_INFO", "RETRIEVE_AGAIN"}:
+            summary = detail
         rationale.append(RationaleItem(basis="agent_state", statement=summary))
         for o in (opts.options if opts else []):
             if o.status != OptionStatus.OPEN:
                 rationale.append(RationaleItem(basis="agent_state", refs=[o.option_id],
                                                statement=f"{o.option_id} {o.status}: {o.reason}"))
 
-    unc.append("모든 대응 효과·후속 영향은 시뮬레이션 예측이며 실제 공정에서 확인되지 않았다.")
-    if tools_virtual:
+    if not sop_only:
+        unc.append("모든 대응 효과·후속 영향은 시뮬레이션 예측이며 실제 공정에서 확인되지 않았다.")
+    if tools_virtual and st.tool_history:
         unc.append("이번 실행의 도구 결과는 가짜(가상) 도구가 만든 값이다.")
     if client_kind == "fake":
         unc.append("Zoro 실제 호출이 아닌 가짜 클라이언트 응답이다.")
@@ -322,6 +394,10 @@ def build_final_output(
         recommended_action_id=dec.action_id if is_rec else None,
         setpoint_command=build_setpoint_command(st, catalog, policy, dec.action_id if is_rec else None, summary),
         summary=summary, rationale=rationale, uncertainties=unc, compared_run_ids=compared,
+        sop_route=sop_route,
+        sop_sources=[e for e in st.rag.evidence if selected and e.evidence_id in selected.evidence_ids]
+                    if sop_route == "PROVIDE_SOP" else [],
+        requested_sensor_ids=selected.requested_sensor_ids if sop_route == "REQUEST_INFO" and selected else [],
         selection_distribution=(dec.selection_distribution.probabilities
                                 if dec and dec.selection_distribution else None),
         case_selection=case_selection(st, catalog, policy),
@@ -335,14 +411,14 @@ def build_setpoint_command(st: AgentState, catalog: ActionCatalog, policy: Agent
     base_spec = catalog.get(policy.recommendation.baseline_action_id)
     spec = catalog.get(action_id) if action_id else base_spec
     case = catalog.case(spec.case_id) if spec else None
+    if action_id is None and case is not None and case.policy != "hold":
+        case = None
     if case is None:
         return SetpointCommand(
             decision="hold", case_id=None, reason=reason + " | 등록 hold case 없음 — 현재 목표 유지",
             setpoint_changes=[], sop_refs=[], expected_cost_direction={}, expected_direction_basis=None,
             simulated_effects=[], watch_signals=[], issued_sim_time_s=st.sim_time_s, review_at_sim_time_s=None,
             revert_rules=[], values_status="example")
-    if action_id is None and case.policy != "hold":
-        raise ValueError(f"기준 action 의 case {case.case_id} 가 hold 가 아님")
     resolved = resolve_case(case, catalog.setpoint_map(), st.active_setpoints, st.valve_positions())
     effects: list[SimulatedEffect] = []
     cmp = st.comparison

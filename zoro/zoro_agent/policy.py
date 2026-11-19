@@ -43,5 +43,7 @@ class AgentPolicy(Model):
     freshness: FreshnessPolicy
     recommendation: RecommendationPolicy
     budget: Budget
+    sop_first: bool = False
+    setpoint_variant_steps_pct: list[float] = Field(default_factory=lambda: [-0.5, 0.5, -1.0, 1.0])
     benchmark: BenchmarkPolicy | None = Field(
         default=None, description="있으면 심슨(hold) 대비 비용·정확도 비교와 case 탐색 종료 규칙으로 권고를 연다")

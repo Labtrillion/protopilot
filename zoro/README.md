@@ -12,6 +12,7 @@ RAG와 시뮬레이터는 **어댑터와 가짜 도구**로 대체했으므로 �
 ```bash
 pip install "pydantic>=2.6" pytest
 python examples/run_demo.py          # 가짜 Zoro + 가짜 도구, 결과는 examples/output/
+python examples/run_demo.py --sop-only --rag jiyeon  # SOP 대응안 한 가지 선택, 시뮬레이션 없음
 python examples/run_demo.py --rag jiyeon   # 지연님 RAG 실제 출력(rag_jiyeon_result.json)으로 실행
 python scripts/build_tep_studio_sop.py     # Studio 제어 코드 → 센서별 SOP (rag_jiyeon 지식 + docs/SOP_TEP_STUDIO.md)
 python -m pytest -q                  # 핵심 테스트
@@ -40,8 +41,10 @@ curl -X POST localhost:8765/api/command -H 'Content-Type: application/json' -d '
 curl -X POST localhost:8765/api/zoro-agent -H 'Content-Type: application/json' -d '{"run":"<run>","alarm_id":<id>}'
 ```
 
-- `ZORO_BASE_URL` 이 있으면 Zoro-1(`/v1/decide`), 없으면 고정 순서 규칙(결과에 `model_client_kind: fake`).
-- case 는 알람 시점 설정값과 팀 SOP 후보(유지·즉시/30분/60분 후 5% 감량)로 사건마다 생성합니다.
+- `ZORO_BASE_URL`이 있으면 `/v1/systemone`을 사용하고, 이전 서버의 경우 `/v1/decide`로 재시도합니다. 가짜 클라이언트 실행은 `model_client_kind: fake`로 표시합니다.
+- `build_policy()`가 만드는 ProtoPilot 정책은 먼저 알람·계측·SOP·지식을 바탕으로 `case1` 하나를 선택합니다. `Choice`로 대응·센서 정보 요청·재검색·운영자 검토를 선택하고, 선택된 대응의 `Noul` 적용 가능성과 `Score` 근거 충실도를 확인합니다. 결과에 `sop_route`, `sop_sources`, `setpoint_command`가 포함됩니다. SOP 버전, 등록 전제조건, 필수 센서 및 안전 검사는 코드에서 확인합니다.
+- 벤치마크가 연결된 실행은 `case1`을 먼저 시험한 뒤, 같은 체크포인트에서 목표값을 한 번에 하나씩 변형해 비교합니다. 기본 후보 간격은 목표값의 `−0.5%, +0.5%, −1%, +1%`이며 `setpoint_variant_steps_pct`에서 설정합니다. 유지가 `case1`이면 변경할 값이 없어서 기준만 시험합니다.
+- 비용과 추종 정확도는 `SimulationToolkit`이 시뮬레이션 시계열을 `EvaluationSpec`에 따라 채점합니다. 첫 단계의 결과와 모델 응답은 `RunReport.sop_stage`에 남으며, 단독 SOP 실행은 `ZoroAgent.run_sop()`를 사용합니다. 재검색을 실행하려면 호출자가 `retrieve_again` 콜백을 공급합니다.
 - 활성 외란은 시뮬레이터 안에만 있고 에이전트 입력·결과에는 들어가지 않습니다.
 - 주의: `docs/SOP_TEP_STUDIO.md` 와 `tep_control.py` 는 CMU TEP Studio(Braatz, SETPT(19) 퍼지 B) 기준입니다.
   ProtoPilot 시뮬레이터는 Ricker 제어기(설정값 9개: 반응기 압력·온도·액위, 생산량, 제품 G, ya/yac)라 그대로 적용되지 않습니다.

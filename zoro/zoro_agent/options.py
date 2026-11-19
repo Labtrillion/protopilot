@@ -50,6 +50,7 @@ class OptionEvaluation(Model):
     description: str
     reason: str
     evidence_ids: list[str] = []
+    requested_sensor_ids: list[str] = []
     checks: list[OptionCheck]
 
 
@@ -158,6 +159,8 @@ def case_selection(state: AgentState, catalog: ActionCatalog, policy: AgentPolic
     for a in cands.values():
         if not a.supported or state.runs_for(a.action_id):
             continue
+        if policy.sop_first and _duplicate_check(a, state).status == CheckStatus.FAIL:
+            continue
         case = catalog.case(a.case_id)
         if case and envelope_problems(case, catalog.setpoint_map(), state.active_setpoints, state.sim_time_s,
                                       state.valve_positions())[0]:
@@ -189,9 +192,11 @@ def _eval_action(
     catalog: ActionCatalog,
     policy: AgentPolicy,
     tools: set[str],
+    sop_only: bool = False,
 ) -> OptionEvaluation:
     checks = [_C("registered", CheckStatus.PASS, "등록된 action_id")]
-    supported = spec.supported and spec.tool_name in tools
+    is_sop_candidate = sop_only and spec.kind == ActionKind.SIMULATION
+    supported = spec.supported and (is_sop_candidate or spec.tool_name in tools)
     checks.append(
         _C("supported", CheckStatus.PASS if supported else CheckStatus.FAIL,
            f"tool={spec.tool_name}, supported={spec.supported}, 연결됨={spec.tool_name in tools}", "hard")
@@ -205,6 +210,25 @@ def _eval_action(
     for s in spec.required_fresh_sensors:
         st, d = sensor_freshness(state, s, policy.freshness)
         checks.append(_C(f"input_fresh:{s}", st, d))
+    if is_sop_candidate:
+        case = catalog.case(spec.case_id)
+        versions = {(r.sop_id, r.version) for r in case.sop_refs if r.version} if case else set()
+        evidence_ids = {eid for candidate in cands for eid in candidate.evidence_ids}
+        evidence = [e for e in state.rag.evidence if e.evidence_id in evidence_ids]
+        linked = any((e.sop_id, e.sop_version) in versions or (e.doc_id, e.doc_version) in versions for e in evidence)
+        checks.append(_C("sop_version", CheckStatus.PASS if linked else CheckStatus.FAIL,
+                         "검색 근거와 등록 SOP 버전 일치 필요", "hard"))
+        checks += _case_checks(spec, state, catalog)
+        for sid in dict.fromkeys(policy.recommendation.required_fresh_sensors):
+            if sid in spec.required_fresh_sensors:
+                continue
+            status, detail = sensor_freshness(state, sid, policy.freshness)
+            checks.append(_C(f"input_fresh:{sid}", status, detail))
+        for cid in policy.recommendation.required_safety_checks:
+            safety = state.safety(cid)
+            checks.append(_C(f"safety:{cid}", safety.status if safety else CheckStatus.UNKNOWN, cid, "hard"))
+        return _finalize(f"PROVIDE_SOP:{spec.action_id}", OptionKind.RECOMMENDATION, spec.action_id,
+                         case.description if case else spec.description, checks, [e.evidence_id for e in evidence])
     if spec.kind == ActionKind.SENSOR_QUERY:
         stale = [s for s in spec.target_sensors if sensor_freshness(state, s, policy.freshness)[0] != CheckStatus.PASS]
         checks.append(
@@ -252,7 +276,7 @@ def _eval_recommendation(
 ) -> OptionEvaluation:
     rp = policy.recommendation
     if policy.benchmark is not None and spec.action_id == rp.baseline_action_id:
-        return _eval_hold_recommendation(spec, cands, state, catalog, policy)
+        return _eval_baseline_recommendation(spec, cands, state, catalog, policy)
     checks: list[OptionCheck] = _case_checks(spec, state, catalog)
     if policy.benchmark is not None:
         sel = case_selection(state, catalog, policy)
@@ -323,14 +347,24 @@ def _eval_recommendation(
     return _finalize(f"{RECOMMEND_PREFIX}{spec.action_id}", OptionKind.RECOMMENDATION, spec.action_id, desc, checks, ev_ids)
 
 
-def _eval_hold_recommendation(spec: ActionSpec, cands: list[RagCandidate], state: AgentState,
-                              catalog: ActionCatalog, policy: AgentPolicy) -> OptionEvaluation:
-    """심슨(hold) 권고: 탐색이 끝났고 심슨을 이긴 case 가 없으며 심슨이 적격일 때만."""
+def _eval_baseline_recommendation(spec: ActionSpec, cands: list[RagCandidate], state: AgentState,
+                                  catalog: ActionCatalog, policy: AgentPolicy) -> OptionEvaluation:
+    """탐색이 끝났고 기준안을 이긴 후보가 없으며 기준안이 적격일 때 권고한다."""
     rp = policy.recommendation
     checks: list[OptionCheck] = []
     run = state.succeeded_run(spec.action_id)
     checks.append(_C("run_succeeded", CheckStatus.PASS if run else CheckStatus.FAIL,
                      f"{run.run_id} 성공" if run else "기준 실험 결과 없음"))
+    if policy.sop_first:
+        checks += _case_checks(spec, state, catalog)
+        impact = state.impact_for(run.run_id) if run else None
+        if rp.require_alarm_recovery:
+            recovered = impact.original_alarm_recovered if impact else None
+            status = CheckStatus.UNKNOWN if recovered is None else (CheckStatus.PASS if recovered else CheckStatus.FAIL)
+            checks.append(_C("alarm_recovery", status, f"원래 알람 회복(예측)={recovered}", "hard"))
+        if rp.block_if_limit_exceedance:
+            status = CheckStatus.UNKNOWN if impact is None else (CheckStatus.FAIL if impact.exceedances else CheckStatus.PASS)
+            checks.append(_C("no_limit_exceedance", status, "기준 실험 한계 초과 검사", "hard"))
     sel = case_selection(state, catalog, policy)
     if sel is None:
         checks.append(_C("case_selection", CheckStatus.FAIL, "심슨(기준) 점수 없음"))
@@ -352,12 +386,14 @@ def _eval_hold_recommendation(spec: ActionSpec, cands: list[RagCandidate], state
     if rp.require_rag_evidence:
         checks.append(_C("rag_evidence", CheckStatus.PASS if ev_ids else CheckStatus.FAIL,
                          f"근거 {ev_ids}" if ev_ids else "RAG 근거 없음", "hard"))
-    desc = f"최종 권고: 현재 목표 유지(hold) — {spec.description}. 심슨을 의미 있게 이긴 case 없음(가상 예측)"
+    desc = (f"최종 권고: SOP 기준 대응안 유지 — {spec.description}" if policy.sop_first else
+            f"최종 권고: 현재 목표 유지(hold) — {spec.description}. 심슨을 의미 있게 이긴 case 없음(가상 예측)")
     return _finalize(f"{RECOMMEND_PREFIX}{spec.action_id}", OptionKind.RECOMMENDATION, spec.action_id, desc, checks, ev_ids)
 
 
 def build_options(
-    state: AgentState, catalog: ActionCatalog, policy: AgentPolicy, available_tools: set[str]
+    state: AgentState, catalog: ActionCatalog, policy: AgentPolicy, available_tools: set[str],
+    *, sop_only: bool = False, case1_baseline: bool = False,
 ) -> OptionSet:
     evals: list[OptionEvaluation] = []
     by_action: dict[str, list[RagCandidate]] = {}
@@ -375,13 +411,24 @@ def build_options(
     action_ids = list(dict.fromkeys(
         [*by_action, *(a.action_id for a in catalog.actions if a.offer_without_rag)]
     ))
+    baseline = state.succeeded_run(policy.recommendation.baseline_action_id) if case1_baseline else None
+    baseline_impact = state.impact_for(baseline.run_id) if baseline else None
     for aid in action_ids:
         spec = catalog.get(aid)
         assert spec is not None  # 어댑터가 등록 ID만 매핑
         if spec.kind == ActionKind.HUMAN_REVIEW:
             continue
-        evals.append(_eval_action(spec, by_action.get(aid, []), state, catalog, policy, available_tools))
-    for aid in action_ids:
+        if sop_only and spec.kind not in {ActionKind.SIMULATION, ActionKind.SENSOR_QUERY}:
+            continue
+        option = _eval_action(spec, by_action.get(aid, []), state, catalog, policy, available_tools, sop_only=sop_only)
+        if sop_only and spec.kind == ActionKind.SENSOR_QUERY:
+            option.option_id = f"REQUEST_INFO:{aid}"
+        if (case1_baseline and spec.kind == ActionKind.SIMULATION and aid != policy.recommendation.baseline_action_id
+                and option.status == OptionStatus.OPEN
+                and (baseline_impact is None or baseline_impact.score is None)):
+            option.status, option.reason = OptionStatus.DEFERRED, "case1 기준 실험과 벤치마크 점수 필요"
+        evals.append(option)
+    for aid in ([] if sop_only else action_ids):
         spec = catalog.get(aid)
         is_hold = policy.benchmark is not None and aid == policy.recommendation.baseline_action_id
         if spec and spec.kind == ActionKind.SIMULATION and (spec.recommendable or is_hold):
@@ -390,9 +437,20 @@ def build_options(
     if hr is not None:
         evals.append(
             _finalize(
-                hr.action_id, OptionKind.HUMAN_REVIEW, hr.action_id, hr.description,
+                "ESCALATE" if sop_only else hr.action_id, OptionKind.HUMAN_REVIEW, hr.action_id, hr.description,
                 [_C("supported", CheckStatus.PASS if hr.supported else CheckStatus.FAIL, "운영자 검토 요청", "hard")],
                 [],
             )
         )
+    if sop_only:
+        missing = list(dict.fromkeys(c.name.removeprefix("input_fresh:") for option in evals
+                                    if option.kind == OptionKind.RECOMMENDATION for c in option.checks
+                                    if c.name.startswith("input_fresh:") and c.status != CheckStatus.PASS))
+        if missing:
+            option = _finalize("REQUEST_INFO", OptionKind.HUMAN_REVIEW, None,
+                               f"추가 센서 정보 요청: {', '.join(missing)}", [], [])
+            option.requested_sensor_ids = missing
+            evals.append(option)
+        evals.append(_finalize("RETRIEVE_AGAIN", OptionKind.HUMAN_REVIEW, None,
+                               "관련 SOP 및 지식 근거를 다시 검색 요청", [], []))
     return OptionSet(event_id=state.event_id, state_version=state.state_version, options=evals)

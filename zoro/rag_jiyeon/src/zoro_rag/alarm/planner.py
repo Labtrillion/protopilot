@@ -37,7 +37,7 @@ class RetrievalPlanner:
             RetrievalQuery(intent="POSSIBLE_CAUSES", query=f"{shared} disturbances possible causes abnormal deviation", alarm_ids=all_alarm_ids, variable_ids=all_variables),
             RetrievalQuery(intent="PROCESS_RELATIONSHIPS", query=f"{shared} process control relationships interactions", alarm_ids=all_alarm_ids, variable_ids=all_variables),
             RetrievalQuery(intent="OPERATING_CONSTRAINTS", query=f"{shared} operating constraints safety limits shutdown override", alarm_ids=all_alarm_ids, variable_ids=all_variables),
-            RetrievalQuery(intent="HISTORICAL_EXPERIMENTS", query=f"{shared} case experiment scenario result cost", alarm_ids=all_alarm_ids, variable_ids=all_variables),
+            RetrievalQuery(intent="HISTORICAL_EXPERIMENTS", query=f"{shared} case experiment scenario operational response", alarm_ids=all_alarm_ids, variable_ids=all_variables),
         ])
         unique: dict[tuple[str, str], RetrievalQuery] = {}
         for query in queries:
