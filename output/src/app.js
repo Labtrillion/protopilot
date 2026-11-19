@@ -240,6 +240,13 @@ function selectTag(tag) {
 }
 
 function attachEvents() {
+  // Chrome can match :focus-visible on a select clicked with a pointer.
+  const root = document.documentElement;
+  document.addEventListener('pointerdown', () => root.setAttribute('data-pointer-focus', ''), true);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Tab') root.removeAttribute('data-pointer-focus');
+  }, true);
+
   run.addEventListener('click', () => doCommand({ op: 'run', enabled: !status.running }));
   reset.addEventListener('click', () => doCommand({ op: 'reset' }, () => {
     explicitTag = '';

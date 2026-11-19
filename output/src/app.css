@@ -57,7 +57,8 @@ button, .exports a {
   justify-content: center; white-space: nowrap; cursor: pointer; font-weight: 600;
 }
 button:hover:not(:disabled), .exports a:hover { border-color: var(--focus); }
-button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+button:focus-visible, a:focus-visible, input:focus-visible, [tabindex]:focus-visible,
+:root:not([data-pointer-focus]) select:focus-visible {
   outline: 2px solid var(--focus); outline-offset: 2px;
 }
 button[hidden], label[hidden], [hidden] { display: none !important; }
@@ -68,6 +69,8 @@ select {
   --select-arrow-inset: 0.8rem;
   --select-arrow-size: 0.8rem;
   appearance: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
   min-height: var(--control-size);
   max-width: 100%;
   padding: 0.28rem calc(var(--select-arrow-inset) + var(--select-arrow-size) + 0.4rem) 0.28rem 0.56rem;
