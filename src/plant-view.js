@@ -6,25 +6,41 @@ import { byId, escape, legend } from './ui.js';
 export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit, trackTag }) {
   const canvas = byId('canvas'), labels = byId('model-labels'), diagramRoot = byId('diagram');
   const threeButton = byId('view-3d'), twoButton = byId('view-2d');
+  const canvasError = byId('canvas-error');
   const flows = byId('view-flow'), pressure = byId('view-pressure'), internals = byId('toggle-internals'), tags = byId('toggle-tags');
   const tagListButton = byId('toggle-tag-list'), tagList = byId('model-tag-list');
   const internalsLabel = byId('internals-label'), interiorTools = byId('interior-tools'), partStrip = byId('interior-parts');
   const circuitButtons = [...document.querySelectorAll('.circuit-controls button[data-circuit]')];
   let scene, area = 'plant', circuit = '', visible = '3d', tracked = '', focusedTag = '';
-  let tagListOpen = false;
+  let tagListOpen = false, sceneAvailable = true, resume3D = false;
   const flags = { flows: true, pressure: true, internals: false, tags: true };
   const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve, selectFeed,
-    (unit, viewport) => scene?.showCloseup(unit, viewport));
+    (unit, viewport) => scene?.showCloseup(sceneAvailable ? unit : undefined, viewport));
   try {
     scene = mountScene(canvas, labels, tagList, (unit, valve) => {
       if (valve) selectValve(valve);
       else selectArea(unit);
-    }, trackTag, chooseCircuit, selectFeed);
+    }, trackTag, chooseCircuit, selectFeed, onContextChange);
   } catch (error) {
     console.warn('WebGL scene unavailable', error);
-    threeButton.disabled = true;
-    threeButton.title = '이 브라우저에서 WebGL 2를 사용할 수 없습니다.';
+    setSceneAvailability(false);
     switchView('2d');
+  }
+
+  function setSceneAvailability(available) {
+    sceneAvailable = available;
+    threeButton.disabled = !available;
+    threeButton.title = available ? '' : 'WebGL을 사용할 수 없습니다.';
+    canvasError.hidden = available;
+  }
+
+  function onContextChange(available) {
+    if (!available) {
+      resume3D = visible === '3d';
+      canvasError.textContent = 'WebGL 연결이 끊겨 3D를 일시적으로 표시할 수 없습니다.';
+    }
+    setSceneAvailability(available);
+    switchView(available && resume3D ? '3d' : '2d');
   }
 
   // Stable keyboard path to the selected unit's interior tags, independent of projected label overlap.
@@ -73,7 +89,6 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
     twoButton.setAttribute('aria-pressed', !three);
     tags.disabled = internals.disabled = !three || !scene;
     byId('stage').dataset.view = next;
-    byId('canvas-error').hidden = !three || Boolean(scene);
     scene?.display(three);
     diagram.focus(area, area === 'plant', focusedTag);
     renderInterior();
@@ -107,7 +122,10 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
     button.addEventListener('click', () => setFlag(key, !flags[key]));
   }
   threeButton.addEventListener('click', () => switchView('3d'));
-  twoButton.addEventListener('click', () => switchView('2d'));
+  twoButton.addEventListener('click', () => {
+    resume3D = false;
+    switchView('2d');
+  });
   for (const button of circuitButtons) button.addEventListener('click', () => chooseCircuit(button.dataset.circuit));
   toggle(flows, 'flows', (enabled) => { scene?.flow(enabled); diagram.flow(enabled); });
   toggle(pressure, 'pressure', applyPressure);
@@ -168,7 +186,7 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
       if (!saved) return;
       // Restore every layer flag first (3D-only ones included), then switch the view.
       for (const key of Object.keys(layers)) setFlag(key, saved.flags[key]);
-      if (saved.view !== visible && !(saved.view === '3d' && !scene)) switchView(saved.view);
+      if (saved.view !== visible && (saved.view !== '3d' || sceneAvailable)) switchView(saved.view);
       if (saved.circuit !== circuit) chooseCircuit(saved.circuit, false);
       scene?.restoreView(saved.camera);
       if (saved.scroll && visible === '2d') [diagramRoot.scrollLeft, diagramRoot.scrollTop] = saved.scroll;

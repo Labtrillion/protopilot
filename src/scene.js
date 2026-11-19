@@ -242,7 +242,7 @@ function makePartLabels(host, parts, onPick) {
   });
 }
 
-export function mountScene(container, host, tagList, select, pick, selectCircuit, selectFeed) {
+export function mountScene(container, host, tagList, select, pick, selectCircuit, selectFeed, onContextChange) {
   const scene = new T.Scene();
   scene.background = new T.Color(readColor('--stage'));
   const renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -252,12 +252,19 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.needsUpdate = true;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  const environment = new RoomEnvironment();
-  const pmrem = new T.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(environment, 0.05).texture;
   scene.environmentIntensity = 0.38;
-  environment.dispose();
-  pmrem.dispose();
+  let environmentMap;
+  function updateEnvironment() {
+    // Restore the lighting texture generated on the GPU along with the scene.
+    environmentMap?.dispose();
+    const environment = new RoomEnvironment();
+    const pmrem = new T.PMREMGenerator(renderer);
+    environmentMap = pmrem.fromScene(environment, 0.05);
+    scene.environment = environmentMap.texture;
+    environment.dispose();
+    pmrem.dispose();
+  }
+  updateEnvironment();
   renderer.domElement.setAttribute('aria-label', 'Tennessee Eastman 공정 3D 모델');
   container.append(renderer.domElement);
   const camera = new T.OrthographicCamera(-20, 20, 10, -10, 0.1, 130);
@@ -880,6 +887,11 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     lastProcessFrame = now;
   }
 
+  renderer.domElement.addEventListener('webglcontextlost', () => onContextChange(false));
+  renderer.domElement.addEventListener('webglcontextrestored', () => {
+    updateEnvironment();
+    onContextChange(true);
+  });
   requestAnimationFrame(animate);
   return {
     go, updateVisuals, showCloseup,

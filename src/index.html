@@ -58,6 +58,7 @@
         </div>
       </div>
       <div class="stage" id="stage" data-view="3d">
+        <p class="canvas-error" id="canvas-error" role="status" hidden>3D를 표시할 수 없어 2D 공정도를 열었습니다.</p>
         <p class="plant-guide"><b>공정 흐름</b> 원료 공급 → 반응 → 분리 → 제품 배출</p>
         <div id="model-tag-list" class="model-tag-list" role="region" aria-label="태그 목록" tabindex="0" hidden></div>
         <div class="stage-controls">
@@ -71,7 +72,6 @@
           <div id="canvas" class="canvas" data-focus="plant"></div>
           <div id="model-labels" class="model-labels"></div>
           <div id="diagram" class="diagram" tabindex="0" aria-label="2D 공정도 스크롤" hidden></div>
-          <div class="canvas-error" id="canvas-error" hidden>이 브라우저에서 WebGL 2를 사용할 수 없습니다. 2D 공정도를 이용하세요.</div>
         </div>
         <div class="stage-footer">
           <div id="legend" class="legend"></div>

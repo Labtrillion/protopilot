@@ -251,7 +251,7 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .model-labels > .in-alarm[data-leader]::after { height: 2px; background: var(--alarm-ink); }
 .model-tag.compact:not(.selected):not(.tracked):not(.in-alarm) { min-height: 1.85rem; padding: 0.18rem 0.35rem; }
 .model-tag.compact:not(.selected):not(.tracked):not(.in-alarm) b { display: none; }
-.canvas-error { position: absolute; inset: 35% 12% auto; text-align: center; padding: 1rem; border: 1px solid var(--line); background: var(--surface); }
+.canvas-error { flex: none; padding: 0.38rem 0.65rem; border-bottom: 1px solid var(--line-soft); color: var(--subtext); font-size: 0.8rem; }
 
 .pipe-details {
   flex: none; min-block-size: 17.5rem;
