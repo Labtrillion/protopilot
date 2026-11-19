@@ -61,6 +61,8 @@ PROTECTIONS = {
     "high_level_to_recycle": ("고액위 · 재순환 밸브 제한", "XMEAS(8)"),
 }
 
+MEASUREMENT_TAGS = tuple(f"XMEAS({i})" for i in range(1, 42))  # the 41 published sensors, in schema order
+
 # Downs & Vogel Table 6 operating limits. The engine separately reports actual shutdowns.
 PV_TAGS = {
     "reactor_pressure": 7, "reactor_temperature": 9, "reactor_level": 8,
