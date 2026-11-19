@@ -8,7 +8,7 @@ from unittest.mock import Mock
 from server.alarm_studies import AlarmStudies
 
 from server.app import ConsoleHandler, analyze_alarm_setpoints
-from server.plant import Plant
+from server.plant import MEASUREMENT_TAGS, Plant
 from server.scenario import STEP_HOURS
 from sop_ranking.score_selection import build_candidates, select_candidates
 
@@ -185,6 +185,9 @@ def test_alarm_endpoint_evaluates_the_checkpoint_even_after_live_changes(tmp_pat
         assert point.controller.setpoints.reactor_pressure == checkpoint.controller.setpoints.reactor_pressure
         assert point.controller.setpoints.reactor_pressure != plant.controller.setpoints.reactor_pressure
         assert any(alarm["tag"] == checkpoint.alarm["tag"] for alarm in point.alarms)
+        assert point.history[-1].time_hours == checkpoint.alarm["time_hours"]
+        tag_index = MEASUREMENT_TAGS.index(checkpoint.alarm["tag"])
+        assert point.history[-1].values[tag_index] == checkpoint.alarm["value"]
         assert path == trace_path
         return {"decision": {"status": "human_review"}, "feature2": {}, "branches": []}
 
