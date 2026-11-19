@@ -21,6 +21,7 @@ from .scenario import ADJUSTMENTS, DEFAULT_FLAGS, DEFAULT_SEED, KERNEL_REVISION,
 TICK_SECONDS = 0.6
 REACTION_FEED_VALVES = frozenset((0, 1, 2, 3))
 COOLING_TAGS = ("XMEAS(9)", "XMEASADD(5)", "XMEASADD(6)", "XMV(10)")
+SOP_HISTORY_HOURS = 2.0
 # Operator-visible history for setpoint decisions (default: one sample per 3 simulated minutes over 2 h).
 HISTORY_SAMPLE_HOURS = CONFIG["history_sample_hours"]
 HISTORY_WINDOW_HOURS = CONFIG["history_window_hours"]
@@ -53,6 +54,7 @@ class AlarmCheckpoint:
     # alarms from the monitor's observed channel and branches keep counting alarm minutes from here.
     monitor: object = None
     offsets: dict = field(default_factory=dict)
+    history: tuple = ()  # (time_hours, observed) samples for SOP alignment, newest last
 
 
 def control_action(controller, measurements, time, manual):
@@ -113,7 +115,8 @@ class Plant:
         self.events = deque(maxlen=80)
         self.alarm_checkpoints = {}
         self.cooling_trend = deque(maxlen=8)
-        self.history = deque()
+        self.sop_history = deque()
+        self.history = deque()  # sampled setpoint-decision history
         self.rollout = None  # server.rollout.Rollout while a baseline comparison runs
         self.samples = 0
         self.running = running
@@ -191,8 +194,15 @@ class Plant:
         for tag, offset in self.offsets.items():
             if native[tag] is not None:
                 values[tag] += offset
-        observed = {**values, "XMV(10):actual": float(self.sim.state[47])}
-        cooling = {"time_hours": round(self.sim.time, 8),
+        # SOP predicates can use actual valve positions as well as observed signals.
+        observed = {**values, **{f"XMV({i + 1}):actual": float(v) for i, v in enumerate(self.sim.state[38:50])}}
+        now = round(self.sim.time, 8)
+        if self.sop_history and self.sop_history[-1][0] == now:
+            self.sop_history.pop()
+        self.sop_history.append((now, observed))
+        while now - self.sop_history[0][0] > SOP_HISTORY_HOURS:
+            self.sop_history.popleft()
+        cooling = {"time_hours": now,
                    **{tag: observed[tag] for tag in (*COOLING_TAGS, "XMV(10):actual")}}
         if self.cooling_trend and self.cooling_trend[-1]["time_hours"] == cooling["time_hours"]:
             self.cooling_trend.pop()
@@ -293,7 +303,8 @@ class Plant:
             self.alarm_checkpoints[alarm["id"]] = AlarmCheckpoint(
                 self.recording.id, self.step, self.seed, dict(alarm), snapshot, controller,
                 self.measurements.copy(), self.manual.copy(), self.idv.copy(), self.limits.copy(),
-                observed, tuple(self.cooling_trend), related, self.alarm_monitor.copy(), dict(self.offsets),
+                observed, tuple(self.cooling_trend), related,
+                monitor=self.alarm_monitor.copy(), offsets=self.offsets.copy(), history=tuple(self.sop_history),
             )
         while len(self.alarm_checkpoints) > self.events.maxlen:
             active_ids = {alarm["id"] for alarm in self.active.values()}
