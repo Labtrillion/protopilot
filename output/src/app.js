@@ -1,34 +1,47 @@
 import { AREAS } from './topology.js';
-import { mountScene } from './scene.js';
+import { mountPlantView } from './plant-view.js';
+import { mountResponse } from './response.js';
 import { setupControls } from './controls.js';
 import {
-  byId, elapsed, icon, initIcons, legend, option, renderAlarms, renderInspector, renderKpis, renderRows, wallTime,
+  byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderKpis, renderRows, wallTime,
 } from './ui.js';
 
 const channels = new Map();
 const trends = new Map();
 const reset = byId('reset'), run = byId('run'), speed = byId('speed'), select = byId('area-select');
 const connection = byId('connection'), soundBtn = byId('sound');
-let scene, openControls, status, audio, buzzer = false, noticeTimer;
-let mode = 'flow', focusedArea = 'plant', selectedTag = '', alarmTab = 'active', connected = false;
+const pageId = crypto.randomUUID();
+let plantView, openControls, status, audio, buzzer = false, noticeTimer, pageRecorded = false;
+let circuit = '', setpoints = [], telemetryView = 'values';
+let focusedArea = 'plant', selectedTag = '', alarmTab = 'active', connected = false;
 let seenAlarms = new Set(), visibleChannels = [];
+
+const response = mountResponse((id) => openControls?.(id));
+
+function showTelemetry(view, setpoint) {
+  telemetryView = view;
+  const show = view === 'response';
+  byId('channel-view').hidden = show;
+  byId('response-view').hidden = !show;
+  byId('tab-values').setAttribute('aria-pressed', !show);
+  byId('tab-response').setAttribute('aria-pressed', show);
+  response.show(show, setpoint);
+}
+
+function inspector() {
+  const configured = setpoints.find((item) => item.id === selectedTag) ?? setpoints.find((item) => item.area === focusedArea);
+  const channel = channels.get(selectedTag);
+  renderInspector(focusedArea, status, channels, circuit, configured, channel?.group === 'manipulated_variables' ? channel : null);
+}
 
 function focus(area, tag = '', resetCamera = false) {
   if (!(area in AREAS)) return;
   focusedArea = area;
   selectedTag = tag;
   select.value = area;
-  scene?.go(area, resetCamera, tag);
-  renderInspector(area, status, channels);
+  plantView?.focus(area, resetCamera, tag);
+  inspector();
   renderRows(visibleChannels, status, selectedTag);
-}
-
-function changeView(view) {
-  mode = view;
-  byId('view-flow').setAttribute('aria-pressed', view === 'flow');
-  byId('view-pressure').setAttribute('aria-pressed', view === 'pressure');
-  scene?.mode(view);
-  legend(view);
 }
 
 function note(message, isError = false) {
@@ -78,6 +91,7 @@ function renderConnection() {
   byId('open-controls').disabled = !connected;
   byId('pressure-test').disabled = !connected;
   byId('clear-test').disabled = !connected;
+  response.enable(connected);
   byId('record-light').classList.toggle('online', connected && !status?.error);
   byId('record-status').textContent = connected && !status?.error && status ? `로컬 기록 · ${status.sample.toLocaleString('ko-KR')} 샘플` : '로컬 기록 연결 확인';
 }
@@ -118,9 +132,10 @@ function receive(next) {
   byId('clear-test').hidden = !('XMEAS(7)' in status.offsets);
   if (sampled) renderKpis(status, channels, trends);
   renderRows(visibleChannels, status, selectedTag);
-  renderInspector(focusedArea, status, channels);
+  inspector();
   renderAlarms(status, alarmTab, channels);
-  scene?.updateVisuals(status);
+  plantView?.update(status);
+  response.update(status);
 }
 
 async function request(path, options = {}) {
@@ -134,7 +149,7 @@ async function command(body, beforeReceive) {
   const result = await request('/api/command', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
-  beforeReceive?.();
+  beforeReceive?.(result);
   if (!status || result.version >= status.version) receive(result);
 }
 const doCommand = (body, callback) => command(body, callback).catch((error) => note(error.message, true));
@@ -144,6 +159,7 @@ function selectTag(tag, navigate = false) {
   if (!ch) return;
   focus(ch.area, tag);
   if (navigate) {
+    if (telemetryView !== 'values') showTelemetry('values');
     byId('channel-group').value = '';
     byId('channel-area').value = '';
     byId('search').value = tag;
@@ -160,20 +176,17 @@ function attachEvents() {
   }));
   speed.addEventListener('change', () => doCommand({ op: 'speed', value: +speed.value }));
   byId('open-controls').addEventListener('click', () => openControls());
-  byId('view-flow').addEventListener('click', () => changeView('flow'));
-  byId('view-pressure').addEventListener('click', () => changeView('pressure'));
-  byId('overview').addEventListener('click', () => focus('plant', '', true));
-  byId('toggle-tags').addEventListener('click', (event) => {
-    const button = event.currentTarget;
-    const enabled = button.getAttribute('aria-pressed') !== 'true';
-    button.setAttribute('aria-pressed', enabled);
-    scene?.tags(enabled);
+  byId('overview').addEventListener('click', () => {
+    plantView.circuit('', false);
+    focus('plant', '', true);
   });
-  byId('toggle-internals').addEventListener('click', (event) => {
-    const button = event.currentTarget;
-    const enabled = button.getAttribute('aria-pressed') !== 'true';
-    button.setAttribute('aria-pressed', enabled);
-    scene?.internals(enabled);
+  byId('tab-values').addEventListener('click', () => showTelemetry('values'));
+  byId('tab-response').addEventListener('click', () => showTelemetry('response'));
+  byId('inspector-content').addEventListener('click', (event) => {
+    const responseButton = event.target.closest('[data-response]');
+    if (responseButton) showTelemetry('response', responseButton.dataset.response);
+    const controlButton = event.target.closest('[data-control]');
+    if (controlButton) openControls?.(controlButton.dataset.control);
   });
   select.addEventListener('change', () => focus(select.value));
   byId('search').addEventListener('input', filter);
@@ -200,7 +213,7 @@ function attachEvents() {
     if (ack) doCommand({ op: 'ack', id: +ack.dataset.ack });
   });
   byId('pressure-test').addEventListener('click', () => doCommand({ op: 'pressure_test' }, () => {
-    changeView('pressure');
+    plantView?.showPressure();
     focus('reactor', 'XMEAS(7)');
   }));
   byId('clear-test').addEventListener('click', () => doCommand({ op: 'offset', id: 'XMEAS(7)', value: 0 }));
@@ -229,9 +242,18 @@ async function poll() {
       schema.channels.forEach((ch) => channels.set(ch.id, ch));
       byId('channel-count').textContent = schema.channels.length;
       byId('channel-group').insertAdjacentHTML('beforeend', schema.groups.map((g) => option(g.id, `${g.label} · ${g.count}`)).join(''));
-      openControls = setupControls(schema, () => status, command, focus);
+      setpoints = schema.setpoints;
+      response.init(setpoints);
+      openControls = setupControls(schema, () => status, command, (area, id, kind) => {
+        focus(area, id);
+        if (kind === 'setpoint') showTelemetry('response', id);
+      });
       filter();
-      renderInspector(focusedArea, status, channels);
+      inspector();
+    }
+    if (!pageRecorded) {
+      await command({ op: 'new_recording', page_id: pageId });
+      pageRecorded = true;
     }
     const next = await request('/api/live');
     if (!status || next.version > status.version || !connected || next.run !== status.run) receive(next);
@@ -244,16 +266,17 @@ async function poll() {
 }
 
 initIcons();
-legend(mode);
 select.innerHTML = Object.entries(AREAS).map(([key, area]) => option(key, key === 'plant' ? '공정 전체' : `${area.code} · ${area.name}`)).join('');
 byId('channel-area').insertAdjacentHTML('beforeend', Object.entries(AREAS).filter(([key]) => key !== 'plant').map(([key, area]) => option(key, area.name)).join(''));
-renderInspector(focusedArea, status, channels);
+inspector();
 renderAlarms(status, alarmTab, channels);
 attachEvents();
-try {
-  scene = mountScene(byId('canvas'), byId('model-labels'), (area, tag) => focus(area, tag));
-} catch (error) {
-  console.error(error);
-  byId('canvas-error').hidden = false;
-}
+plantView = mountPlantView({
+  selectArea: focus,
+  selectValve: (tag) => {
+    const channel = channels.get(tag);
+    if (channel) { focus(channel.area, tag); openControls?.(tag); }
+  },
+  onCircuit: (id) => { circuit = id; inspector(); },
+});
 poll();

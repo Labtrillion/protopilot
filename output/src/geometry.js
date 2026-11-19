@@ -4,14 +4,16 @@ export const v3 = (coordinates) => new T.Vector3(...coordinates);
 const material = (color, roughness = 0.55, metalness = 0.18) =>
   new T.MeshStandardMaterial({ color, roughness, metalness });
 
-export const steel = material(0x92a9ad);
-export const lightSteel = material(0xb6c9c9);
-export const edge = material(0x637c85);
+export const steel = material(0xb6c2c0, 0.34, 0.66);
+export const lightSteel = material(0xc6d0cc, 0.35, 0.53);
+export const edge = material(0x617781, 0.42, 0.42);
 export const dark = material(0x263b46, 0.74);
 export const base = material(0x293f49, 0.81);
 export const gold = material(0xbaa36d);
 const valveColor = material(0x4e8394);
 const black = material(0x17272c);
+const dialFace = material(0xe8ecdf, 0.57, 0.06);
+const pointerRed = material(0xe37c57, 0.41, 0.25);
 const blue = material(0x436e82);
 const display = new T.MeshStandardMaterial({ color: 0x8ee0d9, emissive: 0x337c73, emissiveIntensity: 0.6 });
 const UP = new T.Vector3(0, 1, 0);
@@ -61,10 +63,18 @@ function gauge(group, position, scale = 1) {
   group.add(gauge);
   const body = cylinder(gauge, 0.16, 0.09, [0, 0, 0], edge, false, 24);
   body.rotation.x = Math.PI / 2;
-  const dial = cylinder(gauge, 0.122, 0.015, [0, 0, 0.052], lightSteel, false, 24);
+  const dial = cylinder(gauge, 0.122, 0.015, [0, 0, 0.052], dialFace, false, 24);
   dial.rotation.x = Math.PI / 2;
-  rod(gauge, [0, 0, 0.062], [0.062, 0.061, 0.062], 0.014, black, 6);
+  for (let i = 0; i <= 8; i++) {
+    const a = -0.78 + i * Math.PI * 1.5 / 8;
+    rod(gauge, [0.096*Math.cos(a),0.096*Math.sin(a),0.064], [0.105*Math.cos(a),0.105*Math.sin(a),0.064], 0.004, black, 5);
+  }
+  const needle = new T.Group();
+  gauge.add(needle);
+  needle.position.z = 0.070;
+  rod(needle, [0, -0.018, 0], [0, 0.090, 0], 0.008, pointerRed, 6);
   rod(gauge, [0, -0.12, 0], [0, -0.27, 0], 0.037, gold);
+  return needle;
 }
 function railing(group, radius, height) {
   ring(group, radius, 0.11, height, edge);
@@ -114,8 +124,13 @@ export function vessel(group, spec) {
     cylinder(group, 0.34, 0.11, [0, top + 1.38, 0], lightSteel);
     box(group, [0.41, 0.32, 0.42], [0.3, top + 0.99, 0], dark);
   }
-  gauge(group, [radius * 0.27, top - 0.33, radius + 0.05], 1.08);
-  return { casing, ...sightGlass(group, radius, bottom + 0.18, Math.min(1.44, top - bottom - 0.35)) };
+  const needle = gauge(group, [radius * 0.27, top - 0.33, radius + 0.05], 1.22);
+  box(group, [Math.min(0.43, radius * 0.48),0.19,0.042], [0.16,top-0.62,radius+0.04], edge);
+  for (const fraction of [0.20,0.40,0.60,0.80]) {
+    const y = bottom + 0.18 + Math.min(1.44, top - bottom - 0.35) * fraction;
+    box(group, [0.11,0.018,0.013], [radius*0.56+0.143,y,radius*0.90+0.075], lightSteel);
+  }
+  return { needle, casing, ...sightGlass(group, radius, bottom + 0.18, Math.min(1.44, top - bottom - 0.35)) };
 }
 
 export function condenser(group) {
@@ -125,7 +140,8 @@ export function condenser(group) {
     box(group, [0.52, 0.12, 1.43], [x, 0.32, 0], dark);
   }
   for (const z of [-0.45, 0.45]) rod(group, [-1.17, 0.48, z], [1.17, 2.68, z], 0.07, dark);
-  rod(group, [-1.61, 3.43, 0], [1.61, 3.43, 0], 0.72, steel, 44).castShadow = true;
+  const shell = rod(group, [-1.61, 3.43, 0], [1.61, 3.43, 0], 0.72, steel, 52);
+  shell.castShadow = true;
   for (const [x, sign] of [[-1.62, -1], [1.62, 1]]) {
     const end = cylinder(group, 0.76, 0.15, [x, 3.43, 0], edge);
     end.rotation.z = Math.PI / 2;
@@ -137,6 +153,7 @@ export function condenser(group) {
     }
   }
   gauge(group, [0.23, 3.76, 0.75]);
+  return { casing: [shell] };
 }
 
 export function rotary(group, kind) {
@@ -200,12 +217,32 @@ export function controlValve(group, point, tangent, number) {
   valve.userData = { valve: `XMV(${number})` };
   rod(valve, [-0.24, 0, 0], [0.24, 0, 0], 0.175, valveColor, 12);
   for (const x of [-0.19, 0.14]) rod(valve, [x, 0, 0], [x + 0.06, 0, 0], 0.19, edge, 12);
-  rod(valve, [0, 0, 0], [0, 0.33, 0], 0.061, lightSteel);
-  cylinder(valve, 0.21, 0.13, [0, 0.34, 0], gold, false, 16);
+  for (const x of [-0.10,0.10]) rod(valve, [x,0.10,0], [x,0.46,0], 0.023, lightSteel, 8);
+  const stem = box(valve, [0.087,0.12,0.073], [0,0.27,0], pointerRed);
+  valve.userData.stem = stem;
+  cylinder(valve, 0.21, 0.13, [0, 0.46, 0], gold, false, 20);
   return valve;
 }
 
 export function support(group, x, z, y) {
   box(group, [0.29, y, 0.29], [x, y / 2, z], dark);
   box(group, [0.56, 0.08, 0.55], [x, 0.05, z], base);
+}
+
+
+export function flange(group, point, tangent, radius, mat = edge) {
+  const center = v3(point);
+  const axis = v3(tangent).normalize();
+  const frame = new T.Group();
+  frame.position.copy(center);
+  frame.quaternion.setFromUnitVectors(UP, axis);
+  group.add(frame);
+  cylinder(frame, radius * 1.62, 0.097, [0,0,0], mat, false, 20);
+  cylinder(frame, radius * 1.45, 0.10, [0,-0.081,0], dark, false, 20);
+  for (let i = 0; i < 6; i++) {
+    const angle = 2 * Math.PI * i / 6;
+    cylinder(frame, radius * 0.17, 0.028,
+      [radius * 1.32 * Math.cos(angle),0.059,radius * 1.32 * Math.sin(angle)], lightSteel, false, 6);
+  }
+  return frame;
 }

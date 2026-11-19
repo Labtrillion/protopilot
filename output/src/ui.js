@@ -1,4 +1,4 @@
-import { AREAS, MEDIA, STREAMS, codeFor } from './topology.js';
+import { AREAS, CIRCUITS, CORE_PRESSURES, MEDIA, STREAMS, codeFor } from './topology.js';
 
 export const byId = (id) => document.getElementById(id);
 export const escape = (text = '') => String(text).replace(/[&<>"']/g, (char) =>
@@ -23,6 +23,8 @@ const icons = {
   flow: '<path d="M3 8h17m-4-4 4 4-4 4M21 16H4m4-4-4 4 4 4"/>',
   gauge: '<path d="M4 18a9 9 0 1 1 16 0zm8-4 4-5"/>',
   scan: '<path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3m0 8v3a2 2 0 0 1-2 2h-3m-8 0H5a2 2 0 0 1-2-2v-3m9-7v6m-3-3h6"/>',
+  diagram: '<rect x="3" y="4" width="6" height="5" rx="1"/><rect x="15" y="15" width="6" height="5" rx="1"/><path d="M6 9v8h9m-3-3 3 3-3 3M9 6h9v6"/>',
+  layers: '<path d="m12 3 9 5-9 5-9-5zm-9 9 9 5 9-5m-18 4 9 5 9-5"/>',
   tag: '<path d="m3 4 8-1 10 10-8 8L3 11z"/><circle cx="8" cy="8" r="1"/>',
   box: '<path d="m12 3 9 5-9 5-9-5zm-9 5v8l9 5 9-5V8m-9 5v8"/>',
   activity: '<path d="M2 12h5l3-8 4 16 3-8h5"/>',
@@ -44,10 +46,37 @@ export function initIcons() {
 }
 export const option = (id, label) => `<option value="${escape(id)}">${escape(label)}</option>`;
 
-export function legend(view) {
-  byId('legend').innerHTML = view === 'flow'
-    ? Object.values(MEDIA).map(({ color, name }) => `<span><i style="--medium:${color}"></i>${name}</span>`).join('')
-    : '<span><i class="pressure-scale"></i> 가스 게이지압 · kPa(g)</span><span class="legend-muted">계측 연결 구간</span>';
+export function legend(circuit, interiors) {
+  const media = circuit ? Object.keys(MEDIA).filter((kind) => STREAMS.some((line) => line.circuit === circuit && line.media === kind)) : Object.keys(MEDIA);
+  byId('legend').innerHTML = media.map((key) => {
+    const { color, name } = MEDIA[key];
+    return `<span><i style="--medium:${color}"></i>${name}</span>`;
+  }).join('') + (interiors ? '<span><i class="level-key"></i>액위 SP</span>' : '');
+}
+
+export function renderPressures(status, enabled) {
+  const root = byId('pressure-overview');
+  root.hidden = !enabled;
+  if (!enabled) return;
+  if (!root.children.length) root.innerHTML = Object.entries(CORE_PRESSURES).map(([area, tag]) =>
+    `<button type="button" data-pressure-tag="${codeFor(tag)}" data-area="${area}" title="${AREAS[area].name} · ${codeFor(tag)}">
+      <span>${AREAS[area].code}</span><b>—</b></button>`).join('');
+  for (const row of root.children) {
+    const tag = row.dataset.pressureTag;
+    const alarming = status?.alarms.some((alarm) => alarm.tag === tag);
+    const value = status?.values[tag];
+    const formatted = Number.isFinite(value) ? value.toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '—';
+    row.querySelector('b').innerHTML = `${formatted}<small>kPa(g)</small>`;
+    row.classList.toggle('alarming', alarming);
+  }
+}
+
+function routeDetails(circuit) {
+  if (!circuit) return '';
+  const route = CIRCUITS[circuit];
+  const paths = route.paths.map((path) => `<li>${path.map((item) => `<span>${escape(item)}</span>`).join('<i aria-hidden="true">→</i>')}</li>`).join('');
+  return `<section class="route-inspector" style="--route-color:${route.color}">
+    <h3>${route.title} 경로</h3><ul>${paths}</ul><p>${route.info}</p></section>`;
 }
 
 function drawTrend(canvas, values, index) {
@@ -79,7 +108,7 @@ export function renderKpis(status, metadata, trends) {
   });
 }
 
-export function renderInspector(areaKey, status, metadata) {
+export function renderInspector(areaKey, status, metadata, circuit = '', setpoint = null, control = null) {
   const area = AREAS[areaKey];
   const values = status?.values ?? {};
   const rows = [...area.tags.map(codeFor), ...(area.extra ?? [])].map((tag) => {
@@ -88,20 +117,28 @@ export function renderInspector(areaKey, status, metadata) {
     return `<button class="inspect-value" type="button" data-tag="${tag}" title="${tag} · ${escape(name)}"><span>${escape(name)}</span>
       <b>${reading(values[tag], channel?.unit)} <small>${escape(channel?.unit ?? '')}</small></b></button>`;
   }).join('');
-  const streams = STREAMS.filter((stream) => stream.area === areaKey);
+  const streams = STREAMS.filter((stream) => circuit ? stream.circuit === circuit : stream.area === areaKey && areaKey !== 'plant');
   const flows = streams.map((stream) => {
     const tag = codeFor(stream.tag);
     const channel = metadata.get(tag);
-    return `<div class="inspect-stream"><i style="--medium:${MEDIA[stream.media].color}"></i><span>${escape(stream.id)} · ${escape(stream.name)}</span>
-      <small>${tag ? reading(values[tag], channel?.unit) + ' ' + escape(channel?.unit ?? '') : '방향'}</small></div>`;
+    return `<div class="inspect-stream"><span class="line-id"><i style="--medium:${MEDIA[stream.media].color}"></i>${stream.id}</span>
+      <span><b>${escape(stream.from)} → ${escape(stream.to)}</b><small>${tag ? reading(values[tag], channel?.unit) + ' ' + escape(channel?.unit ?? '') : '흐름 방향'}</small></span></div>`;
   }).join('');
   // Preserve focused buttons and scroll position when markup hasn't changed structurally.
   const root = byId('inspector-content');
-  if (root.dataset.area !== areaKey) {
-    root.innerHTML = `<div class="inspector-label"><code>${area.code}</code><span>${area.en}</span></div>
+  const panelKey = [areaKey, circuit, setpoint?.id, control?.id].join('/');
+  if (root.dataset.area !== panelKey) {
+    root.innerHTML = `${routeDetails(circuit)}<div class="inspector-label"><code>${area.code}</code><span>${area.en}</span></div>
+      ${setpoint ? `<button type="button" class="inspect-setting" data-response="${setpoint.id}"><span>${escape(setpoint.label)} · SP 응답</span><b></b></button>` : ''}
+      ${control ? `<button type="button" class="inspect-setting" data-control="${control.id}"><span>${escape(control.label)}</span><b></b></button>` : ''}
       <div class="inspect-values"></div>${flows ? '<h3>연결 배관</h3><div class="inspect-streams"></div>' : ''}`;
-    root.dataset.area = areaKey;
+    root.dataset.area = panelKey;
     root.scrollTop = 0;
+  }
+  if (setpoint) root.querySelector('[data-response] b').textContent = `${reading(status?.setpoints?.[setpoint.id])} ${setpoint.unit}`;
+  if (control) {
+    const current = status?.actuators?.[control.id];
+    root.querySelector('[data-control] b').textContent = `실제 ${reading(current)}% · 명령 ${reading(values[control.id])}%`;
   }
   const measures = root.querySelector('.inspect-values');
   if (!measures.children.length || !measures.contains(document.activeElement)) measures.innerHTML = rows;

@@ -57,7 +57,7 @@ export function setupControls(schema, current, command, focus) {
       value.min = 0;
       value.max = 100;
       value.value = +(status.manual[id] ?? currentValue ?? 0).toFixed(4);
-      descriptor = `현재 명령 ${tagValue} · ${id in status.manual ? '수동' : '자동 제어'}`;
+      descriptor = `현재 명령 ${tagValue} · 실제 ${reading(status.actuators?.[id])}% · ${id in status.manual ? '수동' : '자동 제어'}`;
     } else if (kind === 'offset') {
       value.value = status.offsets[id] ?? 0;
       descriptor = `현재 표시 ${tagValue} · 오프셋은 화면과 알람에 적용됩니다.`;
@@ -90,7 +90,7 @@ export function setupControls(schema, current, command, focus) {
     apply.disabled = release.disabled = true;
     error.hidden = true;
     try {
-      await command(body, () => focus(item.area, id));
+      await command(body, () => focus(item.area, id, kind));
       dialog.close();
     } catch (failure) {
       error.textContent = failure.message;

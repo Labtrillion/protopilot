@@ -26,21 +26,35 @@
       <div class="panel-head plant-head">
         <div><div class="context-label">공정 관측 <span>·</span> MODE 1</div><h1 id="plant-heading">Tennessee Eastman</h1></div>
         <div class="view-controls">
-          <div class="segments" role="group" aria-label="공정 시각화 모드">
-            <button id="view-flow" type="button" data-icon="flow" aria-pressed="true">유량</button>
-            <button id="view-pressure" type="button" data-icon="gauge" aria-pressed="false">가스 압력</button>
+          <div class="segments view-switch" role="group" aria-label="공정 화면">
+            <button id="view-3d" type="button" data-icon="box" aria-pressed="true">3D 모델</button>
+            <button id="view-2d" type="button" data-icon="diagram" aria-pressed="false">2D 공정도</button>
           </div>
-          <button id="toggle-tags" type="button" data-icon="tag" class="icon-button" aria-label="설비 태그 표시" aria-pressed="true" title="설비 태그 표시"></button>
-          <button id="toggle-internals" type="button" data-icon="box" class="icon-button" aria-label="설비 내부 보기" aria-pressed="false" title="설비 내부 보기"></button>
-          <button id="overview" type="button" data-icon="scan" title="전체 보기">전체 보기</button>
+          <button id="overview" type="button" data-icon="scan">전체 보기</button>
+        </div>
+      </div>
+      <div class="model-toolbar">
+        <div class="circuit-controls" role="group" aria-label="배관 경로 추적">
+          <span class="toolbar-label">배관 추적</span>
+          <button type="button" data-circuit="" aria-pressed="true">전체</button>
+          <button type="button" data-circuit="recycle" aria-pressed="false">재순환</button>
+          <button type="button" data-circuit="cooling" aria-pressed="false">냉각수</button>
+          <button type="button" data-circuit="steam" aria-pressed="false">스팀·재비기</button>
+        </div>
+        <div class="layer-controls" role="group" aria-label="공정 표시 레이어">
+          <button id="view-flow" type="button" data-icon="flow" aria-pressed="true">유량</button>
+          <button id="view-pressure" type="button" data-icon="gauge" aria-pressed="true">가스 압력</button>
+          <button id="toggle-tags" type="button" data-icon="tag" aria-label="3D 설비 태그 표시" aria-pressed="true" title="설비 태그 표시"></button>
+          <button id="toggle-internals" type="button" data-icon="layers" aria-pressed="false">내부 전체</button>
         </div>
       </div>
       <div class="plant-body">
-        <div class="stage" id="stage">
-          <div class="stage-caption"><span class="crosshair">+</span> TEP / PROCESS FLOW</div>
+        <div class="stage" id="stage" data-view="3d">
+          <div class="stage-caption"><span class="crosshair">+</span><span id="stage-caption-text">공정 모델</span></div>
           <div id="canvas" class="canvas" data-focus="plant"></div>
           <div id="model-labels" class="model-labels"></div>
-          <div class="canvas-error" id="canvas-error" hidden>이 브라우저에서 WebGL 2를 사용할 수 없습니다.</div>
+          <div id="diagram" class="diagram" hidden></div>
+          <div class="canvas-error" id="canvas-error" hidden>이 브라우저에서 WebGL 2를 사용할 수 없습니다. 2D 공정도를 이용하세요.</div>
           <div class="stage-footer">
             <div id="legend" class="legend"></div>
             <span class="orbit-hint">드래그 회전 <span>·</span> 스크롤 확대</span>
@@ -49,6 +63,7 @@
         <aside class="inspector" aria-labelledby="inspector-title">
           <div class="inspector-top"><span data-icon="box"></span><h2 id="inspector-title">설비 인스펙터</h2></div>
           <label class="unit-select"><span class="sr-only">관측할 설비</span><select id="area-select"></select></label>
+          <div id="pressure-overview" class="pressure-overview"></div>
           <div id="inspector-content" class="inspector-content"></div>
         </aside>
       </div>
@@ -57,9 +72,15 @@
     <section class="panel telemetry-panel" aria-labelledby="telemetry-title">
       <div class="panel-head">
         <div class="heading-inline"><span data-icon="activity"></span><h2 id="telemetry-title">실시간 계측</h2><span id="channel-count" class="subtle-count"></span></div>
-        <div class="exports"><a data-icon="download" href="/api/export/csv">CSV</a><a href="/api/export/json">JSON</a></div>
+        <div class="telemetry-actions">
+        <div class="segments telemetry-modes" role="group" aria-label="계측 화면">
+          <button type="button" id="tab-values" aria-pressed="true">채널</button>
+          <button type="button" id="tab-response" aria-pressed="false">SP 응답</button>
+        </div>
+        <div class="exports"><a data-icon="download" href="/api/export/csv">CSV</a><a href="/api/export/json">JSON</a></div></div>
       </div>
       <div id="kpis" class="kpis"></div>
+      <div id="channel-view">
       <div class="filter-bar">
         <label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="태그 또는 계측명 검색" aria-label="태그 또는 계측명 검색"></label>
         <label><span class="sr-only">채널 유형</span><select id="channel-group"><option value="">모든 채널</option></select></label>
@@ -71,6 +92,16 @@
           <thead><tr><th scope="col">태그</th><th scope="col">계측 / 조작값</th><th scope="col">설비</th><th scope="col" class="right">현재값</th><th scope="col">단위</th><th scope="col">상태</th></tr></thead>
           <tbody id="rows"><tr><td colspan="6">계측 데이터 연결 중</td></tr></tbody>
         </table>
+      </div>
+      </div>
+      <div id="response-view" class="response-view" hidden>
+        <div class="response-controls">
+          <label><span class="sr-only">추적할 설정값</span><select id="response-select" disabled></select></label>
+          <button id="response-adjust" type="button" data-icon="sliders" disabled>SP 변경</button>
+          <div class="response-legend"><span><i></i>PV 실측</span><span><i></i>SP 목표</span></div>
+        </div>
+        <div id="response-values" class="response-values"></div>
+        <div class="response-chart-wrap"><canvas id="response-chart" aria-label="시간에 따른 설정값과 계측값"></canvas></div>
       </div>
     </section>
 

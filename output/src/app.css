@@ -236,3 +236,114 @@ dialog::backdrop { background: #091117c9; }
   table { min-width: 480px; }
   .footer { padding-inline: 0.66rem; }
 }
+
+/* Process canvas tools and shared instrumentation. */
+.model-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.45rem; padding: 0.40rem 0.85rem; border-top: 1px solid var(--line); background: #131e26; }
+.circuit-controls, .layer-controls, .telemetry-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; min-width: 0; }
+.toolbar-label { font-weight: 650; color: var(--muted); margin-right: 0.38rem; font-size: 0.81rem; }
+.circuit-controls button, .layer-controls button { min-height: 2.03rem; padding: 0.26rem 0.56rem; font-size: 0.81rem; }
+.circuit-controls button[aria-pressed=true], .layer-controls button[aria-pressed=true] { color: var(--accent); border-color: #416a6b; background: #21383d; }
+.circuit-controls [data-circuit=cooling][aria-pressed=true] { color: #b0ceff; border-color: #526b98; background: #243347; }
+.circuit-controls [data-circuit=steam][aria-pressed=true] { color: #ffc29b; border-color: #775644; background: #3b302b; }
+.stage-caption { top: 0.5rem; }
+.model-port { color: var(--route-color); position: absolute; padding: 0.20rem 0.35rem; transform: translate(-50%, -65%); border-radius: 3px; border: 1px solid var(--route-color); background: #17252df5; font: 650 0.75rem var(--mono); white-space: nowrap; }
+.model-tag.has-pressure span { color: #aaeee5; font-size: 0.76rem; font-weight: 700; }
+.model-tag.in-alarm span { color: var(--warning); }
+.legend .level-key { background: none; height: 0; border-top: 2px dashed #a7bbff; }
+.pressure-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 0.58rem; border: 1px solid #34505d; border-radius: 5px; background: #152631; }
+.pressure-overview button { display: grid; text-align: left; justify-content: start; min-width: 0; gap: 0.20rem; padding: 0.43rem 0.29rem 0.40rem; color: #b6d1dc; border: 0; border-right: 1px solid #34505d; border-radius: 0; background: none; }
+.pressure-overview button:last-child { border-right: 0; }
+.pressure-overview button span { font: 0.71rem var(--mono); }
+.pressure-overview button b { color: #a8ebdf; font: 700 clamp(0.72rem, 0.8vw, 0.91rem) var(--mono); }
+.pressure-overview button small { display: block; color: var(--muted); font-size: 0.65rem; font-weight: 400; }
+.pressure-overview button.alarming { background: #3b2b24; }
+.pressure-overview button.alarming b { color: var(--warning); }
+.route-inspector { margin: 0.08rem 0 0.60rem; padding: 0.57rem 0.58rem; border: 1px solid #42616d; border-left: 2px solid var(--route-color); border-radius: 4px; background: #1b2a33; }
+.route-inspector h3 { padding: 0; color: var(--route-color); margin-bottom: 0.45rem; }
+.route-inspector ul { list-style: none; padding: 0; margin: 0; }
+.route-inspector li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.23rem; margin-block: 0.40rem; font-size: 0.76rem; }
+.route-inspector li span { background: #233945; border-radius: 3px; padding: 0.16rem 0.25rem; white-space: nowrap; }
+.route-inspector li i { font-style: normal; color: var(--route-color); }
+.route-inspector p { margin-top: 0.5rem; color: #a9bec8; font-size: 0.75rem; line-height: 1.46; }
+.inspect-setting { display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%; gap: 0.3rem; padding: 0.43rem; margin-bottom: 0.42rem; color: #c8dbe5; font-size: 0.78rem; background: #1c303c; }
+.inspect-setting b { color: #b3caf2; font: 650 0.74rem var(--mono); }
+.inspect-stream { display: grid; grid-template-columns: 2.7rem minmax(0, 1fr); align-items: start; }
+.inspect-stream .line-id { white-space: nowrap; font: 0.68rem var(--mono); color: #a3b9c5; padding-top: 0.2rem; }
+.inspect-stream .line-id i { width: 0.48rem; margin-right: 0.14rem; }
+.inspect-stream b { font-weight: 500; overflow-wrap: anywhere; }
+.inspect-stream small { display: block; margin-top: 0.17rem; }
+
+/* Orthogonal Fig. 1 diagram. */
+.diagram { position: absolute; inset: 0; overflow: auto; scrollbar-width: thin; }
+.pfd-svg { display: block; width: 100%; min-width: 755px; height: 100%; min-height: 318px; }
+.stage[data-view="2d"] .orbit-hint { display: none; }
+.stage[data-view="2d"] .legend { background: #101b24ed; }
+.stage[data-view="2d"] .stage-footer { bottom: 0.5rem; }
+.pfd-stream .pipe-sleeve { stroke: #16242f; stroke-width: 7; }
+.pfd-stream path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.pipe-line { stroke: var(--pipe); stroke-width: 2; }
+.pipe-ticks { stroke: #f1ffff; stroke-width: 2.2; stroke-dasharray: 4 26; opacity: 0; }
+.pfd-svg.show-flow .pfd-stream:not(.no-flow) .pipe-ticks { opacity: 0.65; }
+.pfd-svg.show-flow.running .pipe-ticks { animation: pipe-motion var(--speed, 2s) linear infinite; }
+@keyframes pipe-motion { to { stroke-dashoffset: -60; } }
+.pfd-svg[data-circuit]:not([data-circuit=""]) .pfd-stream { opacity: 0.20; }
+.pfd-svg[data-circuit="recycle"] .pfd-stream[data-circuit="recycle"],
+.pfd-svg[data-circuit="cooling"] .pfd-stream[data-circuit="cooling"],
+.pfd-svg[data-circuit="steam"] .pfd-stream[data-circuit="steam"] { opacity: 1; }
+.pfd-svg[data-circuit]:not([data-circuit=""]) .pfd-stream:hover { opacity: 0.77; }
+.pfd-stream:not([data-circuit=""]) { cursor: pointer; }
+.pfd-junctions circle { fill: #bad3df; stroke: #1d313c; stroke-width: 1; }
+.pfd-samples path { fill: none; stroke: #b6aa80; stroke-width: 1.4; stroke-dasharray: 3 3; }
+.pfd-symbol { fill: #223846; stroke: #82aab9; stroke-width: 1.5; }
+.pfd-symbol path, .pfd-symbol circle { fill: none; }
+.pfd-symbol.selected { stroke: #80e1d4; fill: #25444b; stroke-width: 2.5; }
+.pfd-symbol.in-alarm { stroke: var(--warning); fill: #5a392c; stroke-width: 2.4; }
+.pfd-port rect { fill: #15252e; stroke: #557281; stroke-width: 1.2; }
+.pfd-port text, .pfd-unit text, .pfd-id, .pfd-pressure { text-anchor: middle; font: 700 11px var(--mono); fill: #d3e7ee; }
+.pfd-id { text-anchor: start; fill: #b4c9d3; font-size: 10px; paint-order: stroke; stroke: #14222d; stroke-width: 3px; stroke-linejoin: round; }
+.pfd-pressure { display: none; text-anchor: start; fill: #a7f2e3; font-size: 11px; paint-order: stroke; stroke: #16242d; stroke-width: 5px; stroke-linejoin: round; }
+.pfd-svg.show-pressure .pfd-pressure { display: block; }
+.pfd-pressure.in-alarm { fill: var(--warning); }
+.pfd-valve rect { fill: transparent; stroke: none; }
+.pfd-valve path { fill: #16242e; stroke: #d8d9b6; stroke-width: 1.3; }
+.pfd-unit, .pfd-valve { cursor: pointer; outline: 0; }
+.pfd-unit rect { fill: #18262f; stroke: #72949f; stroke-width: 1; }
+.pfd-unit:is(:hover,:focus-visible,.selected) rect, .pfd-valve:is(:hover,:focus-visible) rect { stroke: #8af5e1; stroke-width: 2; }
+.pfd-unit.in-alarm rect { fill: #51362a; stroke: var(--warning); }
+.pfd-valve text { pointer-events: none; }
+
+.telemetry-modes button { padding: 0.22rem 0.46rem; min-height: 1.75rem; font-size: 0.77rem; }
+.response-view { padding: 0.52rem 0.75rem 0.42rem; min-height: clamp(185px, 20vh, 335px); }
+.response-controls, .response-legend { display: flex; align-items: center; gap: 0.55rem; }
+.response-controls { flex-wrap: wrap; }
+.response-controls select, .response-controls button { min-height: 2rem; font-size: 0.80rem; }
+.response-legend { margin-left: auto; color: #b7cad2; font-size: 0.76rem; }
+.response-legend i { display: inline-block; width: 0.9rem; margin-right: 0.28rem; border-top: 2px solid #7be6d8; vertical-align: 0.2em; }
+.response-legend span:nth-child(2) i { border-top: 2px dashed #a7bbff; }
+.response-values { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 0.5rem; margin: 0.65rem 0; }
+.response-values > div { overflow: hidden; padding-left: 0.40rem; border-left: 2px solid #406b6a; }
+.response-values > div:nth-child(2) { border-color: #778bd4; }
+.response-values span { display: block; color: var(--muted); font-size: 0.73rem; white-space: nowrap; }
+.response-values b { font: 680 1rem var(--mono); white-space: nowrap; }
+.response-values small { font: 0.70rem var(--mono); color: var(--muted); }
+.response-chart-wrap { height: clamp(110px, 13vh, 170px); border: 1px solid var(--line-soft); background: #111c24; }
+#response-chart { display: block; width: 100%; height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .pfd-svg.show-flow.running .pipe-ticks { animation: none; }
+}
+@media (max-width: 760px) {
+  .model-toolbar { padding-inline: 0.54rem; }
+  .model-toolbar button { padding-inline: 0.43rem; }
+  .stage[data-view="2d"] { height: 342px; }
+  .stage[data-view="2d"] .stage-caption { display: none; }
+  .pressure-overview button b { font-size: 0.86rem; }
+  .pressure-overview button small { display: inline; margin-left: 0.27rem; }
+  .inspector { max-height: 23rem; }
+}
+@media (max-width: 440px) {
+  .telemetry-actions { justify-content: flex-end; }
+  .telemetry-panel > .panel-head { padding-inline: 0.53rem; }
+  .response-legend { margin-left: 0; }
+  .response-values { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .response-values b { font-size: 0.87rem; }
+}

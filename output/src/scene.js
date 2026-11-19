@@ -1,19 +1,19 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { AREAS, MEDIA, STREAMS, codeFor } from './topology.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { AREAS, CORE_PRESSURES, MEDIA, PORTS, STREAMS, codeFor } from './topology.js';
+import { buildInternals } from './internals.js';
 import * as geo from './geometry.js';
 
 const initialOffset = new T.Vector3(6.8, 18, 28);
 const home = new T.Vector3(0, 2.76, -0.8);
 const up = new T.Vector3(0, 1, 0);
-const pressureTags = { reactor: 7, separator: 13, stripper: 16 };
 const primary = {
   feeds: 2.2, reactor: 7.05, condenser: 4.9, separator: 6.2, compressor: 2.55,
   stripper: 8.95, reboiler: 3.48, purge: 2.02, product: 1.54,
-  gc_feed: 2.05, gc_purge: 2.05, gc_product: 2.05,
+  gc_feed: 2.05, gc_purge: 2.05, gc_product: 2.05, pump_sep: 1.28, pump_prod: 1.28,
 };
 const visibleLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'compressor', 'stripper', 'product', 'purge']);
-const feedBranches = { '01': 0, '02': 1, '03': 2 };
 
 function pathFor(points) {
   const segments = new T.CurvePath();
@@ -80,20 +80,20 @@ function buildEquipment(scene) {
   sight.reactor = { tag: 8, ...geo.vessel(groups.reactor, { radius: 1.47, bottom: 0.9, top: 5.28, deck: 4.35, seams: [2.5, 3.65], agitator: true }) };
   sight.separator = { tag: 12, ...geo.vessel(groups.separator, { radius: 1.19, bottom: 0.84, top: 4.55, deck: 3.4, seams: [2.31] }) };
   sight.stripper = { tag: 15, ...geo.vessel(groups.stripper, { radius: 1.04, bottom: 0.83, top: 7.22, deck: 4.45, seams: [1.85, 3.36, 5.56, 6.4] }) };
-  geo.vessel(groups.reboiler, { radius: 0.38, bottom: 0.51, top: 2.93, seams: [1.25, 2.24] });
-  geo.condenser(groups.condenser);
+  sight.reboiler = geo.vessel(groups.reboiler, { radius: 0.38, bottom: 0.51, top: 2.93, seams: [1.25, 2.24] });
+  sight.condenser = geo.condenser(groups.condenser);
   geo.rotary(groups.compressor, 'compressor');
-  geo.terminal(groups.product, 0.6);
+  geo.terminal(groups.product, 0.70);
   geo.terminal(groups.purge, 1.2);
   for (const area of ['gc_feed', 'gc_purge', 'gc_product']) geo.analyzer(groups[area]);
 
-  for (const [area, coords] of [['separator', [5.4,0,-1.45]], ['product', [10.1,0,4.2]]]) {
-    const pump = new T.Group();
-    pump.position.copy(geo.v3(coords).sub(groups[area].position));
-    groups[area].add(pump);
-    geo.rotary(pump, 'pump');
+  for (const area of ['pump_sep', 'pump_prod']) {
+    const model = new T.Group();
+    groups[area].add(model);
+    geo.rotary(model, 'pump');
+    for (const z of [-0.76,0.80]) geo.flange(groups[area], [0,0.70,z], [0,0,1], 0.113);
   }
-  for (const [key, tap] of [['gc_feed', [-10.5,0.8,1.4]], ['gc_purge', [12.1,1.2,-5.6]], ['gc_product', [14.5,0.6,5.2]]]) {
+  for (const [key, tap] of [['gc_feed', [-10.5,0.8,1.4]], ['gc_purge', [12.1,1.2,-5.6]], ['gc_product', [14.5,0.70,5.19]]]) {
     const g = groups[key];
     const endpoint = geo.v3(tap).sub(g.position).toArray();
     g.add(new T.Mesh(new T.TubeGeometry(pathFor([[0.22,1.84,0],[0.22,2.04,0],[endpoint[0],2.04,endpoint[2]],endpoint]), 20, 0.028, 6),
@@ -102,92 +102,30 @@ function buildEquipment(scene) {
   return { groups, sight };
 }
 
-function buildInternals(groups, sight) {
-  const translucent = new T.MeshStandardMaterial({
-    color: 0x8cb4c5, transparent: true, opacity: 0.18, depthWrite: false, side: T.DoubleSide,
-  });
-  const internals = {};
-  for (const key of Object.keys(sight)) {
-    const interior = new T.Group();
-    interior.visible = false;
-    groups[key].add(interior);
-    internals[key] = interior;
-  }
-  const reactor = internals.reactor;
-  const coilPoints = [[1.47,3.42,0]];
-  for (let i = 0; i <= 84; i++) {
-    const a = Math.PI * 8 * i / 84;
-    coilPoints.push([1.03 * Math.cos(a), 3.42 - 1.39 * i / 84, 1.03 * Math.sin(a)]);
-  }
-  coilPoints.push([1.47,2.03,0]);
-  const coil = new T.CatmullRomCurve3(coilPoints.map(geo.v3));
-  reactor.add(new T.Mesh(new T.TubeGeometry(coil, 112, 0.061, 10),
-    new T.MeshStandardMaterial({ color: 0x64a6e9, emissive: 0x19478c, emissiveIntensity: 0.32 })));
-  const agitator = new T.Group();
-  reactor.add(agitator);
-  geo.rod(agitator, [0, 1.2, 0], [0, 5.35, 0], 0.080, geo.lightSteel);
-  for (const y of [1.36, 2.46, 3.37]) {
-    const blades = new T.Group();
-    blades.rotation.y = y;
-    geo.box(blades, [1.43, 0.10, 0.20], [0, y, 0], geo.gold);
-    geo.box(blades, [0.20, 0.10, 1.43], [0, y, 0], geo.gold);
-    agitator.add(blades);
-  }
-  const separator = internals.separator;
-  const layer = new T.Mesh(new T.CylinderGeometry(1.12, 1.12, 0.12, 36),
-    new T.MeshStandardMaterial({ color: 0xe8b56b, transparent: true, opacity: 0.72 }));
-  separator.add(layer);
-  geo.box(separator, [1.18, 0.09, 0.42], [-0.59, 2.89, 0], geo.lightSteel);
-  geo.box(separator, [0.08, 0.68, 0.77], [-0.25, 2.89, 0], geo.edge);
-  const stripper = internals.stripper;
-  for (const y of [2.86, 3.36, 3.86, 4.36, 4.86, 5.36]) {
-    const plate = new T.Mesh(new T.CylinderGeometry(0.97, 0.97, 0.056, 32), geo.gold);
-    plate.position.y = y;
-    stripper.add(plate);
-    geo.rod(stripper, [-0.5, y, -0.41], [0.55, y + 0.15, 0.43], 0.046, geo.dark);
-  }
-  return {
-    agitator, separatorLevel: layer,
-    show(enabled, focus) {
-      for (const [key, interior] of Object.entries(internals)) {
-        const visible = enabled && (focus === 'plant' || key === focus);
-        interior.visible = visible;
-        for (const shell of sight[key].casing) {
-          shell.material = visible ? translucent : geo.steel;
-          shell.castShadow = !visible;
-        }
-      }
-    },
-  };
-}
-
 function buildStreams(scene, groups) {
   const markerGeometry = new T.ConeGeometry(0.103, 0.31, 9);
-  const definitions = STREAMS.map((def) => {
-    const points = def.id in feedBranches ? def.points.slice(0, 3) : def.points;
-    return { ...def, points };
-  });
-  definitions.push({
-    id: 'M', name: 'A/D/E 헤더', area: 'feeds', media: 'gas',
-    points: [[-10.5,0.8,-3.45],[-10.5,0.8,1.4]],
-  });
-  return definitions.map((def) => {
+  return STREAMS.map((def) => {
     const path = pathFor(def.points), length = path.getLength();
     const color = new T.Color(MEDIA[def.media].color);
     const pipeColor = color.clone().lerp(new T.Color(0x334d58), 0.55);
     const material = new T.MeshStandardMaterial({
       color: pipeColor, emissive: color, emissiveIntensity: 0.08, roughness: 0.50, metalness: 0.32,
     });
-    const radius = ['06', '07', '07B', '08', '08R', '10', '11'].includes(def.id) ? 0.097 : 0.066;
-    scene.add(new T.Mesh(new T.TubeGeometry(path, Math.ceil(Math.max(18, length * 9)), radius, 9), material));
+    const radius = ['06','07','07B','08','08I','08R','08M','10','10S','11','11S'].includes(def.id) ? 0.114 : 0.079;
+    const tube = new T.Mesh(new T.TubeGeometry(path, Math.ceil(Math.max(18, length * 10)), radius, 12), material);
+    scene.add(tube);
     const geom = new T.MeshBasicMaterial({ color, transparent: true, opacity: 0.98 });
     const count = Math.max(1, Math.ceil(length / (def.tag ? 2.15 : 4.0)));
     const markers = new T.InstancedMesh(markerGeometry, geom, count);
     markers.frustumCulled = false;
     scene.add(markers);
-    for (const fraction of [0.11, 0.92]) {
-      const p = path.getPointAt(fraction), d = path.getTangentAt(fraction).multiplyScalar(0.07);
-      geo.rod(scene, p.clone().sub(d).toArray(), p.clone().add(d).toArray(), radius * 1.48, geo.edge, 12);
+    const flanges = [];
+    for (const point of [0.18, Math.max(0.31, length - 0.18)]) {
+      const fraction = Math.min(0.97, point / length);
+      const p = path.getPointAt(fraction), d = path.getTangentAt(fraction);
+      if (length > 1.3 && !['M','08I','08B','08R','08M'].includes(def.id)) {
+        flanges.push(geo.flange(scene, p.toArray(), d.toArray(), radius));
+      }
     }
     let valve = null;
     if (def.valve) {
@@ -197,7 +135,7 @@ function buildStreams(scene, groups) {
       const group = groups[def.area];
       valve = geo.controlValve(group, point.sub(group.position), tangent, number);
     }
-    return { def, path, length, markers, material, pipeColor, color, valve, phase: 0 };
+    return { def, path, length, markers, material, pipeColor, color, valve, phase: 0, flanges };
   });
 }
 
@@ -221,6 +159,20 @@ function createLabels(host, onSelect) {
   return labels;
 }
 
+function makePortLabels(host) {
+  return PORTS.map(([text, origin, medium, circuit]) => {
+    const el = document.createElement('span');
+    el.className = 'model-port';
+    el.textContent = text;
+    el.style.setProperty('--route-color', MEDIA[medium].color);
+    el.dataset.circuit = circuit;
+    host.append(el);
+    const point = geo.v3(origin);
+    point.y += circuit ? 0.44 : 0.02;
+    return { el, point, circuit };
+  });
+}
+
 export function mountScene(container, host, select) {
   const scene = new T.Scene();
   const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
@@ -230,7 +182,13 @@ export function mountScene(container, host, select) {
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.needsUpdate = true;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.27;
+  renderer.toneMappingExposure = 1.13;
+  const environment = new RoomEnvironment();
+  const pmrem = new T.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(environment, 0.05).texture;
+  scene.environmentIntensity = 0.64;
+  environment.dispose();
+  pmrem.dispose();
   renderer.domElement.setAttribute('aria-label', 'Tennessee Eastman 공정 3D 모델');
   container.append(renderer.domElement);
   const camera = new T.OrthographicCamera(-20, 20, 10, -10, 0.1, 130);
@@ -265,6 +223,7 @@ export function mountScene(container, host, select) {
   const streams = buildStreams(scene, groups);
   const internal = buildInternals(groups, sight);
   const labels = createLabels(host, select);
+  const ports = makePortLabels(host);
   const highlightMat = new T.MeshBasicMaterial({ color: 0x53eff1, transparent: true, opacity: 0.85, depthWrite: false });
   const highlight = new T.Mesh(new T.RingGeometry(1, 1.07, 56), highlightMat);
   highlight.rotation.x = -Math.PI / 2;
@@ -277,7 +236,7 @@ export function mountScene(container, host, select) {
   const desired = new T.Vector3();
   const desiredCamera = new T.Vector3();
   const box = new T.Box3();
-  let width = 1, height = 1, focus = 'plant', mode = 'flow', showLabels = true, showInternals = false, frame = null, data = null;
+  let width = 1, height = 1, focus = 'plant', showFlow = true, showPressure = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
   let down = null, last = 0, dragging = false;
   const alertAreas = new Set();
   const geometryBounds = {};
@@ -318,10 +277,6 @@ export function mountScene(container, host, select) {
       desired.y = Math.max(1.3, desired.y);
       desiredCamera.copy(desired).add(offset);
     }
-    if (showInternals) {
-      internal.show(true, focus);
-      renderer.shadowMap.needsUpdate = true;
-    }
     frame = { zoom };
     highlight.visible = area !== 'plant';
     if (highlight.visible) {
@@ -342,14 +297,24 @@ export function mountScene(container, host, select) {
       const x = (projected.x + 1) * width / 2;
       const y = (1 - projected.y) * height / 2;
       label.button.style.left = `${active ? T.MathUtils.clamp(x, 58, width - 58) : x}px`;
-      label.button.style.top = `${active ? Math.max(mode === 'pressure' ? 64 : 51, y) : y}px`;
+      label.button.style.top = `${active ? Math.max(showPressure ? 64 : 51, y) : y}px`;
       label.button.classList.toggle('selected', focus === area);
       label.button.classList.toggle('in-alarm', alertAreas.has(area));
-      if (mode === 'pressure' && pressureTags[area] && data) {
-        const value = data.values[codeFor(pressureTags[area])];
+      label.button.classList.toggle('has-pressure', showPressure && Boolean(CORE_PRESSURES[area]));
+      if (showPressure && CORE_PRESSURES[area] && data) {
+        const value = data.values[codeFor(CORE_PRESSURES[area])];
         label.value.textContent = Number.isFinite(value) ? `${value.toFixed(1)} kPa(g)` : '';
       } else {
         label.value.textContent = '';
+      }
+    }
+    for (const { el, point, circuit } of ports) {
+      projected.copy(point).project(camera);
+      el.hidden = !showLabels || Math.abs(projected.x) > 0.95 || Math.abs(projected.y) > 0.94 ||
+        (activeCircuit && activeCircuit !== circuit) || (circuit && !activeCircuit);
+      if (!el.hidden) {
+        el.style.left = `${(projected.x+1)*width/2}px`;
+        el.style.top = `${(1-projected.y)*height/2}px`;
       }
     }
   }
@@ -382,22 +347,17 @@ export function mountScene(container, host, select) {
     alertAreas.clear();
     status.alarms.forEach((a) => alertAreas.add(a.area));
     for (const { tag, fill, bottom, height: max } of Object.values(sight)) {
-      const level = Math.max(0.005, Math.min(1, (status.values[codeFor(tag)] ?? 0) / 100));
+      if (!tag) continue;
+      const channel = codeFor(tag);
+      const level = Math.max(0.005, Math.min(1, (status.native_values[channel] ?? status.values[channel] ?? 0) / 100));
       fill.scale.y = max * level;
       fill.position.y = bottom + max * level / 2;
-    }
-    internal.separatorLevel.position.y = 0.98 + 1.9 * T.MathUtils.clamp((status.values[codeFor(12)] ?? 0) / 100, 0, 1);
-    for (const line of streams) {
-      if (line.valve) {
-        const amount = status.values[line.valve.userData.valve];
-        line.valve.children.at(-1).position.y = 0.26 + (amount ?? 50) * 0.0017;
-      }
     }
   }
 
   function animate(now) {
     requestAnimationFrame(animate);
-    if (now - last < 24 || !container.isConnected) return;
+    if (now - last < 24 || !container.isConnected || !displayed || document.hidden) return;
     const dt = Math.min(0.075, (now - last) / 1000);
     last = now;
     if (frame && !dragging) {
@@ -409,25 +369,27 @@ export function mountScene(container, host, select) {
       if (controls.target.distanceTo(desired) < 0.006 && Math.abs(camera.zoom - frame.zoom) < 0.006) frame = null;
     }
     controls.update();
-    if (showInternals && data?.running && !motionReduced) internal.agitator.rotation.y += dt * (1.5 + (data.values['XMV(12)'] ?? 50) * 0.01);
+    internal.animate(data, dt, showInternals && data?.running && !motionReduced);
     for (const line of streams) {
-      const { def, path, length, markers, material, pipeColor, color } = line;
+      const { def, path, length, markers, material, pipeColor, color, valve, flanges } = line;
       const tag = codeFor(def.tag);
-      const measured = data?.values[tag];
+      const measured = data?.native_values[tag] ?? data?.values[tag];
       const ratio = tag && Number.isFinite(measured) ? Math.max(0, measured / def.nominal) : 0.58;
-      const isPressure = mode === 'pressure';
-      const pressure = def.pressure ? data?.values[codeFor(def.pressure)] : null;
-      if (isPressure && Number.isFinite(pressure)) {
-        const normalized = T.MathUtils.clamp((pressure - 1800) / 1500, 0, 1);
-        material.color.setHSL(0.60 - normalized * 0.34, 0.65, 0.34 + normalized * 0.22);
-        material.emissive.copy(material.color);
-        material.emissiveIntensity = 0.37;
-      } else {
-        material.color.copy(pipeColor);
-        material.emissive.copy(color);
-        material.emissiveIntensity = isPressure ? 0.006 : 0.08 + Math.min(ratio, 2) * 0.10;
+      const selected = activeCircuit && activeCircuit === def.circuit;
+      const dimmed = Boolean(activeCircuit && !selected);
+      material.color.copy(selected ? color : pipeColor);
+      material.color.multiplyScalar(dimmed ? 0.28 : 1);
+      material.emissive.copy(color);
+      material.emissiveIntensity = dimmed ? 0 : selected ? 0.44 : 0.08 + Math.min(ratio, 2) * 0.10;
+      for (const flange of flanges) flange.visible = !dimmed;
+      if (valve) {
+        const pos = data?.actuators?.[valve.userData.valve];
+        if (Number.isFinite(pos)) {
+          const stem = valve.userData.stem;
+          stem.position.y = T.MathUtils.lerp(stem.position.y, 0.18 + 0.00225 * pos, 1 - Math.exp(-10 * dt));
+        }
       }
-      markers.visible = !isPressure && ratio > 0.012 && Boolean(data);
+      markers.visible = showFlow && !dimmed && ratio > 0.012 && Boolean(data);
       if (!markers.visible) continue;
       if (data.running && !motionReduced) line.phase = (line.phase + dt * Math.min(5.3, 0.3 + 2.15 * ratio) / length) % 1;
       for (let i = 0; i < markers.count; i++) {
@@ -449,11 +411,15 @@ export function mountScene(container, host, select) {
   requestAnimationFrame(animate);
   return {
     go, updateVisuals,
-    mode(value) { mode = value; },
+    flow(enabled) { showFlow = enabled; },
+    pressure(enabled) { showPressure = enabled; },
+    circuit(id) { activeCircuit = id || ''; container.dataset.circuit = activeCircuit; },
+    display(enabled) { displayed = enabled; },
     tags(visible) { showLabels = visible; },
     internals(visible) {
       showInternals = visible;
-      internal.show(visible, focus);
+      internal.show(visible);
+      container.dataset.internals = visible ? Object.keys(sight).join(',') : '';
       renderer.shadowMap.needsUpdate = true;
     },
   };
