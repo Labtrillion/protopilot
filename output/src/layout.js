@@ -1,5 +1,5 @@
 import { CurvePath, LineCurve3, QuadraticBezierCurve3, Vector3 } from 'three';
-import { ANCHORS, BODIES, FEEDS, JUNCTIONS, ROUTES, SAMPLES, UTILITY_PORTS, VALVES, VIEWBOX } from './schematic.js';
+import { ANCHORS, BODIES, BOUNDARY_PORTS, FEEDS, FLOW_READOUTS, JUNCTIONS, ROUTES, SAMPLES, VALVES, VIEWBOX } from './schematic.js';
 import { STREAMS } from './topology.js';
 
 const pixelsPerUnit = 28;
@@ -56,6 +56,7 @@ const pumpElevation = 0.70;
 const condenserElevation = 3.43;
 const purgeElevation = 1.2;
 const waterElevation = 0.52;
+const feedSkidScale = 0.65;
 
 function analyzerModel(area, [, , [x, y]]) {
   const [, top, , height] = BODIES[area];
@@ -71,7 +72,10 @@ export const EQUIPMENT_LAYOUT = {
   pump_sep: centeredModel('pump_sep', pumpElevation),
   pump_prod: centeredModel('pump_prod', pumpElevation),
   ...Object.fromEntries(Object.entries(SAMPLES).map(([area, sample]) => [area, analyzerModel(area, sample)])),
-  feeds: { position: scenePoint(ROUTES['02'][0], feedElevation).add(new Vector3(-1.5, -feedElevation, 0)) },
+  feeds: {
+    position: scenePoint(ROUTES['02'][0], feedElevation).add(new Vector3(-1.5 * feedSkidScale, -feedElevation, 0)),
+    scale: [feedSkidScale, 1, 1],
+  },
   purge: { position: scenePoint(ROUTES['09'].at(-1), purgeElevation).setY(0), terminalHeight: purgeElevation },
   product: { position: scenePoint(ROUTES['11'].at(-1), pumpElevation).setY(0), terminalHeight: pumpElevation },
 };
@@ -114,9 +118,9 @@ const elevations = {
   'CWS': [waterElevation, waterElevation],
   'CWR': [waterElevation, waterElevation],
   '12I': [waterElevation, contact('reactor', '12I', 'end'), contact('reactor', '12I', 'end')],
-  '12': [contact('reactor', '12', 'start'), contact('reactor', '12', 'start'), waterElevation],
+  '12': [contact('reactor', '12', 'start'), contact('reactor', '12', 'start'), waterElevation, waterElevation],
   '13I': [waterElevation, waterElevation, condenserWater],
-  '13': [condenserWater, waterElevation, waterElevation],
+  '13': [condenserWater, waterElevation, waterElevation, waterElevation],
   'ST': [reboilerSteam, reboilerSteam],
   'CD': [condensate, condensate],
   'RB-I': [0.34, 0.34, reboiler.bottomPort],
@@ -134,10 +138,17 @@ export const ROUTES_3D = Object.fromEntries(STREAMS.map(({ id }) => [id, ROUTES[
 
 export const FEED_OFFSETS = FEEDS.map(([id]) => ROUTES_3D[id][0].z - EQUIPMENT_LAYOUT.feeds.position.z);
 
-export const CONDENSER_WATER_PORTS = [ROUTES_3D['13I'].at(-1), ROUTES_3D['13'][0]].map((point) => {
-  const { position, scale } = EQUIPMENT_LAYOUT.condenser;
-  return point.clone().sub(position).divide(new Vector3(...scale)).toArray();
-});
+function localPorts(area, ...points) {
+  const { position, scale } = EQUIPMENT_LAYOUT[area];
+  return points.map((point) => point.clone().sub(position).divide(new Vector3(...scale)).toArray());
+}
+
+export const INTERNAL_NOZZLES = {
+  reactor: localPorts('reactor', ROUTES_3D['12I'].at(-1), ROUTES_3D['12'][0]),
+  condenser: localPorts('condenser', ROUTES_3D['13I'].at(-1), ROUTES_3D['13'][0]),
+  reboilerSteam: localPorts('reboiler', ROUTES_3D.ST.at(-1), ROUTES_3D.CD[0]),
+  reboilerProcess: localPorts('reboiler', ROUTES_3D['RB-I'].at(-1), ROUTES_3D['RB-R'][0]),
+};
 
 export const SAMPLE_ROUTES_3D = Object.fromEntries(Object.entries(SAMPLES).map(([area, [id, tap, end]]) => {
   const index = ROUTES[id].findIndex(([x, y]) => x === tap[0] && y === tap[1]);
@@ -147,19 +158,24 @@ export const SAMPLE_ROUTES_3D = Object.fromEntries(Object.entries(SAMPLES).map((
 export const LABEL_POINTS = Object.fromEntries(Object.entries(ANCHORS).map(([area, point]) => {
   // HTML tags sit beside their symbols with clearance for the larger pressure readouts.
   const [x, y] = point;
-  const labelY = area === 'compressor' ? y + 42 : area === 'reboiler' ? y + 12 : y + 7;
-  return [area, scenePoint([x, labelY], 1)];
+  if (area === 'compressor') return [area, scenePoint([x - 13, y + 54], 1)];
+  return [area, scenePoint([x, y + (area === 'reboiler' ? 18 : 7)], 1)];
 }));
 
 export const PORTS_3D = [
   ...FEEDS.map(([id, name]) => [name, scenePoint([55, ROUTES[id][0][1]], feedElevation + 0.7), 'gas', '']),
-  ...UTILITY_PORTS.map(([id, name, end]) => {
-    const { media, circuit } = STREAMS.find((stream) => stream.id === id);
+  ...BOUNDARY_PORTS.map(([id, name, end]) => {
+    const { media, circuit = '' } = STREAMS.find((stream) => stream.id === id);
     const [x, y] = ROUTES[id].at(end === 'start' ? 0 : -1);
     const point = ROUTES_3D[id].at(end === 'start' ? 0 : -1);
-    return [name, scenePoint([x + (circuit === 'cooling' ? -24 : 24), y - 9], point.y + 0.4), media, circuit];
+    const dx = circuit === 'cooling' ? -24 : 39;
+    const dy = circuit ? 0 : 10;
+    return [name, scenePoint([x + dx, y + dy], point.y + 0.4), media, circuit];
   }),
 ];
+
+export const FLOW_POINTS = Object.fromEntries(Object.entries(FLOW_READOUTS).map(([id, point]) =>
+  [id, scenePoint(point, ROUTES_3D[id][0].y)]));
 
 export function pipePath(points) {
   const path = new CurvePath();

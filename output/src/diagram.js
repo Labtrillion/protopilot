@@ -1,6 +1,6 @@
 import { AREAS, CORE_PRESSURES, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
-import { ANCHORS, BODIES, JUNCTIONS, ROUTES, SAMPLES, VALVES, VIEWBOX } from './schematic.js';
-import { reading } from './ui.js';
+import { ANCHORS, BODIES, BOUNDARY_PORTS, FEEDS, FLOW_READOUTS, JUNCTIONS, ROUTES, SAMPLES, VALVES, VIEWBOX } from './schematic.js';
+import { flowReading, reading } from './ui.js';
 
 // Orthogonal routing reads left-to-right. Only solid dots indicate a pipe junction.
 const routePath = (points) => 'M' + points.map(([x, y]) => `${x} ${y}`).join('L');
@@ -13,18 +13,17 @@ const LEVELS = {
   separator: { tag: 12, body: BODIES.separator, datum: 278, range: 42 },
   stripper: { tag: 15, body: BODIES.stripper, datum: 379, range: 41 },
 };
-const FLOW_READOUTS = {
-  '06': [205, 326], '08R': [510, 63], '10': [747, 310], '11': [971, 400],
-};
 const symbol = (area, shape) => `<g class="pfd-symbol" data-symbol="${area}">${shape}</g>`;
 const rect = (x,y,w,h,r = 4) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/>`;
 const path = (d) => `<path d="${d}"/>`;
 const vessel = (x,y,w,h) => rect(x,y,w,h,w / 2.3);
 const pump = (x,y) => `<circle cx="${x}" cy="${y}" r="15"/><path d="M${x-15} ${y}h-6m36 0h6m-29-6 11 6-11 6z"/>`;
 const ports = [
-  [36,170,'A'], [36,214,'D'], [36,258,'E'], [36,414,'A/C'],
-  [268,389,'CWS'],[268,447,'CWR'],[1040,139,'PURGE'],[1040,295,'STM'],
-  [1040,355,'COND'],[1040,414,'PRODUCT'],
+  ...FEEDS.map(([id, name]) => [ROUTES[id][0][0] - 42, ROUTES[id][0][1], name]),
+  ...BOUNDARY_PORTS.map(([id, name, end]) => {
+    const [x, y] = ROUTES[id].at(end === 'start' ? 0 : -1);
+    return [x === 317 ? x - 49 : x, y, name];
+  }),
 ];
 const anchors = Object.entries(ANCHORS);
 
@@ -178,7 +177,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
         line.classList.toggle('no-flow', ratio < 0.015);
         line.style.setProperty('--speed', `${Math.min(5, 1.5 / Math.max(0.28, ratio))}s`);
         const label = flowByStream.get(stream.id);
-        if (label) label.textContent = `${reading(value)} ${stream.media === 'gas' ? 'kscm/h' : 'm³/h'}${testMark(tag)}`;
+        if (label) label.textContent = flowReading(status, stream);
       }
       for (const node of svg.querySelectorAll('.pfd-unit,.pfd-symbol,.pfd-pressure')) {
         const area = node.dataset.area ?? node.dataset.symbol ?? node.dataset.pressure;

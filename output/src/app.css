@@ -151,6 +151,8 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .model-tag.selected { border-color: var(--focus); z-index: 2; }
 .model-tag.in-alarm { border-color: var(--warning); z-index: 3; }
 .model-tag.in-alarm small { color: var(--warning); }
+.model-tag.compact:not(.selected):not(.tracked):not(.in-alarm) { min-height: 1.85rem; padding: 0.18rem 0.35rem; }
+.model-tag.compact:not(.selected):not(.tracked):not(.in-alarm) b { display: none; }
 .canvas-error { position: absolute; inset: 35% 12% auto; text-align: center; padding: 1rem; border: 1px solid var(--line); background: var(--surface); }
 
 .inspector { display: flex; flex-direction: column; max-height: 28rem; background: var(--surface); }
@@ -336,7 +338,9 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .circuit-controls, .layer-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; min-width: 0; }
 .toolbar-label { font-weight: 650; color: var(--muted); margin-right: 0.38rem; font-size: 0.81rem; }
 .circuit-controls button, .layer-controls button { padding: 0.26rem 0.56rem; font-size: 0.81rem; }
-.model-port { color: var(--route-color); position: absolute; padding: 0.20rem 0.35rem; transform: translate(-50%, -65%); border-radius: 3px; border: 1px solid var(--route-color); background: var(--surface); font: 650 0.75rem var(--mono); white-space: nowrap; }
+.model-port { color: var(--route-color); position: absolute; padding: 0.20rem 0.35rem; border-radius: 3px; border: 1px solid var(--route-color); background: var(--surface); font: 650 0.75rem var(--mono); white-space: nowrap; }
+.model-flow-reading { position: absolute; padding-inline: 0.2rem; color: var(--subtext); background: var(--stage); font: 650 0.73rem var(--mono); white-space: nowrap; }
+.model-flow-reading.tracked { color: var(--tracked); }
 .model-tag.has-pressure span { color: var(--text); font-size: 0.76rem; font-weight: 700; }
 .model-tag.in-alarm span { color: var(--warning); }
 .legend .level-key { background: none; height: 0; border-top: 2px dashed var(--plot-sp); }
@@ -454,7 +458,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .pfd-level rect { fill: var(--level-fill); }
 .pfd-level line { stroke: var(--plot-sp); stroke-width: 1.4px; stroke-dasharray: 4 3; }
 .pfd-flow-reading {
-  display: none; fill: var(--subtext); font: 650 10px var(--mono); text-anchor: start;
+  display: none; fill: var(--subtext); font: 650 10px var(--mono); text-anchor: end;
   paint-order: stroke; stroke: var(--stage); stroke-width: 4px; stroke-linejoin: round;
 }
 .pfd-svg.show-flow .pfd-flow-reading { display: block; }

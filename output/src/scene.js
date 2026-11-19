@@ -3,9 +3,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { AREAS, CORE_PRESSURES, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { buildInternals } from './internals.js';
-import { EQUIPMENT_LAYOUT, FEED_OFFSETS, LABEL_POINTS, OVERVIEW, PORTS_3D, ROUTES_3D, SAMPLE_ROUTES_3D,
+import { EQUIPMENT_LAYOUT, FEED_OFFSETS, FLOW_POINTS, LABEL_POINTS, OVERVIEW, PORTS_3D, ROUTES_3D, SAMPLE_ROUTES_3D,
   VESSELS, pipePath, scenePoint, valvePosition } from './layout.js';
-import { reading } from './ui.js';
+import { flowReading, reading } from './ui.js';
 import { readColor } from './palette.js';
 import * as geo from './geometry.js';
 
@@ -14,15 +14,22 @@ const initialOrbit = new T.Spherical().setFromVector3(initialOffset);
 const orbitLimit = T.MathUtils.degToRad(25);
 const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
-const visibleLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'compressor', 'stripper', 'product', 'purge']);
+const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'compressor', 'stripper', 'product', 'purge']);
 
-function setupSite(scene) {
+function setupSite(scene, groups) {
+  const footprint = new T.Box3();
+  for (const group of Object.values(groups)) footprint.expandByObject(group);
+  for (const route of Object.values(ROUTES_3D)) {
+    for (const point of route) footprint.expandByPoint(point);
+  }
+  const margin = 1.4;
+  const halfWidth = Math.max(OVERVIEW.halfWidth, Math.abs(footprint.min.x), Math.abs(footprint.max.x)) + margin;
+  const back = Math.min(scenePoint([0, 30], 0).z, footprint.min.z - margin);
+  const front = Math.max(scenePoint([0, 472], 0).z, footprint.max.z + margin);
+  const width = 2 * halfWidth, depth = front - back;
+  const center = (back + front) / 2;
   const floor = new T.Group();
   scene.add(floor);
-  const start = scenePoint([10, 30], 0);
-  const end = scenePoint([1130, 472], 0);
-  const width = end.x - start.x, depth = end.z - start.z;
-  const center = (start.z + end.z) / 2;
   const ground = geo.box(floor, [width, 0.27, depth], [0, -0.19, center], geo.base, true);
   ground.castShadow = false;
   const slab = new T.MeshStandardMaterial({ color: readColor('--model-floor'), roughness: 0.99 });
@@ -33,7 +40,7 @@ function setupSite(scene) {
   );
   lines.position.set(0, -0.18, center);
   scene.add(lines);
-  for (const x of [start.x + 0.7, end.x - 0.7]) for (const z of [start.z + 0.7, end.z - 0.7]) {
+  for (const x of [-halfWidth + 0.7, halfWidth - 0.7]) for (const z of [back + 0.7, front - 0.7]) {
     geo.box(floor, [0.48, 0.12, 0.48], [x, 0.045, z], geo.edge);
   }
   const rack = new T.Group();
@@ -45,6 +52,10 @@ function setupSite(scene) {
       geo.support(rack, x, z, y - 0.13);
     }
   }
+  const cameraUp = initialOffset.clone().normalize().cross(new T.Vector3(1, 0, 0));
+  const halfHeight = Math.max(OVERVIEW.halfHeight, ...[back, front].map((z) =>
+    Math.abs(new T.Vector3(0, -0.33, z).sub(home).dot(cameraUp))));
+  return { halfWidth: halfWidth + 0.55, halfHeight: halfHeight + 0.32 };
 }
 
 function buildEquipment(scene) {
@@ -129,8 +140,10 @@ function createLabels(host, onSelect) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'model-tag';
+    button.classList.toggle('compact', !primaryLabels.has(key));
     button.dataset.area = key;
     button.title = AREAS[key].en;
+    button.setAttribute('aria-label', `${AREAS[key].code} ${AREAS[key].name}`);
     button.innerHTML = `<small>${AREAS[key].code}</small><b>${AREAS[key].name}</b><span></span>`;
     button.addEventListener('click', () => onSelect(key));
     host.append(button);
@@ -147,7 +160,18 @@ function makePortLabels(host) {
     el.style.setProperty('--route-color', `var(${MEDIA[medium].colorToken})`);
     el.dataset.circuit = circuit;
     host.append(el);
-    return { el, point, circuit };
+    return { el, point, circuit, width: Math.max(22, text.length * 6.5 + 10), height: 20 };
+  });
+}
+
+function makeFlowLabels(host) {
+  return STREAMS.filter(({ id }) => FLOW_POINTS[id]).map((def) => {
+    const el = document.createElement('span');
+    el.className = 'model-flow-reading';
+    el.dataset.flowReading = def.id;
+    el.hidden = true;
+    host.append(el);
+    return { el, def, point: FLOW_POINTS[def.id], width: 70, height: 13 };
   });
 }
 
@@ -217,14 +241,19 @@ export function mountScene(container, host, select, pick = () => {}) {
   rim.position.set(8, 6, -12);
   scene.add(rim);
 
-  setupSite(scene);
   const { groups, models, sight } = buildEquipment(scene);
   const streams = buildStreams(scene, groups);
+  const overviewFrame = setupSite(scene, groups);
   const internal = buildInternals(models, sight);
   const labels = createLabels(host, select);
   const labelEntries = Object.entries(labels);
   const parts = makePartLabels(host, internal.parts, pick);
-  const sized = new Map([...labelEntries.map(([, label]) => [label.button, label]), ...parts.map((part) => [part.button, part])]);
+  const ports = makePortLabels(host);
+  const flowLabels = makeFlowLabels(host);
+  const sized = new Map([
+    ...labelEntries.map(([, label]) => [label.button, label]), ...parts.map((part) => [part.button, part]),
+    ...ports.map((port) => [port.el, port]), ...flowLabels.map((label) => [label.el, label]),
+  ]);
   const labelSizes = new ResizeObserver((entries) => {
     for (const { target, borderBoxSize } of entries) {
       const { inlineSize, blockSize } = borderBoxSize[0];
@@ -233,7 +262,6 @@ export function mountScene(container, host, select, pick = () => {}) {
     }
   });
   for (const button of sized.keys()) labelSizes.observe(button);
-  const ports = makePortLabels(host);
   const selectionColor = readColor('--focus');
   const warningColor = readColor('--warning');
   const trackedColor = new T.Color(readColor('--tracked'));
@@ -270,7 +298,7 @@ export function mountScene(container, host, select, pick = () => {}) {
     width = Math.max(1, container.clientWidth);
     height = Math.max(1, container.clientHeight);
     const aspect = width / height;
-    const half = Math.max(OVERVIEW.halfHeight, OVERVIEW.halfWidth / aspect);
+    const half = Math.max(overviewFrame.halfHeight, overviewFrame.halfWidth / aspect);
     camera.left = -half * aspect;
     camera.right = half * aspect;
     camera.top = half;
@@ -334,15 +362,32 @@ export function mountScene(container, host, select, pick = () => {}) {
     }
   }
 
+  function projectAnnotation(item, placed, alignEnd = false) {
+    projected.copy(item.point).project(camera);
+    const x = (projected.x + 1) * width / 2;
+    const y = (1 - projected.y) * height / 2;
+    const left = x - (alignEnd ? item.width : item.width / 2);
+    const right = left + item.width;
+    const top = y - item.height * (alignEnd ? 0.88 : 0.65);
+    const bottom = top + item.height;
+    item.el.hidden = left < 2 || right > width - 2 || top < 2 || bottom > height - 2 || projected.z > 1 ||
+      placed.some((other) => left < other.right + 1 && right > other.left - 1 && top < other.bottom + 1 && bottom > other.top - 1);
+    if (item.el.hidden) return;
+    placed.push({ left, right, top, bottom });
+    item.el.style.left = `${left}px`;
+    item.el.style.top = `${top}px`;
+  }
+
   function projectLabels() {
     const placed = [];
-    const priority = (area) => (focus === area || trackedArea === area || alertAreas.has(area) ? 2 : CORE_PRESSURES[area] ? 1 : 0);
+    const priority = (area) => (focus === area || trackedArea === area || alertAreas.has(area) ? 3 :
+      CORE_PRESSURES[area] ? 2 : primaryLabels.has(area) ? 1 : 0);
     const ordered = [...labelEntries].sort(([a], [b]) => priority(b) - priority(a));
     for (const [area, label] of ordered) {
       projected.copy(label.position).project(camera);
       const offscreen = Math.abs(projected.x) > 0.96 || Math.abs(projected.y) > 0.95 || projected.z > 1;
       const selected = area === focus || area === trackedArea;
-      if (offscreen || (!showLabels && !selected) || (!visibleLabels.has(area) && !selected && !alertAreas.has(area))) {
+      if (offscreen || (!showLabels && !selected)) {
         label.button.hidden = true;
         continue;
       }
@@ -372,14 +417,13 @@ export function mountScene(container, host, select, pick = () => {}) {
       }
     }
     projectParts(placed);
-    for (const { el, point, circuit } of ports) {
-      projected.copy(point).project(camera);
-      el.hidden = !showLabels || Math.abs(projected.x) > 0.95 || Math.abs(projected.y) > 0.94 ||
-        (activeCircuit && activeCircuit !== circuit) || (circuit && !activeCircuit);
-      if (!el.hidden) {
-        el.style.left = `${(projected.x+1)*width/2}px`;
-        el.style.top = `${(1-projected.y)*height/2}px`;
-      }
+    for (const port of ports) {
+      if (showLabels && (!activeCircuit || activeCircuit === port.circuit)) projectAnnotation(port, placed);
+      else port.el.hidden = true;
+    }
+    for (const label of flowLabels) {
+      if (showFlow && data && (!activeCircuit || activeCircuit === label.def.circuit)) projectAnnotation(label, placed, true);
+      else label.el.hidden = true;
     }
   }
 
@@ -424,6 +468,7 @@ export function mountScene(container, host, select, pick = () => {}) {
 
   function updateVisuals(status) {
     data = status;
+    for (const { el, def } of flowLabels) el.textContent = flowReading(status, def);
     alertAreas.clear();
     status.alarms.forEach((a) => alertAreas.add(a.area));
     for (const { tag, fill, bottom, height: max } of Object.values(sight)) {
@@ -500,6 +545,7 @@ export function mountScene(container, host, select, pick = () => {}) {
       trackedTag = tag;
       for (const [key, label] of Object.entries(labels)) label.button.classList.toggle('tracked', key === area);
       for (const line of streams) line.tracked = streamMatchesTag(line.def, tag);
+      for (const { el, def } of flowLabels) el.classList.toggle('tracked', streamMatchesTag(def, tag));
     },
     // Camera pose for returning to a previous investigation position.
     view() {

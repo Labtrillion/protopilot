@@ -1,6 +1,7 @@
 import * as T from 'three';
 import { steel, edge, lightSteel, hardware, box, rod, v3 } from './geometry.js';
 import { CORE_PRESSURES, INTERIOR_PARTS, codeFor } from './topology.js';
+import { INTERNAL_NOZZLES } from './layout.js';
 import { readColor } from './palette.js';
 
 const glass = new T.MeshPhysicalMaterial({
@@ -103,7 +104,8 @@ export function buildInternals(groups, equipment) {
     interiors[key] = group;
   }
   const rotor = agitator(interiors.reactor);
-  coil(interiors.reactor, 4, [1.47,3.42,0], [1.47,2.03,0], 1.07, water);
+  const [coilIn, coilOut] = INTERNAL_NOZZLES.reactor;
+  coil(interiors.reactor, 4, coilIn, coilOut, 1.07, water);
   const sep = interiors.separator;
   box(sep, [1.18,0.09,0.42], [-0.59,2.89,0], lightSteel);
   box(sep, [0.08,0.64,0.77], [-0.30,2.89,0], edge);
@@ -111,11 +113,12 @@ export function buildInternals(groups, equipment) {
   trayStack(interiors.stripper);
 
   const condenser = interiors.condenser;
+  const [waterIn, waterOut] = INTERNAL_NOZZLES.condenser;
   for (const [y,z] of [[3.29,-0.21],[3.29,0],[3.29,0.21],[3.57,-0.21],[3.57,0],[3.57,0.21]]) {
-    pipe(condenser, [[0.88,3.24,-0.55],[0.84,y,z],[-0.78,y,z],[-0.95,3.22,-0.56]], water, 0.036, 26);
+    pipe(condenser, [waterIn, [-1.1,y,z], [1.17,y,z], waterOut], water, 0.036, 26);
   }
-  coil(interiors.reboiler, 5, [0.38,1.24,0], [0.27,0.83,0.27], 0.26, steam, 0.8);
-  rod(interiors.reboiler, [0,0.44,0],[0,3.09,0], 0.073, edge);
+  coil(interiors.reboiler, 5, ...INTERNAL_NOZZLES.reboilerSteam, 0.26, steam, 0.8);
+  rod(interiors.reboiler, ...INTERNAL_NOZZLES.reboilerProcess, 0.073, edge);
   const levels = {
     reactor: { tag: 8, meter: inventory(interiors.reactor, 1.32, 0.95, 2.56) },
     separator: { tag: 12, meter: inventory(sep, 1.075, 0.89, 1.96) },
@@ -131,7 +134,7 @@ export function buildInternals(groups, equipment) {
   const anchors = {
     'XMEAS(8)': levels.reactor.meter.anchor,
     'XMV(12)': fixedAnchor(interiors.reactor, [0, 4.02, 0]),
-    'XMEAS(21)': fixedAnchor(interiors.reactor, [1.07, 2.32, 0.35]),
+    'XMEAS(21)': fixedAnchor(interiors.reactor, [1.07, (coilIn[1] + coilOut[1]) / 2, 0.35]),
     'XMEAS(12)': levels.separator.meter.anchor,
     'XMEAS(15)': levels.stripper.meter.anchor,
   };

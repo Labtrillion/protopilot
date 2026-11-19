@@ -10,6 +10,10 @@ export function reading(value, unit) {
   if (!Number.isFinite(value)) return '—';
   return (unit === 'mol fraction' || (Math.abs(value) < 1 && value !== 0) ? fine : number).format(value);
 }
+export function flowReading(status, stream) {
+  const tag = codeFor(stream.tag);
+  return `${reading(status.values[tag])} ${stream.media === 'gas' ? 'kscm/h' : 'm³/h'}${tag in status.offsets ? ' · 시험' : ''}`;
+}
 export function elapsed(hours) {
   const seconds = Math.round((hours ?? 0) * 3600);
   return [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60].map((value) => String(value).padStart(2, '0')).join(':');
