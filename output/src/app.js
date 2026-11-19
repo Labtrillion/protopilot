@@ -1,4 +1,4 @@
-import { AREAS, codeFor } from './topology.js';
+import { AREAS, FEED_TAGS, codeFor } from './topology.js';
 import { mountPlantView } from './plant-view.js';
 import { mountResponse } from './response.js';
 import { mountSetpointSlider, setupControls } from './controls.js';
@@ -11,6 +11,7 @@ import {
 const REPRESENTATIVE_LOOP = { reactor: 'reactor_pressure', separator: 'separator_level', stripper: 'stripper_level' };
 // Channel tab first screen: gas pressure, level, temperature, inlet/product/purge flow of the main units.
 const PRIMARY_TAGS = [7, 13, 16, 8, 12, 15, 9, 11, 18, 6, 17, 10].map(codeFor);
+const FEED_FLOW_TAGS = new Set(Object.values(FEED_TAGS));
 const TREND_LENGTH = 60;
 
 const channels = new Map();
@@ -143,8 +144,9 @@ function focus(area, tag = '', resetCamera = false, next) {
   explicitTag = tag || (next ? tagForSelection(next) : area === 'plant' ? explicitTag : '');
   focusedArea = area;
   select.value = area;
-  // Re-tracking keeps the camera in place while explicit navigation can reframe it.
-  if (moved || resetCamera || tag.startsWith('XMV(')) plantView?.focus(area, resetCamera, tag);
+  if (moved || resetCamera || tag.startsWith('XMV(') || FEED_FLOW_TAGS.has(tag)) {
+    plantView?.focus(area, resetCamera, tag);
+  }
   if (next?.kind !== 'setpoint' && telemetryView === 'response') {
     if (area === 'plant') closeResponse();
     else syncResponse(tag ? unitLoop(tag, area) : loopFor(area));

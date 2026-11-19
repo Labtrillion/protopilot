@@ -362,16 +362,12 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     focusedValve = streams.find((line) => line.valve?.userData.valve === tag && line.def.area === area)?.valve;
     if (showInternals) applyInternals();
     moveHighlight();
-    // Keep the visible route in frame when the user picks a feed line.
-    if (area === 'feeds' && trackedFeed?.feedTag === tag && !resetOrientation) {
-      frame = null;
-      return;
-    }
     desired.copy(group ? group.position : home);
     if (group) desired.y = Math.min(4, group.userData.top * 0.47);
     const zoom = group ? Math.min(3.3, Math.max(2.04, 19.2 / (group.userData.top + 1.9))) : 1;
-    if (focusedValve) {
-      focusedValve.getWorldPosition(desired);
+    const target = focusedValve ?? (area === 'feeds' ? feedSkids.get(tag) : undefined);
+    if (target) {
+      target.getWorldPosition(desired);
       desired.y = Math.max(1.3, desired.y);
     }
     frame = { zoom, offset: resetOrientation ? initialOffset : null, panX: 0 };
