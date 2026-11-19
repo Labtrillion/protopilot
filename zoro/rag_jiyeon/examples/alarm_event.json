@@ -1,0 +1,18 @@
+{
+  "event_id": "DEMO-EVT-0001",
+  "timestamp": "2026-11-19T14:30:00+09:00",
+  "source": "synthetic_demo_fixture",
+  "alarms": [
+    {
+      "alarm_id": "REACTOR_PRESSURE_HIGH",
+      "tag": "XMEAS(7)",
+      "severity": "warning",
+      "current_value": 2810,
+      "unit": "kPa(g)"
+    }
+  ],
+  "process_state": {"XMEAS(7)": 2810, "XMEAS(10)": 42.5},
+  "recent_changes": [],
+  "simulation_context": {"disturbance_id": null}
+}
+

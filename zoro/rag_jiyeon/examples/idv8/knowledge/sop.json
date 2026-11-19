@@ -1,0 +1,285 @@
+{
+  "schema_version": "tep-appendix-d-test-protocol-1",
+  "document_id": "demo-sop-idv8-pressure-cost",
+  "test_id": null,
+  "scenario_id": "IDV8-PRESSURE-COST",
+  "title_ko": "DEMO SOP — IDV(8) 원료 조성 변동·Purge 손실과 압력 Setpoint 검토",
+  "summary": {
+    "text_ko": "가짜 IDV(8) 알람으로 공정 근거와 압력 설정값 시뮬레이션 비교 절차를 검색하는 데모. 최적값과 조치 효과는 아직 검증하지 않았다.",
+    "text_en": "IDV_8 random A B C feed composition variation, purge loss, operating cost and reactor pressure setpoint simulation review.",
+    "operator_action_status": "NOT_EXECUTED"
+  },
+  "scope": {
+    "language": "ko",
+    "source_model": "APMonitor teaching TEP; not the Manca alarm threshold catalog",
+    "source_event_kind": "synthetic_demo_fixture",
+    "protocol_kind": "author_proposed_demo_review_not_validated_operator_SOP",
+    "physical_action_executed": false,
+    "format_compatibility": "User template top-level organization reused; this is not an Appendix D test reconstruction."
+  },
+  "applicability": {
+    "disturbance_ids": [
+      "IDV_8"
+    ],
+    "variable_ids": [
+      "XMEAS_7",
+      "XMEAS_10",
+      "XMEAS_23",
+      "XMEAS_24",
+      "XMEAS_25"
+    ],
+    "equipment": [
+      "feed",
+      "purge",
+      "reactor"
+    ],
+    "simulator": "apmonitor_teaching_tep"
+  },
+  "schedule": {
+    "time_origin": "synthetic simulator elapsed hours, not measured plant history",
+    "phases": [
+      {
+        "phase_order": 1,
+        "description_raw": "Normal baseline",
+        "start_h": 0,
+        "end_h": 1
+      },
+      {
+        "phase_order": 2,
+        "description_raw": "Injected IDV(8), random A/B/C feed composition variation",
+        "start_h": 1,
+        "end_h": null
+      }
+    ],
+    "current_event_time_h": 2
+  },
+  "alarms": [
+    {
+      "alarm_id": "FEED_A_COMPOSITION_HIGH",
+      "canonical_id": "XMEAS(23)",
+      "definition": {
+        "unit": "mol%",
+        "threshold": 35.0,
+        "threshold_status": "synthetic_demo_only",
+        "deadband_clear_value": 34.5
+      },
+      "response": {
+        "start_step": "verify_event",
+        "operator_action_executed": false
+      }
+    },
+    {
+      "alarm_id": "PURGE_RATE_HIGH",
+      "canonical_id": "XMEAS(10)",
+      "definition": {
+        "unit": "kscmh",
+        "threshold": 48.0,
+        "threshold_status": "synthetic_demo_only",
+        "deadband_clear_value": 46.0
+      },
+      "response": {
+        "start_step": "verify_event",
+        "operator_action_executed": false
+      }
+    },
+    {
+      "alarm_id": "OPERATING_COST_HIGH",
+      "canonical_id": null,
+      "definition": {
+        "unit": "$/h",
+        "threshold": 175.0,
+        "threshold_status": "synthetic_demo_only",
+        "deadband_clear_value": 172.0
+      },
+      "response": {
+        "start_step": "verify_event",
+        "operator_action_executed": false
+      }
+    }
+  ],
+  "protocol": {
+    "authorship": "author-proposed synthetic demo adapted to user-provided format",
+    "scope_ko": "문헌 근거 검색과 시뮬레이션 검토 요청만 수행",
+    "start_step": "verify_event",
+    "steps": [
+      {
+        "id": "verify_event",
+        "actor": "운영자 / Zoro AI",
+        "instruction_ko": "합성 알림의 시각·단위·분석기 지연과 공정 상태를 확인한다. IDV(8)은 데모 주입 상태로 알려진 값이며 조성 알람만으로 원인을 확정하지 않는다.",
+        "retrieval_text_en": "IDV_8 feed composition variation XMEAS(23) XMEAS(24) XMEAS(25) alarm verification",
+        "source_refs": [
+          "demo_event",
+          "idv_catalog"
+        ],
+        "transitions": [
+          {
+            "when_ko": "입력과 단위 확인",
+            "to": "review_cost_and_constraints"
+          }
+        ]
+      },
+      {
+        "id": "review_cost_and_constraints",
+        "actor": "Zoro AI / 운영자",
+        "instruction_ko": "Purge 유량 XMEAS(10), 비용, 반응기 압력 XMEAS(7)의 추이를 함께 검토한다. 현재 압력 상승 알람은 없으며 비용 경보가 즉시 압력을 높이라는 명령은 아니다.",
+        "retrieval_text_en": "IDV_8 purge loss operating cost reactor pressure shutdown 3000 kPa g; demo comparison requires at least 100 kPa margin.",
+        "source_refs": [
+          "demo_event",
+          "app_case5",
+          "app_pressure_exercise"
+        ],
+        "transitions": [
+          {
+            "when_ko": "실행 가능한 시뮬레이션과 전체 제약 확보",
+            "to": "simulate_pressure_candidates"
+          },
+          {
+            "when_ko": "정보 부족",
+            "to": "unresolved"
+          }
+        ]
+      },
+      {
+        "id": "simulate_pressure_candidates",
+        "actor": "Zoro AI 시뮬레이션 검토 모듈",
+        "instruction_ko": "압력 Setpoint 2705·2750·2800·2850 kPa(g)를 같은 IDV(8) 궤적과 초기 상태에서 24시간 비교하도록 요청한다. 최고 압력 2900 이하(셧다운 3000에서 여유 100), 나머지 공정 제약과 생산·품질 기준을 만족하는 후보 중 평균 비용이 최소인 값을 검토한다. 결과가 없으면 추천값은 null이다.",
+        "retrieval_text_en": "IDV_8 reactor pressure setpoint simulation comparison purge loss operating cost constraints",
+        "action": {
+          "kind": "simulation_review",
+          "plan": {
+            "parameter": "REACTOR_PRESSURE_SETPOINT",
+            "unit": "kPa(g)",
+            "candidate_values": [
+              2705,
+              2750,
+              2800,
+              2850
+            ],
+            "baseline_value": 2705,
+            "horizon_h": 24,
+            "comparison": "same initial state, controller, IDV8 trajectory and common noise realization",
+            "metrics": [
+              "mean_operating_cost_usd_per_h",
+              "peak_reactor_pressure_kpag",
+              "mean_purge_rate_kscmh",
+              "production_and_product_quality",
+              "all_other_shutdown_constraints"
+            ],
+            "constraints": {
+              "pressure_shutdown_kpag": 3000,
+              "minimum_pressure_margin_kpa": 100,
+              "maximum_peak_pressure_kpag": 2900,
+              "reject_shutdown": true,
+              "other_process_limits_must_pass": true,
+              "production_and_quality_tolerances": null
+            },
+            "selection_rule": "After simulations, reject constraint violations and select the lowest mean cost among feasible candidates; if none feasible or required data missing, return no recommendation.",
+            "results": null,
+            "objective": {
+              "metric": "mean_operating_cost_usd_per_h",
+              "direction": "minimize",
+              "unit": "$/h"
+            },
+            "simulator": "apmonitor_teaching_tep"
+          },
+          "trigger_variable_ids": [
+            "XMEAS_7",
+            "XMEAS_10",
+            "XMEAS_23",
+            "XMEAS_24",
+            "XMEAS_25"
+          ]
+        },
+        "source_refs": [
+          "app_case5",
+          "app_pressure_exercise",
+          "demo_design"
+        ],
+        "transitions": [
+          {
+            "when_ko": "실제 시뮬레이션 결과 확보",
+            "to": "operator_review"
+          },
+          {
+            "when_ko": "결과 없음 또는 조건 불충족",
+            "to": "unresolved"
+          }
+        ]
+      },
+      {
+        "id": "operator_review",
+        "actor": "운영자",
+        "instruction_ko": "최적 후보와 기준 운전 대비 비용·압력 여유·생산·품질 변화 및 검증 한계를 확인한다. 추천은 운영자 검토 대상이며 이 데모는 설비나 시뮬레이터에 설정값을 적용하지 않는다.",
+        "source_refs": [
+          "demo_design"
+        ],
+        "transitions": [
+          {
+            "when_ko": "검토 완료, 후속 실행은 별도",
+            "to": "review_completed"
+          }
+        ]
+      }
+    ],
+    "terminals": [
+      {
+        "id": "review_completed",
+        "meaning_ko": "검토 완료, 실제 조작 및 인과 효과 검증 아님"
+      },
+      {
+        "id": "unresolved",
+        "meaning_ko": "필수 정보나 실제 시뮬레이션 결과가 없어 추천 보류"
+      }
+    ]
+  },
+  "event_data": {
+    "source_kind": "synthetic_demo_fixture",
+    "input_file": "examples/idv8/alarm_event.json",
+    "real_alarm_log": false
+  },
+  "provenance": {
+    "format_reference": {
+      "kind": "user_supplied_format_only",
+      "sha256": "64fec47f6267819769945b9576931b60152577671f9fab084f02cf4d8d22728e",
+      "copied_real_event_records": false
+    },
+    "source_registry": {
+      "idv_catalog": {
+        "file": "zoro_rag_knowledge/05_Disturbance_knowledge/idv_catalog.json",
+        "record_id": 8
+      },
+      "app_case5": {
+        "file": "zoro_rag_knowledge/02_Operational_Guidance/APMonitor_Instructions.html",
+        "locator": "Case 5 paragraph: 24 h, 176.1 / 146.3 $/h, pressure up to 2827 kPa g",
+        "status": "literature_reference_only_not_this_demo_simulation"
+      },
+      "app_pressure_exercise": {
+        "file": "zoro_rag_knowledge/02_Operational_Guidance/APMonitor_Instructions.html",
+        "locator": "exercise: setpoints 2705, 2750, 2800, 2850; 100 kPa margin"
+      },
+      "demo_event": {
+        "file": "examples/idv8/alarm_event.json",
+        "status": "invented sensor values and notification thresholds"
+      },
+      "demo_design": {
+        "status": "author-proposed plan; not validated control logic"
+      }
+    }
+  },
+  "resolution_check": {
+    "status": "NOT_RUN",
+    "simulation_results": null,
+    "recommended_pressure_setpoint_kpag": null,
+    "physical_action_executed": false,
+    "meaning_ko": "실행한 것은 RAG 검색이다. 압력 최적화 시뮬레이션·안전성 검증·비용 절감 효과 검증은 수행하지 않았다."
+  },
+  "known_limits": [
+    "알람 임계값과 센서값은 데모를 위해 만든 값이다.",
+    "첨부의 실제 시험 번호·이벤트·태그 임계값은 이 시나리오로 복사하지 않았다.",
+    "문헌의 Case 5 수치는 이 데모에서 실행한 결과가 아니다.",
+    "100 kPa 압력 여유만으로 모든 안전 제약 충족을 판정하지 않는다.",
+    "생산·품질 허용오차와 다른 제약이 없으면 최적값을 추천하지 않는다.",
+    "snapshot_id와 sample_id는 합성 참조다. 스냅샷 저장·복원은 수행하지 않는다. measured_at은 관측값의 시각이며 분석기의 실제 채취·보고 지연은 별도 시뮬레이터 메타데이터로 확인해야 한다.",
+    "반응기 압력 설정값은 APMonitor 교육용 구현의 조작 변수다. TEP Studio(Braatz) 제어 구조에는 반응기 압력 루프가 없어 이 계획을 실행할 수 없다."
+  ]
+}
