@@ -62,6 +62,7 @@ export function mountPlantView({ selectArea, selectValve, onCircuit }) {
   toggle(tags, 'tags', (enabled) => scene?.tags(enabled));
   toggle(internals, 'internals', (enabled) => {
     scene?.internals(enabled);
+    if (enabled && area !== 'plant') selectArea('plant', '', true);
     legend(circuit, enabled);
   });
 
