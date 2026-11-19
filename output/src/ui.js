@@ -84,7 +84,7 @@ function routeDetails(circuit) {
     <h3>${route.title} 경로</h3><ul>${paths}</ul><p>${route.info}</p></section>`;
 }
 
-const trendColor = readColor('--plot-pv');
+const trendColor = readColor('--plot-sparkline');
 
 function drawTrend(canvas, values) {
   const ctx = canvas.getContext('2d');

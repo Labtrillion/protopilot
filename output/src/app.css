@@ -14,13 +14,13 @@
   --text: #edf1f6;
   --subtext: #c6ceda;
   --muted: #a0aaba;
+  --disabled-text: #687383;
   --text-inverse: #0d1726;
   --accent: #8ebaff;
   --accent-hover: #adcfff;
   --selected: #273141;
   --selected-line: #72839b;
   --scrim: #0b0e14c9;
-  --shadow: #0006;
 
   /* Operator states */
   --ok: #89cfaa;
@@ -41,6 +41,10 @@
   --process-water: #7fa8e1;
   --process-steam: #bc9db8;
   --process-mixed: #abb67f;
+  --pipe-muted: #576271;
+  --flow-marker: #deebf6;
+  --level-fill: #665c4d;
+  --plot-sparkline: #80b6ab;
   --plot-pv: #a6e2d4;
   --plot-sp: #a1b9ee;
   --plot-grid: var(--line);
@@ -64,7 +68,6 @@ button, .exports a {
   justify-content: center; white-space: nowrap; cursor: pointer; font-weight: 600;
 }
 button:hover:not(:disabled), .exports a:hover { background: var(--hover); border-color: var(--control-line); }
-button:disabled { cursor: default; opacity: 0.45; }
 button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
@@ -194,7 +197,7 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .kpis button > span { display: block; font-size: 0.79rem; color: var(--subtext); margin: 0 2.8rem 0.38rem 0; white-space: normal; position: relative; z-index: 1; }
 .kpis button b { font: 650 1.16rem var(--mono); position: relative; z-index: 1; }
 .kpis button small { font: 0.69rem var(--mono); color: var(--muted); margin-left: 0.26rem; position: relative; z-index: 1; }
-.kpis button canvas { position: absolute; height: 1.25rem; width: 2.7rem; top: 0.45rem; right: 0.48rem; opacity: 0.7; }
+.kpis button canvas { position: absolute; height: 1.25rem; width: 2.7rem; top: 0.45rem; right: 0.48rem; }
 .kpis button.alarming { background: var(--warning-bg); }
 .kpis button.alarming b { color: var(--warning); }
 .telemetry-toolbar { display: flex; padding: 0.46rem 0.65rem 0; flex: none; }
@@ -214,7 +217,6 @@ th { color: var(--subtext); background: var(--raised); font-size: 0.76rem; font-
 th:nth-child(2) { width: 31%; }
 th:nth-child(3) { width: 21%; }
 td { border-bottom: 1px solid var(--line-soft); color: var(--subtext); }
-tr:nth-child(even) td { background: color-mix(in srgb, var(--panel), var(--text) 2%); }
 tr[data-tag] { cursor: pointer; }
 tr[data-tag]:not(.selected-row, .alarm-row):hover td { background: var(--hover); }
 tr.selected-row td { background: var(--tracked-bg); }
@@ -272,7 +274,7 @@ dialog::backdrop { background: var(--scrim); }
 .value-fields { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.61rem; }
 .dialog-actions { justify-content: flex-end; border-bottom: 0; border-top: 1px solid var(--line); }
 #adjust-error { color: var(--danger); }
-.notice { position: fixed; z-index: 5; right: 1.2rem; bottom: 1.2rem; color: var(--ok); background: var(--ok-bg); border: 1px solid var(--ok); padding: 0.71rem 0.93rem; border-radius: 5px; box-shadow: 0 8px 32px var(--shadow); }
+.notice { position: fixed; z-index: 5; right: 1.2rem; bottom: 1.2rem; color: var(--ok); background: var(--ok-bg); border: 1px solid var(--ok); padding: 0.71rem 0.93rem; border-radius: 5px; }
 .notice[data-level=warning] { color: var(--warning); background: var(--warning-bg); border-color: var(--warning-line); }
 .notice[data-level=danger] { color: var(--danger); background: var(--danger-bg); border-color: var(--danger-line); }
 
@@ -316,8 +318,8 @@ dialog::backdrop { background: var(--scrim); }
 .circuit-controls [data-circuit=steam] { --route-color: var(--process-steam); }
 .circuit-controls [data-circuit]:not([data-circuit=""])[aria-pressed=true] {
   color: var(--route-color);
-  border-color: color-mix(in srgb, var(--route-color), var(--stage) 40%);
-  background: color-mix(in srgb, var(--route-color) 15%, var(--inset));
+  border-color: var(--route-color);
+  background: var(--inset);
 }
 .model-port { color: var(--route-color); position: absolute; padding: 0.20rem 0.35rem; transform: translate(-50%, -65%); border-radius: 3px; border: 1px solid var(--route-color); background: var(--inset); font: 650 0.75rem var(--mono); white-space: nowrap; }
 .model-tag.has-pressure span { color: var(--text); font-size: 0.76rem; font-weight: 700; }
@@ -354,15 +356,12 @@ dialog::backdrop { background: var(--scrim); }
 .pfd-stream path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .pipe-hit { stroke: transparent; stroke-width: 16px; pointer-events: stroke; }
 .pipe-line { stroke: var(--display-pipe); stroke-width: 2; }
-.pipe-ticks { stroke: color-mix(in srgb, var(--display-pipe), var(--text) 45%); stroke-width: 2.2; stroke-dasharray: 4 26; opacity: 0; }
-.pfd-svg.show-flow .pfd-stream:not(.no-flow) .pipe-ticks { opacity: 0.65; }
+.pipe-ticks { stroke: var(--flow-marker); stroke-width: 2.2; stroke-dasharray: 4 26; visibility: hidden; pointer-events: none; }
+.pfd-svg.show-flow .pfd-stream:not(.no-flow) .pipe-ticks { visibility: visible; }
+.pfd-svg.show-flow .pfd-stream.out-of-circuit:not(:hover) .pipe-ticks { visibility: hidden; }
 .pfd-svg.show-flow.running .pipe-ticks { animation: pipe-motion var(--speed, 2s) linear infinite; }
 @keyframes pipe-motion { to { stroke-dashoffset: -60; } }
-.pfd-svg[data-circuit]:not([data-circuit=""]) .pfd-stream { opacity: 0.20; }
-.pfd-svg[data-circuit="recycle"] .pfd-stream[data-circuit="recycle"],
-.pfd-svg[data-circuit="cooling"] .pfd-stream[data-circuit="cooling"],
-.pfd-svg[data-circuit="steam"] .pfd-stream[data-circuit="steam"] { opacity: 1; }
-.pfd-svg[data-circuit]:not([data-circuit=""]) .pfd-stream:hover { opacity: 0.77; }
+.pfd-stream.out-of-circuit:not(:hover) .pipe-line { stroke: var(--pipe-muted); marker-end: url(#arrow-muted); }
 .pfd-stream:not([data-circuit=""]) { cursor: pointer; }
 .pfd-junctions circle { fill: var(--equipment-line); stroke: var(--line); stroke-width: 1; }
 .pfd-samples path { fill: none; stroke: var(--process-liquid); stroke-width: 1.4; stroke-dasharray: 3 3; }
@@ -420,7 +419,7 @@ dialog::backdrop { background: var(--scrim); }
   .telemetry-panel > .panel-head { padding-inline: 0.53rem; }
   .response-values b { font-size: 0.87rem; }
 }
-.pfd-level rect { fill: var(--process-liquid); opacity: 0.42; }
+.pfd-level rect { fill: var(--level-fill); }
 .pfd-level line { stroke: var(--plot-sp); stroke-width: 1.4px; stroke-dasharray: 4 3; }
 .pfd-flow-reading {
   display: none; fill: var(--subtext); font: 650 10px var(--mono); text-anchor: start;
@@ -554,3 +553,4 @@ tr.selected-row:not(.alarm-row, .tested-row) .channel-state { color: var(--track
 .response-values .response-test b { color: var(--warning); }
 .response-values .response-test span:last-child { margin-top: 0.12rem; color: var(--warning); font: 0.72rem var(--mono); }
 .stage-meta { flex-wrap: wrap; }
+button:disabled, button[aria-pressed]:disabled { cursor: default; color: var(--disabled-text); background: var(--inset); border-color: var(--line); }

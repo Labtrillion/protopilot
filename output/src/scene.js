@@ -42,12 +42,6 @@ function setupSite(scene) {
   ground.castShadow = false;
   const slab = new T.MeshStandardMaterial({ color: readColor('--model-floor'), roughness: 0.99 });
   geo.box(floor, [38.9, 0.035, 20.9], [0, -0.045, -0.65], slab, true).castShadow = false;
-  const grid = new T.GridHelper(40, 40, readColor('--control-line'), readColor('--line'));
-  grid.position.set(0, 0.002, -0.65);
-  grid.scale.z = 0.52;
-  grid.material.transparent = true;
-  grid.material.opacity = 0.27;
-  scene.add(grid);
   const lines = new T.LineSegments(
     new T.EdgesGeometry(new T.BoxGeometry(40, 0.29, 22)),
     new T.LineBasicMaterial({ color: readColor('--line') }),
@@ -108,19 +102,17 @@ function buildEquipment(scene) {
 
 function buildStreams(scene, groups) {
   const markerGeometry = new T.ConeGeometry(0.103, 0.31, 9);
+  const markerMaterial = new T.MeshBasicMaterial({ color: readColor('--flow-marker'), toneMapped: false });
   return STREAMS.map((def) => {
     const path = pathFor(def.points), length = path.getLength();
     const color = new T.Color(readColor(MEDIA[def.media].colorToken));
-    const pipeColor = color.clone().lerp(geo.edge.color, 0.32);
-    const material = new T.MeshStandardMaterial({
-      color: pipeColor, emissive: color, emissiveIntensity: 0.08, roughness: 0.50, metalness: 0.32,
-    });
+    // Diagram and 3D pipes use the same media colors under any scene lighting.
+    const material = new T.MeshBasicMaterial({ color, toneMapped: false });
     const radius = ['06','07','07B','08','08I','08R','08M','10','10S','11','11S'].includes(def.id) ? 0.114 : 0.079;
     const tube = new T.Mesh(new T.TubeGeometry(path, Math.ceil(Math.max(18, length * 10)), radius, 12), material);
     scene.add(tube);
-    const geom = new T.MeshBasicMaterial({ color, toneMapped: false });
     const count = Math.max(1, Math.ceil(length / (def.tag ? 2.15 : 4.0)));
-    const markers = new T.InstancedMesh(markerGeometry, geom, count);
+    const markers = new T.InstancedMesh(markerGeometry, markerMaterial, count);
     markers.frustumCulled = false;
     scene.add(markers);
     const flanges = [];
@@ -139,7 +131,7 @@ function buildStreams(scene, groups) {
       const group = groups[def.area];
       valve = geo.controlValve(group, point.sub(group.position), tangent, number);
     }
-    return { def, path, length, markers, material, pipeColor, color, valve, phase: 0, flanges };
+    return { def, path, length, markers, material, color, valve, phase: 0, flanges };
   });
 }
 
@@ -196,18 +188,18 @@ function makePartLabels(host, parts, onPick) {
 
 export function mountScene(container, host, select, pick = () => {}) {
   const scene = new T.Scene();
-  const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+  scene.background = new T.Color(readColor('--stage'));
+  const renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(1.65, window.devicePixelRatio));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = T.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.needsUpdate = true;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.13;
   const environment = new RoomEnvironment();
   const pmrem = new T.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(environment, 0.05).texture;
-  scene.environmentIntensity = 0.64;
+  scene.environmentIntensity = 0.38;
   environment.dispose();
   pmrem.dispose();
   renderer.domElement.setAttribute('aria-label', 'Tennessee Eastman 공정 3D 모델');
@@ -264,8 +256,9 @@ export function mountScene(container, host, select, pick = () => {}) {
   const selectionColor = readColor('--accent');
   const warningColor = readColor('--warning');
   const trackedColor = new T.Color(readColor('--tracked'));
+  const mutedPipeColor = new T.Color(readColor('--pipe-muted'));
   const highlightMat = new T.MeshBasicMaterial({
-    color: selectionColor, toneMapped: false, transparent: true, opacity: 0.85, depthWrite: false,
+    color: selectionColor, toneMapped: false, depthWrite: false,
   });
   const highlight = new T.Mesh(new T.RingGeometry(1, 1.07, 56), highlightMat);
   highlight.rotation.x = -Math.PI / 2;
@@ -486,16 +479,12 @@ export function mountScene(container, host, select, pick = () => {}) {
     }
     internal.animate(data, dt, showInternals && data?.running && !motionReduced);
     for (const line of streams) {
-      const { def, path, length, markers, material, pipeColor, color, valve, flanges } = line;
+      const { def, path, length, markers, material, color, valve, flanges } = line;
       const tag = codeFor(def.tag);
       const measured = data?.native_values[tag] ?? data?.values[tag];
       const ratio = tag && Number.isFinite(measured) ? Math.max(0, measured / def.nominal) : 0.58;
-      const selected = activeCircuit && activeCircuit === def.circuit;
-      const dimmed = Boolean(activeCircuit && !selected);
-      material.color.copy(line.tracked && !dimmed ? trackedColor : selected ? color : pipeColor);
-      material.color.multiplyScalar(dimmed ? 0.28 : 1);
-      material.emissive.copy(line.tracked && !dimmed ? trackedColor : color);
-      material.emissiveIntensity = dimmed ? 0 : (line.tracked || selected) ? 0.24 : 0.04 + Math.min(ratio, 2) * 0.06;
+      const dimmed = Boolean(activeCircuit) && activeCircuit !== def.circuit;
+      material.color.copy(dimmed ? mutedPipeColor : line.tracked ? trackedColor : color);
       for (const flange of flanges) flange.visible = !dimmed;
       if (valve) {
         const pos = data?.actuators?.[valve.userData.valve];
@@ -506,7 +495,6 @@ export function mountScene(container, host, select, pick = () => {}) {
       }
       markers.visible = showFlow && !dimmed && ratio > 0.012 && Boolean(data);
       if (!markers.visible) continue;
-      markers.material.color.copy(line.tracked ? trackedColor : color);
       if (data.running && !motionReduced) line.phase = (line.phase + dt * Math.min(5.3, 0.3 + 2.15 * ratio) / length) % 1;
       for (let i = 0; i < markers.count; i++) {
         const t = (i / markers.count + line.phase + 0.03) % 1;
@@ -519,7 +507,6 @@ export function mountScene(container, host, select, pick = () => {}) {
       markers.instanceMatrix.needsUpdate = true;
     }
     highlightMat.color.set(alertAreas.has(focus) ? warningColor : trackedArea === focus ? trackedColor : selectionColor);
-    highlightMat.opacity = alertAreas.has(focus) && !motionReduced ? 0.68 + 0.26 * Math.sin(now / 240) : 0.86;
     projectLabels();
     renderer.render(scene, camera);
   }

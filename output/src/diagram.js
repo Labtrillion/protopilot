@@ -80,7 +80,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
       <path class="pipe-sleeve" d="${d}"/><path class="pipe-line" d="${d}" marker-end="url(#arrow-${stream.media})"/>
       <path class="pipe-ticks" d="${d}"/>${hit}</g>`;
   }).join('');
-  const arrows = Object.entries({ ...MEDIA, tracked: { colorToken: '--tracked' } }).map(([id, { colorToken }]) =>
+  const arrows = Object.entries({ ...MEDIA, tracked: { colorToken: '--tracked' }, muted: { colorToken: '--pipe-muted' } }).map(([id, { colorToken }]) =>
     `<marker id="arrow-${id}" viewBox="0 0 9 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 9 4 0 8 2 4Z" fill="var(${colorToken})"/></marker>`).join('');
   const portsMarkup = ports.map(([x,y,name]) =>
     `<g class="pfd-port" transform="translate(${x} ${y})"><rect x="0" y="-10" width="${x === 1040 ? 78 : 47}" height="20" rx="3"/>
@@ -185,7 +185,11 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
         flowByStream.get(line.id)?.classList.toggle('tracked', tracked);
       }
     },
-    circuit(id) { svg.dataset.circuit = id || ''; },
+    circuit(id) {
+      for (const line of linesById.values()) {
+        line.classList.toggle('out-of-circuit', Boolean(id) && line.dataset.circuit !== id);
+      }
+    },
     flow(on) { svg.classList.toggle('show-flow', on); },
     pressure(on) { svg.classList.toggle('show-pressure', on); },
     update(status) {
