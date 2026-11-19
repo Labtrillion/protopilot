@@ -22,13 +22,14 @@ npm start
 | 경로 | 내용 |
 | --- | --- |
 | `src/`, `server/` | 관제 화면과 시뮬레이터 API |
-| `zoro/` | 판단 에이전트, RAG, SOP와 인덱스 |
+| `zoro/` | Zoro-1 호출 및 모델 입출력 타입 |
+| `features/` | 설정값 판단과 RAG, 후속 대안 선별 및 평가 |
 | `vendor/trida-stack/` | Zoro-1 서빙용 Trida Stack 서브모듈 |
 | `scripts/` | Brev 실행과 Zoro-1 환경 설치 |
 | `.runtime/` | 서버 설정, Zoro-1 가상환경, 로그 및 PID |
 | `worktrees/pp-setpoint/` | Brev의 기존 setpoint 개발용 워크트리 |
 
-새로 체크아웃한 Brev 서버에서 Zoro-1을 준비하고 실행하려면 저장소 루트에서 다음을 실행합니다. 기존 가상환경이 있는 서버에서는 다시 설치할 필요가 없습니다.
+새로 체크아웃한 Brev 서버에서 Zoro-1을 준비하고 실행하려면 저장소 루트에서 다음을 실행합니다. 기존 가상환경을 쓰는 서버에서는 저장소 루트에서 `.venv/bin/python -m pip install -e .`로 기능 패키지를 연결합니다.
 
 ```sh
 git submodule update --init vendor/trida-stack
@@ -52,9 +53,13 @@ Brev에서는 `.runtime/zoro.env`에서 서버 환경을 설정합니다. 로컬
 2. `GET /api/live`의 `run`과 `response_events`에서 확인한 ID를 `POST /api/alarm-response`에 `run`과 `alarm_id`로 전달합니다. 응답에 데모 SOP, 알람 발생 시점의 계측, Zoro-1이 우선 검토한 대응이 포함됩니다. SOP는 [로컬 문서](server/demo-sops.json)에 들어 있습니다.
 3. 각 분기는 알람 발생 시점의 모델 상태, 난수 상태, 제어기 메모리, 수동 조작값과 활성 외란을 복제합니다. 외란을 고정한 채 최대 3시간 45분 동안 생산 목표를 유지하는 SOP 기준안과 25개 감량 조합을 비교합니다. **시뮬레이션 결과 보기**에서 적용 시점(즉시·15·30·45·60분)과 감량률(1·2.5·5·7.5·10%)별 카드로 결과를 확인할 수 있습니다. 각 카드에 점수, 트립, 알람 기준 복귀, 정상 운전 범위 이탈, 보호 개입, 최고 압력·온도, 분리기 액위, 생산량과 SOP 기준안 대비 차이가 표시됩니다.
 
-4. `POST /api/zoro-agent`에 같은 `run`과 `alarm_id`를 보내면 [Zoro 판단 에이전트](zoro/README.md)가 SOP 후보 중 시험할 분기를 하나씩 고르고, 결과를 받아 다음 분기나 최종 권고를 정합니다. 각 분기는 위와 같은 체크포인트 복제로 실행하고, 비용·목표 근접도로 SOP 단독(유지) 대비 비교합니다.
+4. `POST /api/zoro-agent`에 같은 `run`과 `alarm_id`를 보내면 [알람 대응 에이전트](features/feature2-sop-ranking/docs/AGENT_DEMO.md)가 SOP 후보 중 시험할 분기를 하나씩 고르고, 결과를 받아 다음 분기나 최종 권고를 정합니다. 각 분기는 위와 같은 체크포인트 복제로 실행하고, 비용·목표 근접도로 SOP 단독(유지) 대비 비교합니다.
 
 분석은 라이브 관제와 분리된 모의 실험입니다. 센서 시험은 오프셋 적용 전 모델 계측으로 비교합니다. 분석 이력은 실행 ID, 알람 체크포인트, SOP 개정 번호, 모델 판단과 분기 결과를 `data/agent-trace.jsonl`에 기록합니다.
+
+### 설정값 판단과 후속 대안 평가
+
+`POST /api/setpoint-decision`에 현재 `run`을 보내면 [Feature 1](features/feature1-setpoint-gate/README.md)이 최대 두 설정값을 바꾸는 기준안을 만들고, [Feature 2](features/feature2-sop-ranking/README.md)가 남은 후보 중 점수 상위 대안을 비교합니다. `feature2.recommended`에 최종 권고를 반환하며, 기존 `apply: true`는 Feature 1의 변경값을 적용합니다.
 
 ## Zoro-1과 개발 도구
 
@@ -62,7 +67,7 @@ Brev에서는 `.runtime/zoro.env`에서 서버 환경을 설정합니다. 로컬
 
 개발용 실험이 필요하면 `.venv/bin/python -m server.experiments`로 [독립 실험 도구](http://127.0.0.1:8050/experiments/)를 실행합니다. **고급 설정**에서 운전 모드·초기 상태·제어 튜닝을 바꿀 수 있고, **Compare**, **Metrics / Record**, **JSON 시나리오**로 독립 실행을 확인할 수 있습니다.
 
-기존 패키지의 `.venv/bin/tep-mcp`(stdio), `.venv/bin/tep`(실행·FDD 벤치마크·데이터셋·RL 내보내기), Gymnasium, 최적화 어댑터와 수치 검증을 같은 가상환경에서 사용할 수 있습니다. 파이썬 회귀 검사는 `.venv/bin/python -m unittest discover -s tests -v`로 실행합니다.
+기존 패키지의 `.venv/bin/tep-mcp`(stdio), `.venv/bin/tep`(실행·FDD 벤치마크·데이터셋·RL 내보내기), Gymnasium, 최적화 어댑터와 수치 검증을 같은 가상환경에서 사용할 수 있습니다. 파이썬 회귀 검사는 개발 의존성을 `.venv/bin/python -m pip install -e ".[dev]"`로 설치한 뒤 `.venv/bin/python -m pytest`로 실행합니다.
 
 ## Fig. 1 스트림 대조
 

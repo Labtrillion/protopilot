@@ -1,7 +1,9 @@
-# Feature 2 · SOP 대응 선택 및 근거 평가
+# Feature 2 · 미변경 설정값 대안 평가
 
-Zoro-1의 `choice`로 SOP 대응이나 다음 행동을 고르고, `score`로 선택한 후보의 근거 또는 적합성을 평가해 후속 판단에 반영한다.
+`POST /api/setpoint-decision`의 `feature2` 결과에는 선정 후보, 분기 지표, 평가 근거 ID와 최종 권고가 들어갑니다.
 
-- API 진입점은 `POST /api/zoro-agent`이다. [서버 라우팅](../../server/app.py), [알람 체크포인트 연결](../../server/zoro_bridge.py)
-- 후보 선택과 점수 검증은 [에이전트 판단 흐름](../../zoro/zoro_agent/agent.py)과 [Zoro-1 요청·응답 타입](../../zoro/zoro_agent/zoro.py)에서 확인한다.
-- 회귀 테스트는 [서버 연결 테스트](../../tests/test_zoro_bridge.py)와 [에이전트 테스트](../../zoro/tests/test_core.py)에 있다.
+1. [후보 선별](sop_ranking/score_selection.py)은 Feature 1 기준안이 변경한 설정값을 제외합니다. 나머지 대안의 Zoro `score`를 합계 1로 정규화하고, 누적 점수가 0.9 이상인 최소 후보 수를 선정합니다. `choice`로 선정 후보 중 첫 시험을 고릅니다.
+2. [분기 비교](sop_ranking/evaluate.py)는 같은 체크포인트에서 Feature 1 기준안과 대안 하나를 추가한 분기들을 평가합니다.
+3. [효율성 판정](sop_ranking/efficiency.py)은 RAG의 생산량·품질·복귀 적격 기준과 기존 벤치마크의 비용·추종 정확도 비교를 사용합니다. 비용과 정확도가 동률이면 생산 손실이 작은 쪽을 선택합니다. 더 나은 적격 대안이 없으면 기준안을 권고하고, 적격 결과가 없으면 운영자 검토로 반환합니다.
+
+기존 알람 대응 화면의 `POST /api/zoro-agent`와 퍼지 시나리오 예제는 [알람 에이전트 데모](docs/AGENT_DEMO.md)를 참고하세요.

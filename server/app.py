@@ -14,7 +14,8 @@ from .catalog import CHANNELS, METADATA
 from .plant import Plant, TICK_SECONDS
 from .recording import ArchivedRecording, encode
 from .rollout import Rollout
-from .setpoint_decision import analyze_setpoints, capture_point
+from setpoint_gate.setpoint_decision import analyze_setpoints, capture_point
+from sop_ranking.evaluate import evaluate_alternatives
 
 ROOT = Path(__file__).resolve().parents[1]
 ZORO_STUDY = BoundedSemaphore()
@@ -154,7 +155,8 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             self.respond({"error": "다른 설정값 판단을 계산 중입니다. 잠시 후 다시 시도하세요."}, 409)
             return
         try:
-            result = analyze_setpoints(point, self.plant.root / "agent-trace.jsonl")
+            result = analyze_setpoints(point, self.plant.root / "agent-trace.jsonl",
+                                       evaluate_alternatives=evaluate_alternatives)
         finally:
             SETPOINT_STUDY.release()
         if body.get("apply") and not result["decision"]["fallback"]:
@@ -200,8 +202,7 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             ROLLOUT_STUDY.release()
 
     def zoro_agent(self, body):
-        # Imported here so the console still starts when the agent package is absent.
-        from .zoro_bridge import run_zoro_agent
+        from sop_ranking.zoro_bridge import run_zoro_agent
 
         alarm_id = body.get("alarm_id")
         if type(alarm_id) is not int or not isinstance(body.get("run"), str):

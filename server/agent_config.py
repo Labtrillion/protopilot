@@ -1,12 +1,14 @@
 """Tunable numbers for the agent flows, read once from `agent-config.json` (or `PROTOPILOT_AGENT_CONFIG`).
 
 Modules copy what they need into their own constants at import, so a test can still patch
-`server.setpoint_decision.BRANCH_HOURS` and the like. Values are checked here so a bad file fails at start-up.
+`setpoint_gate.setpoint_decision.BRANCH_HOURS` and the like. Values are checked here so a bad file fails at start-up.
 """
 
 import json
 import os
 from pathlib import Path
+
+import setpoint_gate
 
 DEFAULT_PATH = Path(__file__).with_name("agent-config.json")
 
@@ -37,6 +39,7 @@ def load(path=None):
     raw = json.loads(path.read_text(encoding="utf-8"))
     history, decision = raw["history"], raw["setpoint_decision"]
     rule, rollout = raw["local_rule"], raw["rollout"]
+    rulebook_dir = Path(setpoint_gate.__file__).parent if path.resolve() == DEFAULT_PATH.resolve() else path.parent
     baselines = rollout["baselines"]
     if not isinstance(baselines, list) or not set(baselines) <= {"hold", "rule"} or not baselines:
         raise ValueError(f"agent config rollout.baselines: a non-empty subset of hold, rule; got {baselines!r}")
@@ -50,7 +53,7 @@ def load(path=None):
         "category_steps": {name: _steps(v, f"setpoint_decision.category_steps.{name}")
                            for name, v in decision["category_steps"].items()},
         "default_category_steps": _steps(decision["default_category_steps"], "setpoint_decision.default_category_steps"),
-        "rulebook_path": path.parent / decision["rulebook"],
+        "rulebook_path": rulebook_dir / decision["rulebook"],
         "alarm_rules_path": path.parent / decision["alarm_rules"],
         "cut_fraction": _fraction(rule["cut_fraction_of_initial"], "local_rule.cut_fraction_of_initial"),
         "floor_fraction": _fraction(rule["floor_fraction_of_initial"], "local_rule.floor_fraction_of_initial"),

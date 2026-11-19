@@ -27,8 +27,8 @@
 
 | 기능 | 필수 타입 | 사용 방법 |
 | --- | --- | --- |
-| **Feature 1** | `noul` + `choice` | `noul`로 명확한 예·아니오 조건의 참일 확률을 얻고 코드에 정의된 기준으로 통과 여부를 정한다. 통과한 항목은 `choice`로 허용된 후보 중 하나를 고른다. 설정값 변경 필요 여부와 변경 방향·크기를 고르는 [기존 구현](./server/setpoint_decision.py)을 참고한다. |
-| **Feature 2** | `choice` + `score` | `choice`로 등록된 SOP 대응이나 다음 행동 중 하나를 고른다. `score`로 선택한 후보의 근거 또는 적합성을 낮은 단계부터 정렬된 기준으로 평가하고 권고, 재검색, 검토 등의 다음 판단에 반영한다. [에이전트 요청 타입](./zoro/zoro_agent/zoro.py)과 [판단 처리](./zoro/zoro_agent/agent.py)를 참고한다. |
+| **Feature 1** | `noul` + `choice` | `noul`로 명확한 예·아니오 조건의 참일 확률을 얻고 코드에 정의된 기준으로 통과 여부를 정한다. 통과한 항목은 `choice`로 허용된 후보 중 하나를 고른다. 설정값 변경 필요 여부와 변경 방향·크기를 고르는 [기존 구현](./features/feature1-setpoint-gate/setpoint_gate/setpoint_decision.py)을 참고한다. |
+| **Feature 2** | `choice` + `score` | Feature 1의 기준안이 변경한 설정값을 제외하고 `score`로 누적 90%를 충족하는 최소 후보를 정한다. `choice`로 첫 실행 후보를 선택한다. [공용 요청 타입](./zoro/schemas.py)과 [후보 선별](./features/feature2-sop-ranking/sop_ranking/score_selection.py)을 참고한다. |
 
 - 각 기능의 정상 진입점에서 필수 타입의 요청과 응답이 후속 판단에 쓰이는지 확인한다. `choice`의 허용 후보, `noul`의 0–1 범위, `score`의 평가 단계 범위를 검증한다. 모델의 `score`와 시뮬레이터의 비용·생산량·운전 점수는 각자의 기준과 단위로 기록한다.
 - 실제 호출, 테스트 대역, 규칙 기반 대체 경로는 실행 로그에서 구분한다. 요청 ID, 타입별 결과, 선택된 행동과 실패 이유를 확인할 수 있게 한다. 시간 초과, 필수 응답 누락, 기준 미달은 기존 대체 경로나 운영자 검토로 연결한다.

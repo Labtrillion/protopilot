@@ -8,9 +8,10 @@ import re
 from time import perf_counter
 from dataclasses import dataclass
 from threading import Lock
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.error import URLError
 from uuid import uuid4
+
+from zoro.client import chat_completion, zoro_decide
 
 from .recording import encode, timestamp
 from .scenario import DEFAULT_SEED
@@ -33,46 +34,6 @@ class AssistantTurn:
     text: str
     run_ids: list[str]
     history: list[dict]
-
-
-def _request(url, payload, *, timeout):
-    headers = {"Content-Type": "application/json"}
-    if key := os.environ.get("ZORO_API_KEY"):
-        headers["Authorization"] = f"Bearer {key}"
-    request = Request(url, data=encode(payload).encode(), headers=headers, method="POST")
-    with urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read(512 * 1024))
-
-
-def _zoro_endpoint():
-    base = os.environ.get("ZORO_BASE_URL", "").rstrip("/")
-    if not base:
-        raise ValueError("ZORO_BASE_URL 설정 없음")
-    endpoint = f"{base}/v1" if not base.endswith("/v1") else base
-    return endpoint, os.environ.get("ZORO_MODEL", "trillionlabs/Zoro-1")
-
-
-def zoro_decide(state, questions, *, timeout=5):
-    """Ask Zoro-1's typed-decision head; return its raw `answers` after checking each fits its question."""
-    endpoint, model = _zoro_endpoint()
-    decision_request = {"state": state, "questions": questions}
-    try:
-        decision = _request(f"{endpoint}/systemone", {"model": model, **decision_request, "reasoning": False},
-                            timeout=timeout)
-    except HTTPError as error:
-        if error.code not in (404, 405):
-            raise
-        decision = _request(f"{endpoint}/decide", {"request": decision_request, "reasoning": False}, timeout=timeout)
-    answers = decision["answers"]
-    for name, question in questions.items():
-        answer = answers[name]
-        if question["type"] == "noul":
-            value = float(answer["noul"])
-            if not math.isfinite(value) or not 0 <= value <= 1:
-                raise ValueError("Zoro-1 판단 형식 오류")
-        elif answer["choice"] not in question["criteria"]:
-            raise ValueError("Zoro-1 판단 형식 오류")
-    return answers
 
 
 def zoro_choices(state, questions):
@@ -100,7 +61,6 @@ def append_trace(path, trace):
 
 
 def _zoro_plan(text, history, tools):
-    endpoint, model = _zoro_endpoint()
     state = {"request": text, "recent_turns": history[-4:]}
     question = {"type": "choice", "instructions": "Choose the simulation tool that fulfills the request.", "criteria": ROUTES}
     answer = zoro_choices(state, {"tool": question})["tool"]
@@ -109,8 +69,7 @@ def _zoro_plan(text, history, tools):
         return route, {}, confidence
     schema = next(spec["input_schema"] for spec in tools.tool_specs() if spec["name"] == route)
     catalog = tools.describe_plant() if route.startswith("run_") else {"stored_runs": tools.store.ids()}
-    reply = _request(f"{endpoint}/chat/completions", {
-        "model": model,
+    reply = chat_completion({
         "messages": [
             {"role": "system", "content": (
                 f"Construct arguments for {route}. Return one JSON object with no code fence or commentary. "

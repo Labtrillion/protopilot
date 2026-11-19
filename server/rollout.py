@@ -17,11 +17,11 @@ import numpy as np
 from tep_studio import TennesseeEastmanProcess
 
 from .agent_config import CONFIG
-from .alarm_response import step_cost
+from .branch_metrics import step_cost
 from .catalog import OPERATING_LIMITS
 from .plant import HISTORY_SAMPLE_HOURS, HISTORY_WINDOW_HOURS, MEASUREMENT_TAGS, HistorySample, control_action
 from .scenario import STEP_HOURS
-from .setpoint_decision import DecisionPoint, local_rule, monitor_alarms, setpoint_table
+from setpoint_gate.setpoint_decision import DecisionPoint, local_rule, monitor_alarms, setpoint_table
 
 RULE_INTERVAL_HOURS = CONFIG["rule_interval_hours"]
 ENVIRONMENT_OPS = {"disturbance", "mv", "offset", "limit", "pressure_test", "controller"}
