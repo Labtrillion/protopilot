@@ -343,7 +343,7 @@ class Plant:
         start = round(0.48 / STEP_HOURS)
         return live_scenario({
             "format": LIVE_FORMAT, "step_hours": STEP_HOURS, "seed": DEFAULT_SEED,
-            "controller": DEFAULT_FLAGS, "initial_speed": 960, "through_step": round(1.28 / STEP_HOURS),
+            "controller": DEFAULT_FLAGS, "initial_speed": 960, "through_step": round(0.8 / STEP_HOURS),
             "timeline": [
                 {"step": start, "op": "disturbance", "id": "IDV(11)", "value": 1},
                 {"step": start, "op": "disturbance", "id": "IDV(14)", "value": 1},

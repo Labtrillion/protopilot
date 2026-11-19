@@ -4,6 +4,7 @@ import { mountResponse } from './response.js';
 import { setupControls } from './controls.js';
 import { mountSignal, signalTag } from './signal.js';
 import { mountScenario } from './scenario.js';
+import { mountAlarmResponse } from './alarm-response.js';
 import {
   KPI_TAGS, byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderKpis, renderRows, wallTime,
 } from './ui.js';
@@ -26,6 +27,7 @@ let channelScope = 'primary', returnPoint = null, explicitTag = '';
 
 const signal = mountSignal((tag) => loopForTag(tag));
 const response = mountResponse((id) => openControls?.(id), (id) => trackSetpoint(id));
+const alarmResponse = mountAlarmResponse(request);
 const scenario = mountScenario(request, async (body) => {
   try {
     return await command(body);
@@ -272,6 +274,7 @@ function renderConnection() {
   reset.disabled = !connected;
   byId('open-controls').disabled = !connected;
   byId('pressure-test').disabled = !connected;
+  byId('cooling-demo').disabled = !connected;
   byId('clear-test').disabled = !connected;
   byId('tab-response').disabled = !setpoints.length;
   response.enable(connected);
@@ -433,11 +436,24 @@ function attachEvents() {
     });
   }
   byId('events').addEventListener('click', (event) => {
+    const compare = event.target.closest('[data-response-alarm]');
+    if (compare && connected) {
+      const id = Number(compare.dataset.responseAlarm);
+      const alarm = status.alarms.find((item) => item.id === id) ?? status.events.find((item) => item.id === id);
+      if (alarm) alarmResponse.open(status.run, alarm);
+      return;
+    }
     const item = event.target.closest('[data-event-area]');
     if (item) investigate(item.dataset.eventArea, item.dataset.eventTag);
     const ack = event.target.closest('[data-ack]');
     if (ack) doCommand({ op: 'ack', id: +ack.dataset.ack });
   });
+  byId('cooling-demo').addEventListener('click', () => doCommand({ op: 'cooling_demo' }, () => {
+    clearReturn();
+    byId('active-tab').click();
+    investigate('reactor', 'XMEAS(9)');
+    note('냉각 이상 데모를 시작했습니다. 알람의 대응 비교를 누르세요.');
+  }));
   byId('pressure-test').addEventListener('click', () => {
     const saved = snapshot();
     doCommand({ op: 'pressure_test' }, () => {

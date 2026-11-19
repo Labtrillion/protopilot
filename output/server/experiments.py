@@ -88,8 +88,8 @@ def _layout():
     simulate = next(tab.children for tab in tabs.children if tab.value == "simulate")
     config_body = simulate.children[0].children
     mode = next(child for child in config_body if any(
-        getattr(field, "id", None) == "mode-select" for field in getattr(child, "children", [])
-    ) if isinstance(getattr(child, "children", None), list))
+        getattr(field, "id", None) == "mode-select" for field in child._traverse()
+    ))
     advanced = [child for child in config_body if isinstance(child, html.Details)]
     config_body.remove(mode)
     for child in advanced:

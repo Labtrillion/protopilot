@@ -222,11 +222,13 @@ export function renderAlarms(status, tab, metadata) {
   const events = tab === 'active' ? status?.alarms : status?.events;
   const panel = byId('events');
   const count = status?.alarms.length ?? 0;
+  const responseEvents = new Set(status?.response_events ?? []);
   byId('alarm-count').textContent = count;
   byId('alarm-count').classList.toggle('alarming', count > 0);
   const focused = document.activeElement;
-  const focusKey = panel.contains(focused) && (focused.dataset.ack ?? focused.dataset.eventId);
-  const focusAttribute = focused.dataset.ack ? 'data-ack' : 'data-event-id';
+  const focusAttribute = ['data-response-alarm', 'data-ack', 'data-event-id']
+    .find((name) => panel.contains(focused) && focused.hasAttribute(name));
+  const focusKey = focusAttribute && focused.getAttribute(focusAttribute);
   const items = !events?.length ? `<div class="alarm-empty">${icon('check')}<b>${tab === 'active' ? '활성 알람 없음' : '기록된 이벤트 없음'}</b>
       <span>${tab === 'active' ? '새 알람은 배지와 소리로 알립니다. 항목을 선택하면 관련 설비로 이동합니다.' : '공정 조작과 알람 내역이 여기에 표시됩니다.'}</span></div>`
     : events.map((e) => {
@@ -237,7 +239,10 @@ export function renderAlarms(status, tab, metadata) {
         <span class="event-head"><span class="event-kind">${KIND[e.kind]}</span><time datetime="${e.time_utc}">${wallTime(e.time_utc)}</time></span>
         <span class="event-title">${escape(e.label)}${icon('arrow')}</span><span class="event-detail">${escape(detail)}</span>
         </button>
-        ${tab === 'active' ? `<button type="button" class="ack" data-ack="${e.id}" ${e.ack ? 'disabled' : ''}>${e.ack ? '확인됨' : '알람 확인'}</button>` : ''}
+        <div class="event-actions">
+          ${responseEvents.has(e.id) ? `<button type="button" class="alarm-study" data-response-alarm="${e.id}">${e.kind === 'trip' ? 'SOP 확인' : '대응 비교'}</button>` : ''}
+          ${tab === 'active' ? `<button type="button" class="ack" data-ack="${e.id}" ${e.ack ? 'disabled' : ''}>${e.ack ? '확인됨' : '알람 확인'}</button>` : ''}
+        </div>
       </article>`;
     }).join('');
   if (panel.dataset.html !== items) {

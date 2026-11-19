@@ -124,6 +124,7 @@
         </details>
         <div id="events" class="alarm-items" role="region" tabindex="0" aria-label="알람 또는 이벤트 목록"></div>
         <div class="alarm-footer">
+          <button type="button" id="cooling-demo" data-icon="bolt" disabled title="새 실행에서 반응기 냉각 이상을 재현합니다">냉각 이상 데모</button>
           <button type="button" id="pressure-test" data-icon="bolt" disabled>압력 알람 테스트</button>
           <button type="button" id="clear-test" hidden disabled>센서 시험 해제</button>
         </div>
@@ -225,6 +226,20 @@
       </div>
       <div class="dialog-actions"><button type="submit" id="load-scenario" class="solid">불러와 재실행 준비</button></div>
     </form>
+  </dialog>
+  <dialog id="alarm-response-dialog" aria-labelledby="alarm-response-title">
+    <div class="dialog-head">
+      <div>
+        <p id="alarm-response-context" class="context-label"></p>
+        <h2 id="alarm-response-title">알람 대응 비교</h2>
+      </div>
+      <button id="close-alarm-response" type="button" class="icon-button" data-icon="close" aria-label="알람 대응 비교 닫기" autofocus></button>
+    </div>
+    <div class="dialog-fields alarm-response-fields">
+      <p id="alarm-response-status" role="status"></p>
+      <button id="retry-alarm-response" type="button" hidden>다시 시도</button>
+      <div id="alarm-response-result" hidden></div>
+    </div>
   </dialog>
   <div id="notice" class="notice" role="status" hidden></div>
   <script type="module" src="/app.js"></script>
