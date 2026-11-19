@@ -482,6 +482,7 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
     const orderedParts = [...parts].sort((a, b) => Number(b.tag === trackedTag) - Number(a.tag === trackedTag));
     for (const part of orderedParts) {
       if (showInternals && internal.visible(part.area)) {
+        part.anchorHeight = part.anchor.position.y;
         part.anchor.getWorldPosition(part.point);
         projectAnnotation(part, placed, annotationPositions.part);
       } else {
@@ -631,6 +632,9 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
 
   function animateProcess(dt) {
     internal.animate(data, dt, showInternals && data?.running && !motionReduced);
+    // The liquid-level anchors move with the interpolated surface.
+    if (showLabels && showInternals && parts.some(({ area, anchor, anchorHeight }) =>
+      internal.visible(area) && Math.abs(anchor.position.y - anchorHeight) > 0.004)) annotationsDirty = true;
     for (const line of streams) {
       const { def, path, length, markers, material, color, valve, flanges } = line;
       const tag = codeFor(def.tag);

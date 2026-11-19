@@ -13,7 +13,7 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
   const flags = { flows: true, pressure: true, internals: false, tags: true };
   const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve, selectFeed);
   try {
-    scene = mountScene(canvas, labels, (unit, valve) => {
+    scene = mountScene(canvas, labels, interiorTools, (unit, valve) => {
       if (valve) selectValve(valve);
       else selectArea(unit);
     }, trackTag, chooseCircuit, selectFeed);
@@ -30,7 +30,7 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
     internalsLabel.textContent = list ? `${AREAS[area].code} 내부` : '내부 전체';
     internals.title = list ? `${AREAS[area].code} 단면만 표시` : '모든 설비 내부 표시';
     interiorTools.hidden = !(flags.internals && visible === '3d' && scene);
-    partStrip.hidden = interiorTools.hidden || !list;
+    partStrip.hidden = interiorTools.hidden || !flags.tags || !list;
     if (partStrip.hidden) return;
     const key = `${area}/${tracked}`;
     if (partStrip.dataset.key === key) return;
@@ -49,7 +49,8 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
   function switchView(next) {
     visible = next;
     const three = next === '3d';
-    canvas.hidden = labels.hidden = !three;
+    canvas.hidden = !three;
+    if (!scene) labels.hidden = true;
     diagramRoot.hidden = three;
     threeButton.setAttribute('aria-pressed', three);
     twoButton.setAttribute('aria-pressed', !three);
@@ -92,7 +93,11 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
   for (const button of circuitButtons) button.addEventListener('click', () => chooseCircuit(button.dataset.circuit));
   toggle(flows, 'flows', (enabled) => { scene?.flow(enabled); diagram.flow(enabled); });
   toggle(pressure, 'pressure', applyPressure);
-  toggle(tags, 'tags', (enabled) => scene?.tags(enabled));
+  toggle(tags, 'tags', (enabled) => {
+    tags.title = enabled ? '3D 태그 가리기' : '3D 태그 표시';
+    scene?.tags(enabled);
+    renderInterior();
+  });
   // Toggling the interior keeps the selected unit, camera, tracked tag and telemetry view.
   toggle(internals, 'internals', (enabled) => {
     scene?.internals(enabled);

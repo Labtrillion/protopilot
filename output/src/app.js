@@ -263,7 +263,7 @@ function attachEvents() {
     for (const button of panes) button.setAttribute('aria-pressed', button.dataset.paneTarget === pane);
   }
   for (const button of panes) button.addEventListener('click', () => showPane(button.dataset.paneTarget));
-  matchMedia('(max-width: 500px) and (max-height: 640px), (max-height: 460px)').addEventListener('change', ({ matches }) => {
+  matchMedia('(max-width: 500px) and (max-height: 700px), (max-height: 460px)').addEventListener('change', ({ matches }) => {
     if (!matches && dashboard.dataset.pane === 'pipes') showPane('plant');
   });
 
