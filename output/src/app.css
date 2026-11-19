@@ -71,7 +71,24 @@ button[hidden], label[hidden], [hidden] { display: none !important; }
 a { color: inherit; text-decoration: none; }
 svg { width: 1.18rem; height: 1.18rem; flex: 0 0 auto; }
 h1, h2, h3, p { margin: 0; }
-select { min-height: var(--control-size); padding: 0.28rem 0.56rem; max-width: 100%; }
+select {
+  --select-arrow-inset: 0.8rem;
+  --select-arrow-half: 0.4rem;
+  appearance: none;
+  min-height: var(--control-size);
+  max-width: 100%;
+  padding: 0.28rem calc(var(--select-arrow-inset) + var(--select-arrow-half) * 3) 0.28rem 0.56rem;
+  background-image:
+    linear-gradient(45deg, transparent 38%, var(--subtext) 42% 58%, transparent 62%),
+    linear-gradient(-45deg, transparent 38%, var(--subtext) 42% 58%, transparent 62%);
+  background-position: right calc(var(--select-arrow-inset) + var(--select-arrow-half)) center, right var(--select-arrow-inset) center;
+  background-size: var(--select-arrow-half) var(--select-arrow-half);
+  background-repeat: no-repeat;
+  text-overflow: ellipsis;
+}
+@media (forced-colors: active) {
+  select { appearance: auto; padding-right: 0.56rem; background-image: none; }
+}
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .icon-button { padding-inline: 0.45rem; }
 .solid { color: var(--text-inverse); background: var(--accent); border-color: var(--accent); font-weight: 750; }
