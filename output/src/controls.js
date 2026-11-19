@@ -113,6 +113,11 @@ export function setupControls(schema, current, command, onAdjustment) {
     type.value = kind;
     setupTarget(tag);
     dialog.showModal();
-    type.focus();
+    if (kind === 'setpoint' && tag) {
+      value.focus();
+      value.select();
+    } else {
+      type.focus();
+    }
   };
 }

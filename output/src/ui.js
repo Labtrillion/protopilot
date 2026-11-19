@@ -99,8 +99,18 @@ function renderChannelTrend(cell, series) {
 export function renderInspector(areaKey, status, metadata, circuit = '', setpoint = null, control = null, tracked = '') {
   const area = AREAS[areaKey];
   const values = status?.values ?? {};
+  const setting = byId('inspector-setpoint');
+  setting.hidden = !setpoint;
+  if (setpoint) {
+    if (setting.dataset.setpoint !== setpoint.id) {
+      setting.dataset.setpoint = setpoint.id;
+      byId('inspector-sp-label').textContent = `${setpoint.label} · SP 응답`;
+      byId('inspector-adjust').setAttribute('aria-label', `${setpoint.label} SP 변경`);
+    }
+    byId('inspector-sp-value').textContent = `${reading(status?.setpoints?.[setpoint.id], setpoint.unit)} ${setpoint.unit}`;
+  }
   const root = byId('inspector-content');
-  const panelKey = [areaKey, circuit, setpoint?.id, control?.id, metadata.size].join('/');
+  const panelKey = [areaKey, circuit, control?.id, metadata.size].join('/');
   if (root.dataset.area !== panelKey) {
     const rows = [...area.tags.map(codeFor), ...(area.extra ?? [])].map((tag) => {
       const channel = metadata.get(tag);
@@ -112,13 +122,11 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
       `<div class="inspect-stream"><span class="line-id"><i style="--medium:var(${MEDIA[stream.media].colorToken})"></i>${stream.id}</span>
         <b>${escape(stream.from)} → ${escape(stream.to)}</b></div>`).join('');
     root.innerHTML = `${routeDetails(circuit)}<div class="inspector-label"><code>${area.code}</code><span>${area.en}</span></div>
-      ${setpoint ? `<button type="button" class="inspect-setting" data-response="${setpoint.id}"><span>${escape(setpoint.label)} · SP 응답</span><b></b></button>` : ''}
       ${control ? `<button type="button" class="inspect-setting" data-control="${control.id}"><span>${escape(control.label)}</span><b></b></button>` : ''}
       <div class="inspect-tags">${rows}</div>${routes ? `<h3>연결 배관</h3><div class="inspect-streams">${routes}</div>` : ''}`;
     root.dataset.area = panelKey;
     root.scrollTop = 0;
   }
-  if (setpoint) root.querySelector('[data-response] b').textContent = `${reading(status?.setpoints?.[setpoint.id])} ${setpoint.unit}`;
   if (control) {
     const current = status?.actuators?.[control.id];
     const command = status?.manual[control.id] ?? values[control.id];

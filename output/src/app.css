@@ -154,6 +154,12 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .inspector { display: flex; flex-direction: column; max-height: 28rem; background: var(--surface); }
 .inspector-controls { padding: 0 0.65rem; flex: none; }
 .unit-select select { width: 100%; font-weight: 650; }
+.inspector-setpoint { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.35rem; margin-top: 0.42rem; }
+#inspector-response {
+  display: grid; justify-content: stretch; gap: 0.12rem; min-width: 0; padding: 0.32rem 0.43rem;
+  color: var(--subtext); white-space: normal; text-align: left; font-size: 0.78rem;
+}
+#inspector-sp-value { color: var(--text); font: 650 0.74rem var(--mono); }
 .inspector-content { flex: 1; margin-top: 0.32rem; padding: 0 0.65rem 0.5rem; }
 .inspector-content, .alarm-items, .table-scroll { overflow: auto; min-height: 0; scrollbar-width: thin; }
 .inspector-content:focus-visible, .alarm-items:focus-visible, .table-scroll:focus-visible { outline-offset: -2px; }

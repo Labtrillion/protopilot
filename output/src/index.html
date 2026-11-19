@@ -71,6 +71,10 @@
         <div class="panel-head"><div class="heading-inline"><span data-icon="box"></span><h2 id="inspector-title">설비 인스펙터</h2></div></div>
         <div class="inspector-controls">
           <label class="unit-select"><span class="sr-only">관측할 설비</span><select id="area-select"></select></label>
+          <div id="inspector-setpoint" class="inspector-setpoint" hidden>
+            <button id="inspector-response" type="button"><span id="inspector-sp-label"></span><b id="inspector-sp-value"></b></button>
+            <button id="inspector-adjust" type="button" class="solid" aria-haspopup="dialog" disabled>SP 변경</button>
+          </div>
         </div>
         <div id="inspector-content" class="inspector-content" role="region" tabindex="0" aria-label="선택한 설비의 계측 태그와 배관"></div>
       </aside>

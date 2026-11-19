@@ -260,6 +260,7 @@ function renderConnection() {
   run.disabled = !connected || !!status?.error || !!status?.shutdown.terminated;
   reset.disabled = !connected;
   byId('open-controls').disabled = !connected;
+  byId('inspector-adjust').disabled = !connected;
   byId('pressure-test').disabled = !connected;
   byId('cooling-demo').disabled = !connected;
   byId('clear-test').disabled = !connected;
@@ -376,11 +377,12 @@ function attachEvents() {
     setScope('primary');
   });
   byId('scope-all').addEventListener('click', () => setScope('all'));
+  const inspectorSetpoint = byId('inspector-setpoint');
+  byId('inspector-response').addEventListener('click', () => trackSetpoint(inspectorSetpoint.dataset.setpoint, true));
+  byId('inspector-adjust').addEventListener('click', () => openControls?.(inspectorSetpoint.dataset.setpoint));
   byId('inspector-content').addEventListener('click', (event) => {
     const channelButton = event.target.closest('button[data-tag]');
     if (channelButton) selectTag(channelButton.dataset.tag, true);
-    const responseButton = event.target.closest('[data-response]');
-    if (responseButton) trackSetpoint(responseButton.dataset.response, true);
     const controlButton = event.target.closest('[data-control]');
     if (controlButton) openControls?.(controlButton.dataset.control);
   });
