@@ -354,7 +354,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   display: flex; gap: 1ch; inline-size: 16ch; margin-top: 0.19rem; color: var(--text); font: 700 0.76rem var(--mono);
 }
 .model-pressure-value strong { overflow: hidden; text-overflow: ellipsis; }
-.has-pressure .model-pressure-test { display: block; grid-area: 1 / 2; align-self: center; color: var(--warning); font-size: 0.72rem; }
+.has-pressure .model-pressure-test { display: block; grid-area: 1 / 2; align-self: center; color: var(--warning); font-size: 0.72rem; line-height: 1; }
 .model-tag.in-alarm .model-pressure-value { color: var(--warning); }
 .legend .level-key { background: none; height: 0; border-top: 2px dashed var(--plot-sp); }
 .circuit-route { flex: none; padding: 0.57rem 0.65rem; border-top: 1px solid var(--line-soft); }

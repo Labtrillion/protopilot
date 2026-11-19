@@ -453,8 +453,13 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       Object.assign(target, { x, y, onScreen });
       if (onScreen) placed.push({ left, right, top, bottom });
     }
-    const priority = (area) => (focus === area || trackedArea === area || alertAreas.has(area) ? 3 :
-      CORE_PRESSURES[area] ? 2 : primaryLabels.has(area) ? 1 : 0);
+    const priority = (area) => {
+      if (focus === area || trackedArea === area) return 3;
+      // Pressure readouts keep their placement priority when a pressure alarm changes color.
+      if (showPressure && CORE_PRESSURES[area]) return 2;
+      if (alertAreas.has(area)) return 3;
+      return CORE_PRESSURES[area] ? 2 : primaryLabels.has(area) ? 1 : 0;
+    };
     const ordered = [...labelEntries].sort(([a], [b]) => priority(b) - priority(a));
     for (const [area, label] of ordered) {
       projected.copy(label.position).project(camera);
