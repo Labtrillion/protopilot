@@ -35,7 +35,7 @@ def run_branch(runner, snapshot, case_id, changes, policy):
         return {**report, "error": str(error)}, None
     report.update(
         cost_per_m3=score.usd_per_m3,
-        tracking_accuracy=score.tracking_accuracy,
+        tracking_accuracy=score.tracking_accuracy if score.per_variable_accuracy else None,
         production_loss_m3=outcome.production_loss_m3,
         produced_m3=score.product_m3,
         failed_gates=list(score.failed_gates),

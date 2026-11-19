@@ -467,6 +467,21 @@ def test_simulator_cost_overrides_the_table9_estimate(sc):
     assert beats(sim, est, sim, b, b.vs_baseline) == (False, "비용 정의 불일치(tep_operating_cost_internal vs downs_vogel_table9)")
 
 
+def test_setpoint_at_alarm_limit_still_gates_branch(sc):
+    policy = sc.policy.benchmark
+    pressure = next(v for v in policy.tracked if v.tag == "XMEAS(7)")
+    pressure.hi = pressure.setpoint
+    sample = {v.tag: v.setpoint for v in policy.tracked}
+    score = score_timeseries(
+        "at-limit", [0.0, policy.horizon_s], [sample, sample], policy.tracked, policy,
+        operating_cost=100.0, produced_m3=50.0,
+    )
+    assert pressure.tag not in score.per_variable_accuracy
+    assert score.usd_per_m3 == 2
+    assert not score.final_window_inside
+    assert "final_window_inside" in score.failed_gates
+
+
 def test_accuracy_is_closeness_to_setpoint_within_threshold():
     v = TrackedVariable(tag="XMEAS(7)", setpoint=2705, unit="kPa(g)", hi=2895, lo=None, source="t")
     assert closeness(v, 2705) == 1 and closeness(v, 2800) == pytest.approx(0.5)

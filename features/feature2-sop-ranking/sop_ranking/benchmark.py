@@ -167,6 +167,9 @@ def score_timeseries(run_id: str, times_s: list[float], samples: list[dict[str, 
     span = times_s[-1] - times_s[0]
     per_var, wsum, acc = {}, 0.0, 0.0
     for v in tracked:
+        # An alarm can invalidate the configured reference, but its thresholds still gate the branch.
+        if (v.lo is None and v.hi is None) or not inside(v, v.setpoint):
+            continue
         a = _trapz(times_s, [closeness(v, x[v.tag]) for x in samples]) / span
         per_var[v.tag] = a
         acc += v.weight * a
