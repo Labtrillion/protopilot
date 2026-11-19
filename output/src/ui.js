@@ -69,6 +69,7 @@ export function renderPressures(status, enabled, tracked = '') {
     row.querySelector('b').innerHTML = `${formatted}<small>kPa(g)</small>`;
     row.classList.toggle('alarming', alarming);
     row.toggleAttribute('data-tracked', tag === tracked);
+    row.setAttribute('aria-current', tag === tracked);
   }
 }
 
@@ -113,27 +114,24 @@ export function renderKpis(status, metadata, trends, tracked) {
 export function renderInspector(areaKey, status, metadata, circuit = '', setpoint = null, control = null, tracked = '') {
   const area = AREAS[areaKey];
   const values = status?.values ?? {};
-  const rows = [...area.tags.map(codeFor), ...(area.extra ?? [])].map((tag) => {
-    const channel = metadata.get(tag);
-    const name = channel?.label ?? tag;
-    return `<button class="inspect-value" type="button" data-tag="${tag}" title="${tag} · ${escape(name)}"><span>${escape(name)}</span>
-      <b>${reading(values[tag], channel?.unit)} <small>${escape(channel?.unit ?? '')}</small></b></button>`;
-  }).join('');
-  const streams = STREAMS.filter((stream) => circuit ? stream.circuit === circuit : stream.area === areaKey && areaKey !== 'plant');
-  const flows = streams.map((stream) => {
-    const tag = codeFor(stream.tag);
-    const channel = metadata.get(tag);
-    return `<div class="inspect-stream"><span class="line-id"><i style="--medium:${MEDIA[stream.media].color}"></i>${stream.id}</span>
-      <span><b>${escape(stream.from)} → ${escape(stream.to)}</b><small>${tag ? reading(values[tag], channel?.unit) + ' ' + escape(channel?.unit ?? '') : '흐름 방향'}</small></span></div>`;
-  }).join('');
-  // Preserve focused buttons and scroll position when markup hasn't changed structurally.
   const root = byId('inspector-content');
-  const panelKey = [areaKey, circuit, setpoint?.id, control?.id].join('/');
+  const panelKey = [areaKey, circuit, setpoint?.id, control?.id, metadata.size].join('/');
   if (root.dataset.area !== panelKey) {
+    const rows = [...area.tags.map(codeFor), ...(area.extra ?? [])].map((tag) => {
+      const channel = metadata.get(tag);
+      return `<button class="inspect-value" type="button" data-tag="${tag}" title="${tag} · ${escape(channel?.label ?? tag)}">
+        <span>${escape(channel?.label ?? tag)}</span><b><span>—</span> <small>${escape(channel?.unit ?? '')}</small></b></button>`;
+    }).join('');
+    const streams = STREAMS.filter((stream) => circuit ? stream.circuit === circuit : stream.area === areaKey && areaKey !== 'plant');
+    const flows = streams.map((stream) => {
+      const tag = codeFor(stream.tag);
+      return `<div class="inspect-stream"><span class="line-id"><i style="--medium:${MEDIA[stream.media].color}"></i>${stream.id}</span>
+        <span><b>${escape(stream.from)} → ${escape(stream.to)}</b>${tag ? `<small data-flow-tag="${tag}"></small>` : '<small>흐름 방향</small>'}</span></div>`;
+    }).join('');
     root.innerHTML = `${routeDetails(circuit)}<div class="inspector-label"><code>${area.code}</code><span>${area.en}</span></div>
       ${setpoint ? `<button type="button" class="inspect-setting" data-response="${setpoint.id}"><span>${escape(setpoint.label)} · SP 응답</span><b></b></button>` : ''}
       ${control ? `<button type="button" class="inspect-setting" data-control="${control.id}"><span>${escape(control.label)}</span><b></b></button>` : ''}
-      <div class="inspect-values"></div>${flows ? '<h3>연결 배관</h3><div class="inspect-streams"></div>' : ''}`;
+      <div class="inspect-values">${rows}</div>${flows ? `<h3>연결 배관</h3><div class="inspect-streams">${flows}</div>` : ''}`;
     root.dataset.area = panelKey;
     root.scrollTop = 0;
   }
@@ -143,16 +141,17 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
     const command = status?.manual[control.id] ?? values[control.id];
     root.querySelector('[data-control] b').textContent = `실제 ${reading(current)}% · 명령 ${reading(command)}%`;
   }
-  const measures = root.querySelector('.inspect-values');
-  if (!measures.children.length || !measures.contains(document.activeElement)) measures.innerHTML = rows;
-  else {
-    for (const button of measures.children) {
-      const channel = metadata.get(button.dataset.tag);
-      button.querySelector('b').innerHTML = `${reading(values[button.dataset.tag], channel?.unit)} <small>${escape(channel?.unit ?? '')}</small>`;
-    }
+  for (const button of root.querySelector('.inspect-values').children) {
+    const tag = button.dataset.tag;
+    button.querySelector('b span').textContent = reading(values[tag], metadata.get(tag)?.unit);
+    button.toggleAttribute('data-tracked', tag === tracked);
+    button.setAttribute('aria-current', tag === tracked);
   }
-  for (const button of measures.children) button.toggleAttribute('data-tracked', button.dataset.tag === tracked);
-  if (flows) root.querySelector('.inspect-streams').innerHTML = flows;
+  for (const flow of root.querySelectorAll('[data-flow-tag]')) {
+    const tag = flow.dataset.flowTag;
+    const unit = metadata.get(tag)?.unit;
+    flow.textContent = `${reading(values[tag], unit)}${unit ? ` ${unit}` : ''}`;
+  }
 }
 
 export function renderRows(channels, status, selected) {
@@ -194,22 +193,24 @@ export function renderAlarms(status, tab, metadata) {
   byId('alarm-count').textContent = count;
   byId('alarm-count').classList.toggle('alarming', count > 0);
   const focused = document.activeElement;
-  const focusKey = panel.contains(focused) && focused.dataset.ack;
+  const focusKey = panel.contains(focused) && (focused.dataset.ack ?? focused.dataset.eventId);
+  const focusAttribute = focused.dataset.ack ? 'data-ack' : 'data-event-id';
   const items = !events?.length ? `<div class="alarm-empty">${icon('check')}<b>${tab === 'active' ? '활성 알람 없음' : '기록된 이벤트 없음'}</b>
       <span>${tab === 'active' ? '새 알람이 발생하면 관련 설비로 이동합니다.' : '공정 조작과 알람 내역이 여기에 표시됩니다.'}</span></div>`
     : events.map((e) => {
       const unit = metadata.get(e.tag)?.unit;
       const detail = [e.tag, e.value == null ? '' : `${reading(e.value, unit)} ${unit ?? ''}`,
         e.limit == null ? '' : `기준 ${reading(e.limit)}`, e.source].filter(Boolean).join(' · ');
-      return `<article class="event ${e.kind}"><div class="event-head"><span class="event-kind">${KIND[e.kind]}</span><time datetime="${e.time_utc}">${wallTime(e.time_utc)}</time></div>
-        <button type="button" class="event-title" data-event-area="${e.area}" data-event-tag="${escape(e.tag ?? '')}">${escape(e.label)}${icon('arrow')}</button>
-        <div class="event-detail">${escape(detail)}</div>
+      return `<article class="event ${e.kind}"><button type="button" class="event-open" data-event-id="${e.id}" data-event-area="${e.area}" data-event-tag="${escape(e.tag ?? '')}">
+        <span class="event-head"><span class="event-kind">${KIND[e.kind]}</span><time datetime="${e.time_utc}">${wallTime(e.time_utc)}</time></span>
+        <span class="event-title">${escape(e.label)}${icon('arrow')}</span><span class="event-detail">${escape(detail)}</span>
+        </button>
         ${tab === 'active' ? `<button type="button" class="ack" data-ack="${e.id}" ${e.ack ? 'disabled' : ''}>${e.ack ? '확인됨' : '알람 확인'}</button>` : ''}
       </article>`;
     }).join('');
   if (panel.dataset.html !== items) {
     panel.innerHTML = items;
     panel.dataset.html = items;
-    if (focusKey) panel.querySelector(`[data-ack="${focusKey}"]:not(:disabled)`)?.focus();
+    if (focusKey) panel.querySelector(`[${focusAttribute}="${focusKey}"]:not(:disabled)`)?.focus({ preventScroll: true });
   }
 }

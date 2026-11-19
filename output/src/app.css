@@ -495,7 +495,7 @@ dialog::backdrop { background: var(--scrim); }
   .kpis button > span { margin-bottom: 0.26rem; }
 }
 
-@media (pointer: coarse) {
+@media (max-width: 600px), (pointer: coarse) {
   :root { --control-size: 3.39rem; --map-tag-size: 2.77rem; }
   .topbar { flex-wrap: wrap; }
   .dialog-fields select, .dialog-fields input { min-height: var(--control-size); }

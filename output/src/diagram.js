@@ -113,21 +113,23 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     ${equipment()}${levelLayers}${valves}${portsMarkup}${meterMarkup}${labels}${readouts}${flowReadouts}</svg>`;
   const svg = host.firstElementChild;
   const targets = [...svg.querySelectorAll('.pfd-hit')];
-  const touch = matchMedia('(pointer: coarse)');
+  const largerTargets = matchMedia('(max-width: 600px), (pointer: coarse)');
   function sizeTargets() {
     const box = svg.viewBox.baseVal;
     const scale = Math.min(svg.clientWidth / box.width, svg.clientHeight / box.height);
     if (!scale) return;
-    const side = (touch.matches ? 36 : 28) / scale;
+    const side = (largerTargets.matches ? 36 : 28) / scale;
     for (const rect of targets) {
-      rect.setAttribute('width', side);
-      rect.setAttribute('height', side);
-      rect.setAttribute('x', -side / 2);
-      rect.setAttribute('y', -side / 2 - 3);
+      const width = Math.max(rect.parentElement.classList.contains('pfd-unit') ? 44 : 24, side);
+      const height = Math.max(20, side);
+      rect.setAttribute('width', width);
+      rect.setAttribute('height', height);
+      rect.setAttribute('x', -width / 2);
+      rect.setAttribute('y', -height / 2 - 3);
     }
   }
   new ResizeObserver(sizeTargets).observe(svg);
-  touch.addEventListener('change', sizeTargets);
+  largerTargets.addEventListener('change', sizeTargets);
 
   function activate(node) {
     const valve = node.closest('[data-valve]');

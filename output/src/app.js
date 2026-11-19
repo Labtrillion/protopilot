@@ -233,9 +233,9 @@ function attachEvents() {
   byId('channel-area').addEventListener('change', filter);
   for (const id of ['inspector-content', 'kpis', 'rows']) {
     byId(id).addEventListener('click', (event) => {
-      const button = event.target.closest('button[data-tag]');
-      if (!button) return;
-      selectTag(button.dataset.tag, id === 'inspector-content');
+      const target = event.target.closest(id === 'rows' ? 'tr[data-tag]' : 'button[data-tag]');
+      if (!target) return;
+      selectTag(target.dataset.tag, id === 'inspector-content');
       const detail = byId('signal-detail');
       const bounds = detail.getBoundingClientRect();
       if (id !== 'inspector-content' && (bounds.top < 0 || bounds.bottom > innerHeight)) {
