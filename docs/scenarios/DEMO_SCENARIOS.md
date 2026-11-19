@@ -86,7 +86,7 @@ Zoro AI는 두 대응의 압력 회복 시간, 분리기 액위 편차, 승인 �
 
 ## 실행용 시나리오 JSON
 
-시나리오마다 시뮬레이터에 바로 불러올 수 있는 JSON이 있다. 관제 화면의 **시나리오 → 저장한 시나리오**에서 파일을 선택하고 **불러와 재실행 준비**를 누르면 시간 0에서 일시정지된 새 실행이 만들어진다. **실행**을 누르면 적힌 시각에 조작이 들어가고 `duration_min`에서 일시정지한다.
+관제 화면의 **시나리오 → 데모 시나리오**에서 아래 5개 중 하나를 선택하고 **불러와 재실행 준비**를 누르면 시간 0에서 일시정지된 새 실행이 만들어진다. **실행**을 누르면 선택한 JSON에 적힌 시각에 조작이 들어가고 `duration_min`에서 일시정지한다.
 
 | 시나리오 | 파일 | 조작 (분) | 문서에 없어 정한 값 |
 | --- | --- | --- | --- |
@@ -121,7 +121,7 @@ Zoro AI는 두 대응의 압력 회복 시간, 분리기 액위 편차, 승인 �
 }
 ```
 
-- `events`의 `op`, `id`, `value`, `low`는 라이브 시나리오(`protopilot-live-1`)의 조작과 같다: `mv`, `setpoint`, `disturbance`, `offset`, `limit`, `pressure_test`, `controller`, `speed`.
+- `events`의 조작 시각은 `at_min`으로 입력한다. `op`, `id`, `value`, `low`는 라이브 시나리오(`protopilot-live-1`)의 조작과 같다. 지원하는 조작은 `mv`, `setpoint`, `disturbance`, `offset`, `limit`, `pressure_test`, `controller`, `speed`다.
 - `duration_min`을 적은 조작은 그만큼 지난 뒤 되돌린다. 외란·오프셋은 0, 설정값·밸브는 기본값·자동, 알람 기준은 기본 기준으로 돌아간다.
 - `seed`, `controller`, `initial_speed`를 생략하면 기본 시드, 기본 제어 옵션, 960배속을 쓴다.
 - `title`, `context`, `agent`, `assumptions`는 사람이 읽는 설명이며 시뮬레이터는 쓰지 않는다. 승인 생산계획(시나리오 5)이나 이전 추천(시나리오 1)을 에이전트에 전달하는 경로는 아직 없다.

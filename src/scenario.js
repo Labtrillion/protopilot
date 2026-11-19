@@ -1,5 +1,14 @@
+import economicThenStiction from '../docs/scenarios/s1-economic-then-stiction.json';
+import falseHighTemp from '../docs/scenarios/s2-false-high-temp.json';
+import restoreAfterCooling from '../docs/scenarios/s3-restore-after-cooling.json';
+import compositionAndTwoCoolers from '../docs/scenarios/s4-composition-and-two-coolers.json';
+import shiftPlanMismatch from '../docs/scenarios/s5-shift-plan-mismatch.json';
 import { byId, elapsed, escape, reading } from './ui.js';
 import { mountArchive } from './archive.js';
+
+const demoScenarios = new Map([
+  economicThenStiction, falseHighTemp, restoreAfterCooling, compositionAndTwoCoolers, shiftPlanMismatch,
+].map((scenario) => [scenario.id, scenario]));
 
 const protections = {
   high_pressure_to_production: '고압 · 생산량 제한',
@@ -9,22 +18,38 @@ const protections = {
 export function mountScenario(request, command, onReplay) {
   const dialog = byId('scenario-dialog');
   const form = byId('scenario-form');
-  const file = byId('scenario-file');
+  const select = byId('demo-scenario');
   const error = byId('scenario-error');
   const submit = byId('load-scenario');
   const open = byId('open-scenario');
   const options = byId('controller-options');
-  let latest, online, updating = false;
+  let latest, online, updating = false, replaying = false;
+  for (const [id, scenario] of demoScenarios) select.add(new Option(scenario.title, id));
+
+  function renderReplayControls() {
+    select.disabled = !online || replaying;
+    submit.disabled = select.disabled || !select.value;
+  }
+
   async function replay(scenario) {
-    await command({ op: 'replay_scenario', scenario });
-    dialog.close();
-    onReplay();
+    if (replaying) throw new Error('시나리오를 불러오는 중입니다.');
+    replaying = true;
+    renderReplayControls();
+    try {
+      await command({ op: 'replay_scenario', scenario });
+      dialog.close();
+      onReplay();
+    } finally {
+      replaying = false;
+      renderReplayControls();
+    }
   }
   const archive = mountArchive(request, replay);
 
   function render() {
     const flags = latest?.controller_flags;
     open.disabled = !online || !flags;
+    renderReplayControls();
     for (const box of options.querySelectorAll('input')) {
       box.disabled = !online || updating || !flags;
       box.checked = Boolean(flags?.[box.value]);
@@ -51,25 +76,20 @@ export function mountScenario(request, command, onReplay) {
     if (byId('recording-archive').open) archive.refresh();
   });
   byId('close-scenario').addEventListener('click', () => dialog.close());
+  select.addEventListener('change', () => {
+    error.hidden = true;
+    renderReplayControls();
+  });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const scenario = demoScenarios.get(select.value);
+    if (!scenario || submit.disabled) return;
     error.hidden = true;
-    submit.disabled = true;
     try {
-      const selected = file.files[0];
-      if (!selected || selected.size > 1024 * 1024) throw new Error('1 MB 이하의 시나리오 JSON을 선택하세요.');
-      let scenario;
-      try {
-        scenario = JSON.parse(await selected.text());
-      } catch {
-        throw new Error('JSON 파일 형식을 확인하세요.');
-      }
       await replay(scenario);
     } catch (failure) {
       error.textContent = failure.message;
       error.hidden = false;
-    } finally {
-      submit.disabled = false;
     }
   });
   options.addEventListener('change', async (event) => {
