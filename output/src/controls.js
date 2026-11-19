@@ -1,12 +1,13 @@
 import { AREAS } from './topology.js';
-import { byId, option, reading } from './ui.js';
+import { byId, escape, option, reading } from './ui.js';
 
-export function mountSetpointSlider(apply) {
-  const slider = byId('setpoint-slider');
-  const label = byId('setpoint-label');
-  const output = byId('setpoint-value');
-  const min = byId('setpoint-min'), max = byId('setpoint-max');
-  let loop, run, current;
+function mountSetpointSlider(row, loop, apply) {
+  const slider = row.querySelector('input');
+  const output = row.querySelector('output');
+  slider.min = loop.min;
+  slider.max = loop.max;
+  slider.step = loop.unit === 'kPa(g)' ? 1 : 0.1;
+  let run, current;
   let available = false, editing = false, pending = null;
 
   function showValue(value) {
@@ -18,7 +19,7 @@ export function mountSetpointSlider(apply) {
   function render() {
     slider.disabled = !available || pending !== null;
     if (editing) return;
-    const value = pending && pending.loop === loop && pending.run === run ? pending.value : current;
+    const value = pending && pending.run === run ? pending.value : current;
     if (Number.isFinite(value)) slider.value = value;
     showValue(value);
   }
@@ -33,7 +34,7 @@ export function mountSetpointSlider(apply) {
     const value = slider.valueAsNumber;
     if (value === current) return;
     const hadFocus = document.activeElement === slider;
-    pending = { loop, run, value };
+    pending = { run, value };
     render();
     try {
       await apply(loop.id, value);
@@ -50,24 +51,36 @@ export function mountSetpointSlider(apply) {
     render();
   });
 
-  return function update(nextLoop, status, connected) {
-    if (nextLoop !== loop) {
-      loop = nextLoop;
-      label.textContent = loop ? `${loop.label} SP` : '설정값';
-      min.textContent = loop ? reading(loop.min) : '';
-      max.textContent = loop ? reading(loop.max) : '';
-      if (loop) {
-        slider.min = loop.min;
-        slider.max = loop.max;
-        slider.step = loop.unit === 'kPa(g)' ? 1 : 0.1;
-      }
-      editing = false;
-    }
+  return function update(status, connected) {
     if (!connected || status?.run !== run) editing = false;
     run = status?.run;
-    current = status?.setpoints[loop?.id];
+    current = status?.setpoints[loop.id];
     available = connected && Number.isFinite(current);
     render();
+  };
+}
+
+export function mountSetpointControls(apply) {
+  const list = byId('setpoint-list');
+  let sliders = [];
+  return {
+    init(loops) {
+      list.innerHTML = loops.map((loop) => {
+        const id = `sp-${escape(loop.id)}`;
+        return `<li class="setpoint-control">
+          <div class="setpoint-readout">
+            <label for="${id}">${escape(loop.label)}</label>
+            <output for="${id}" aria-live="off">—</output>
+          </div>
+          <input id="${id}" type="range" disabled>
+          <div class="setpoint-bounds" aria-hidden="true"><span>${reading(loop.min)}</span><span>${reading(loop.max)}</span></div>
+        </li>`;
+      }).join('');
+      sliders = Array.from(list.children, (row, index) => mountSetpointSlider(row, loops[index], apply));
+    },
+    update(status, connected) {
+      for (const update of sliders) update(status, connected);
+    },
   };
 }
 

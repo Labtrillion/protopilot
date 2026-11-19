@@ -1,7 +1,7 @@
 import { AREAS, FEED_TAGS, codeFor } from './topology.js';
 import { mountPlantView } from './plant-view.js';
 import { mountResponse } from './response.js';
-import { mountSetpointSlider, setupControls } from './controls.js';
+import { mountSetpointControls, setupControls } from './controls.js';
 import { mountScenario } from './scenario.js';
 import {
   byId, elapsed, icon, initIcons, option, renderInspector, renderRows,
@@ -25,10 +25,14 @@ let focusedArea = 'plant', selection, connected = false;
 let visibleChannels = [], channelScope = 'primary', explicitTag = '';
 
 const response = mountResponse(trackSetpoint);
-const updateSetpointSlider = mountSetpointSlider((id, value) => {
+let latestSetpointChange = 0;
+const setpointControls = mountSetpointControls((id, value) => {
+  const change = ++latestSetpointChange;
   const runId = status.run;
+  const previousSelection = selection, previousArea = focusedArea, previousView = telemetryView;
   return doCommand({ op: 'setpoint', id, value }, () => {
-    if (status.run === runId && activeSetpoint()?.id === id) trackSetpoint(id);
+    if (change === latestSetpointChange && status.run === runId && selection === previousSelection
+      && focusedArea === previousArea && telemetryView === previousView) trackSetpoint(id);
   });
 });
 const scenario = mountScenario(request, async (body) => {
@@ -87,7 +91,6 @@ function inspector() {
   const tag = tagForSelection(selection);
   const configured = chosen?.kind === 'setpoint' ? chosen.item : loopFor(focusedArea, tag);
   renderInspector(focusedArea, status, channels, circuit, configured, chosen?.kind === 'mv' ? chosen.item : null, tag);
-  updateSetpointSlider(activeSetpoint(), status, connected);
 }
 
 function renderChannels() {
@@ -199,6 +202,7 @@ function filter() {
 
 function renderConnection() {
   scenario.update(status, connected);
+  setpointControls.update(status, connected);
   const kind = !connected || status?.error ? 'offline' : status?.shutdown.terminated ? 'trip' : status?.running ? 'live' : 'paused';
   const labels = { offline: '연결 끊김', trip: '모델 트립', live: '시뮬레이션 실행 중', paused: '일시정지' };
   connection.className = `status ${kind}`;
@@ -321,6 +325,7 @@ async function poll() {
       byId('channel-count').textContent = schema.channels.length;
       byId('channel-group').insertAdjacentHTML('beforeend', schema.groups.map((g) => option(g.id, `${g.label} · ${g.count}`)).join(''));
       setpoints = schema.setpoints;
+      setpointControls.init(setpoints);
       scenario.init(schema.controller_flags ?? {}, schema.channels);
       response.init(setpoints);
       openControls = setupControls(schema, () => status, command, (kind, item) => {
@@ -343,7 +348,6 @@ async function poll() {
   } catch {
     connected = false;
     renderConnection();
-    updateSetpointSlider(activeSetpoint(), status, connected);
   } finally {
     setTimeout(poll, connected ? 430 : 1400);
   }

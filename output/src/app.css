@@ -212,17 +212,19 @@ tr.alarm-row :is(.numeric > span, .channel-state) { color: var(--warning); }
 .empty-cell { padding-block: 1.5rem; color: var(--muted); text-align: center; }
 
 .setpoint-panel { display: flex; flex-direction: column; }
-.setpoint-control {
-  flex: 1; display: grid; align-content: center; gap: 0.28rem;
-  padding: 1rem 0.85rem; border-top: 1px solid var(--line);
+.setpoint-list {
+  flex: 1; min-height: 0; padding: 0; margin: 0; list-style: none;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
 }
-.setpoint-control label { color: var(--subtext); font-size: 0.87rem; font-weight: 650; }
-.setpoint-control output { font: 650 1.5rem var(--mono); line-height: 1.35; }
-#setpoint-slider {
-  display: block; width: 100%; height: var(--control-size); margin: 0;
+.setpoint-control { padding: 0.36rem 0.68rem; border-top: 1px solid var(--line-soft); }
+.setpoint-readout { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0.35rem; }
+.setpoint-readout label { color: var(--subtext); font-size: 0.82rem; font-weight: 650; }
+.setpoint-readout output { font: 650 0.79rem var(--mono); white-space: nowrap; }
+.setpoint-control input {
+  display: block; width: 100%; height: 1.85rem; margin: 0;
   border: 0; background: transparent; accent-color: var(--tracked); touch-action: pan-y;
 }
-.setpoint-bounds { display: flex; justify-content: space-between; color: var(--muted); font: 0.75rem var(--mono); }
+.setpoint-bounds { display: flex; justify-content: space-between; color: var(--muted); font: 0.7rem var(--mono); }
 
 dialog {
   --dialog-gutter: clamp(1rem, 4vmin, 2rem);
@@ -431,8 +433,9 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
     grid-template-rows: minmax(0, 1fr);
     grid-template-areas: "telemetry plant sidebar";
   }
-  .plant-sidebar { grid-template-rows: minmax(0, 1.18fr) minmax(0, 1fr); align-content: stretch; }
+  .plant-sidebar { grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; }
   .inspector { max-height: none; }
+  .setpoint-panel { max-height: calc(100dvh - 13rem); }
   .stage { flex: 1; min-height: 0; height: auto; }
   .pfd-svg { min-width: 0; min-height: 0; }
   .table-scroll { height: auto; flex: 1; }
@@ -449,6 +452,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 @media (max-width: 600px), (pointer: coarse) {
   :root { --control-size: 3.39rem; --map-tag-size: 2.77rem; }
   .topbar { flex-wrap: wrap; }
+  .setpoint-control input { height: 2.77rem; }
   .dialog-fields select, .dialog-fields input { min-height: var(--control-size); }
 }
 
