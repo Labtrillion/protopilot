@@ -8,13 +8,13 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Event, RLock, Thread
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 from wsgiref.simple_server import ServerHandler, WSGIRequestHandler, WSGIServer
 
-from .catalog import METADATA
+from .catalog import CHANNELS, METADATA
 from .experiments import EXPERIMENTS_PATH, create_experiments
 from .plant import Plant, TICK_SECONDS
-from .recording import encode
+from .recording import ArchivedRecording, encode
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -54,7 +54,8 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_GET(self):
-        path = urlsplit(self.path).path
+        url = urlsplit(self.path)
+        path = url.path
         if path.startswith(EXPERIMENTS_PATH):
             self.serve_experiments()
         elif path == "/api/schema":
@@ -65,6 +66,10 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
         elif path == "/api/scenario":
             with self.lock:
                 self.respond(self.plant.scenario(), attachment=f"scenario-{self.plant.recording.id}.json")
+        elif path == "/api/recordings":
+            self.respond(ArchivedRecording.list(self.plant.root))
+        elif path.startswith("/api/recordings/"):
+            self.archive(path, parse_qs(url.query))
         elif path in ("/api/export/csv", "/api/export/json"):
             self.download(path.rsplit("/", 1)[1])
         else:
@@ -102,9 +107,31 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             logging.exception("Could not record operator command")
             self.respond({"error": "로컬 기록 쓰기에 실패했습니다."}, 500)
 
-    def download(self, kind):
+    def archive(self, path, query):
+        try:
+            run_id, part = path.removeprefix("/api/recordings/").split("/")
+            recording = ArchivedRecording.open(self.plant.root, run_id)
+            if part == "scenario":
+                self.respond(recording.scenario(), attachment=f"scenario-{run_id}.json")
+                return
+            if part == "series":
+                tag = query.get("tag", ["XMEAS(7)"])[0]
+                if tag not in CHANNELS:
+                    self.respond({"error": "계측 태그를 확인하세요."}, 400)
+                    return
+                self.respond({"tag": tag, "points": recording.series(tag)})
+                return
+            if part not in {"csv", "json"}:
+                raise FileNotFoundError(path)
+            schema = (recording.directory / "schema.json").read_bytes() if part == "json" else None
+        except (OSError, ValueError):
+            self.respond({"error": "기록을 찾을 수 없습니다."}, 404)
+            return
+        self.download(part, recording=recording, schema=schema)
+
+    def download(self, kind, *, recording=None, schema=None):
         with self.lock:
-            recording = self.plant.recording
+            recording = recording or self.plant.recording
             source = recording.csv_path if kind == "csv" else recording.json_path
             size = source.stat().st_size
             events_size = recording.events_path.stat().st_size
@@ -121,7 +148,7 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
                     remaining -= len(chunk)
         else:
             self.wfile.write(f'{{"run":"{recording.id}","schema":'.encode())
-            self.wfile.write(encode(METADATA).encode())
+            self.wfile.write(schema.strip() if schema is not None else encode(METADATA).encode())
             self.wfile.write(b',"samples":[')
             self.write_lines(source, size)
             self.wfile.write(b'],"events":[')
