@@ -221,7 +221,12 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .legend { display: flex; align-items: center; flex-wrap: wrap; gap: 0.32rem 0.74rem; }
 .legend span { font-size: 0.76rem; white-space: nowrap; }
 .legend i, .inspect-stream i { display: inline-block; width: 1.06rem; height: 0.23rem; margin-right: 0.35rem; background: var(--medium); vertical-align: 0.19em; border-radius: 2px; }
-.orbit-hint { color: var(--muted); font-size: 0.72rem; white-space: nowrap; }
+.stage-controls {
+  display: flex; flex: none; align-items: center; min-width: 0; block-size: 2.8rem;
+  padding-inline: 0.65rem; border-bottom: 1px solid var(--line-soft); background: var(--surface);
+}
+.orbit-hint { color: var(--muted); font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.interior-tools:not([hidden]) + .orbit-hint { display: none; }
 .model-tag {
   --tag-padding: 0.35rem 0.48rem;
   position: absolute; display: grid; gap: 0.13rem; min-height: var(--map-tag-size); min-width: var(--map-tag-size);
@@ -439,7 +444,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 /* Orthogonal Fig. 1 diagram. */
 .diagram { position: absolute; inset: 0; }
 .pfd-svg { display: block; width: 100%; height: 100%; }
-.stage[data-view="2d"] .orbit-hint { display: none; }
+.stage[data-view="2d"] .stage-controls { display: none; }
 .pfd-stream { --display-pipe: var(--pipe); }
 .pfd-stream .pipe-sleeve { stroke: var(--stage); stroke-width: 7; }
 .pfd-stream path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
@@ -544,7 +549,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .pfd-unit.tracked:not(.in-alarm, .tracking-feed [data-area="feeds"]) .pfd-chip, .pfd-symbol.tracked:not(.in-alarm), .pfd-valve.tracked path { stroke: var(--tracked); stroke-width: 2; }
 
 @container (max-width: 560px) {
-  .toolbar-label, .orbit-hint { display: none; }
+  .toolbar-label { display: none; }
   .model-toolbar { padding-inline: 0.42rem; gap: 0.32rem; }
   .model-toolbar button { padding-inline: 0.38rem; gap: 0.26rem; }
   .model-toolbar button svg { width: 1rem; height: 1rem; }
@@ -620,10 +625,11 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 
 /* Interior part tags, sensor test and channel scope. */
 .interior-tools {
-  display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.65rem;
-  padding: 0.3rem 0.65rem; border-bottom: 1px solid var(--line-soft); background: var(--surface);
+  display: flex; min-width: 0; max-height: 100%; align-items: center; gap: 0.65rem;
+  overflow-x: auto; overflow-y: hidden; padding: 0.32rem 0.24rem; margin-inline: -0.24rem;
 }
-.interior-parts, .interior-unit { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; min-width: 0; }
+.interior-parts, .interior-unit { display: flex; flex: none; align-items: center; gap: 0.3rem; }
+.interior-tools > .legend { flex: none; }
 .interior-parts { column-gap: 0.75rem; }
 .interior-parts .toolbar-label { margin-right: 0.1rem; font-size: 0.74rem; }
 .interior-parts button { min-height: 2rem; padding: 0.16rem 0.48rem; gap: 0.32rem; font-size: 0.76rem; }

@@ -59,9 +59,12 @@
       </div>
       <div class="stage" id="stage" data-view="3d">
         <div id="model-tag-list" class="model-tag-list" role="region" aria-label="태그 목록" tabindex="0" hidden></div>
-        <div id="interior-tools" class="interior-tools" hidden>
-          <div id="interior-parts" class="interior-parts" role="group" aria-label="내부 부품 태그" hidden></div>
-          <div class="legend"><span><i class="level-key" aria-hidden="true"></i>액위 SP</span></div>
+        <div class="stage-controls">
+          <div id="interior-tools" class="interior-tools" hidden>
+            <div id="interior-parts" class="interior-parts" role="group" aria-label="내부 부품 태그" hidden></div>
+            <div class="legend"><span><i class="level-key" aria-hidden="true"></i>액위 SP</span></div>
+          </div>
+          <span class="orbit-hint">좌클릭 드래그로 좌우 이동 <span>·</span> 우클릭 드래그로 회전 <span>·</span> 휠로 확대·축소</span>
         </div>
         <div class="stage-display">
           <div id="canvas" class="canvas" data-focus="plant"></div>
@@ -71,7 +74,6 @@
         </div>
         <div class="stage-footer">
           <div id="legend" class="legend"></div>
-          <span class="orbit-hint">좌클릭 드래그로 좌우 이동 <span>·</span> 우클릭 드래그로 회전 <span>·</span> 휠로 확대·축소</span>
           <span class="diagram-hint">좌우 스크롤</span>
         </div>
       </div>

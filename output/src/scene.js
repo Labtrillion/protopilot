@@ -365,6 +365,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     for (const shell of casing) bounds.union(box.setFromObject(shell, true));
     return [area, bounds];
   }));
+  const casingAreas = Object.keys(casingBounds);
 
   function updateProjection() {
     camera.setViewOffset(width, height, -panX * width, 0, width, height);
@@ -501,10 +502,9 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     }
   }
 
-  function reserveInteriors(occupied) {
-    if (!openInteriors.length) return;
+  function reserveCasings(occupied) {
     viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    for (const area of openInteriors) {
+    for (const area of focus in casingBounds ? [focus] : casingAreas) {
       box.copy(casingBounds[area]).applyMatrix4(viewProjection);
       const { min, max } = box;
       const left = (min.x + 1) * width / 2 - interiorClearance;
@@ -520,18 +520,23 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   function projectLabels() {
     annotationsDirty = false;
     if (!showLabels) return;
-    // Keep the exposed sections and the valve controls clear of projected labels.
+    // Reserve the same space for each section whether its casing is opaque or transparent.
     const placed = valveTargets.map(({ bounds }) => bounds).filter(Boolean);
-    reserveInteriors(placed);
+    reserveCasings(placed);
     const priority = (area) => {
       if (focus === area || trackedArea === area || alertAreas.has(area)) return 3;
       if (showPressure && CORE_PRESSURES[area]) return 2;
       return primaryLabels.has(area) ? 1 : 0;
     };
     const ordered = [...labelEntries].sort(([a], [b]) => priority(b) - priority(a));
-    for (const [area, label] of ordered) {
-      if (priority(area) >= 2) projectAnnotation(label, placed, annotationPositions.equipment);
+    for (const [, label] of ordered) projectAnnotation(label, placed, annotationPositions.equipment);
+    for (const port of ports) {
+      projectIfEnabled(port, !activeCircuit || activeCircuit === port.circuit, placed, annotationPositions.port);
     }
+    for (const label of flowLabels) {
+      projectIfEnabled(label, showFlow && Boolean(data) && (!activeCircuit || activeCircuit === label.def.circuit), placed, annotationPositions.flow);
+    }
+    // Internal tags use the space left after external tags, so toggling them cannot move other tags.
     const orderedParts = [...parts].sort((a, b) => Number(b.tag === trackedTag) - Number(a.tag === trackedTag));
     for (const part of orderedParts) {
       const enabled = showInternals && internal.visible(part.area);
@@ -541,15 +546,6 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
         part.layoutPoint ??= part.point.clone();
       }
       projectIfEnabled(part, enabled, placed, annotationPositions.part);
-    }
-    for (const [area, label] of ordered) {
-      if (priority(area) < 2) projectAnnotation(label, placed, annotationPositions.equipment);
-    }
-    for (const port of ports) {
-      projectIfEnabled(port, !activeCircuit || activeCircuit === port.circuit, placed, annotationPositions.port);
-    }
-    for (const label of flowLabels) {
-      projectIfEnabled(label, showFlow && Boolean(data) && (!activeCircuit || activeCircuit === label.def.circuit), placed, annotationPositions.flow);
     }
   }
 
@@ -826,7 +822,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     internals(visible) {
       showInternals = visible;
       applyInternals();
-      resetAnnotationOffsets();
+      annotationsDirty = true;
     },
   };
 }
