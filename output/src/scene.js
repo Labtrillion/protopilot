@@ -13,6 +13,7 @@ const initialOffset = geo.v3(OVERVIEW.offset);
 const initialPolarAngle = new T.Spherical().setFromVector3(initialOffset).phi;
 const verticalOrbitLimit = T.MathUtils.degToRad(25);
 const clickSlop = 5;
+const processFrameInterval = 24;
 const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
 const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'stripper']);
@@ -226,7 +227,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
   camera.position.copy(home).add(initialOffset);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.copy(home);
-  // Horizontal left-button panning shares the canvas's click/drag detection below.
+  // Left-button drags shift the projection below, leaving the orbit target in place.
   controls.enablePan = false;
   controls.mouseButtons.LEFT = null;
   controls.mouseButtons.MIDDLE = null;
@@ -301,7 +302,8 @@ export function mountScene(container, host, select, pick, selectCircuit) {
   const box = new T.Box3();
   let width = 1, height = 1, focus = 'plant', showFlow = true, showPressure = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
   let trackedArea = '', trackedTag = '';
-  let down = null, last = 0, framing = false, valveRadius = 14;
+  let down = null, framing = false, valveRadius = 14;
+  let panX = 0, cameraDirty = true, lastRender = 0, lastProcessFrame = -Infinity;
   const alertAreas = new Set();
   const geometryBounds = {};
   scene.updateMatrixWorld(true);
@@ -313,6 +315,11 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     group.userData.top = box.max.y;
   }
 
+  function updateProjection() {
+    camera.setViewOffset(width, height, -panX * width, 0, width, height);
+    cameraDirty = true;
+  }
+
   new ResizeObserver(() => {
     width = Math.max(1, container.clientWidth);
     height = Math.max(1, container.clientHeight);
@@ -322,7 +329,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     camera.right = half * aspect;
     camera.top = half;
     camera.bottom = -half;
-    camera.updateProjectionMatrix();
+    updateProjection();
     renderer.setSize(width, height, false);
   }).observe(container);
 
@@ -338,7 +345,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
       valve.getWorldPosition(desired);
       desired.y = Math.max(1.3, desired.y);
     }
-    frame = { zoom, offset: resetOrientation ? initialOffset : null };
+    frame = { zoom, offset: resetOrientation ? initialOffset : null, panX: 0 };
     if (showInternals) applyInternals();
     highlight.visible = area !== 'plant';
     if (highlight.visible) {
@@ -439,13 +446,13 @@ export function mountScene(container, host, select, pick, selectCircuit) {
       label.button.classList.toggle('selected', focus === area);
       label.button.classList.toggle('in-alarm', alertAreas.has(area));
       label.button.classList.toggle('has-pressure', showPressure && Boolean(CORE_PRESSURES[area]));
+      let pressure = '';
       if (showPressure && CORE_PRESSURES[area] && data) {
         const tag = codeFor(CORE_PRESSURES[area]);
         const value = data.values[tag];
-        label.value.textContent = Number.isFinite(value) ? `${reading(value, 'kPa(g)')} kPa(g)${tag in data.offsets ? ' · 시험' : ''}` : '';
-      } else {
-        label.value.textContent = '';
+        if (Number.isFinite(value)) pressure = `${reading(value, 'kPa(g)')} kPa(g)${tag in data.offsets ? ' · 시험' : ''}`;
       }
+      if (label.value.textContent !== pressure) label.value.textContent = pressure;
     }
     projectParts(placed);
     for (const port of ports) {
@@ -458,13 +465,17 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     }
   }
 
-  controls.addEventListener('change', () => {
+  function takeCameraControl() {
+    cameraDirty = true;
     if (frame && !framing) {
-      // Manual orbit and zoom can take over while the selected target stays centered.
+      // Complete the selected target's move without overriding manual camera input.
       frame.offset = null;
       frame.zoom = null;
+      frame.panX = null;
     }
-  });
+  }
+
+  controls.addEventListener('change', takeCameraControl);
 
   function hitAt(x, y) {
     pointer.set(x / width * 2 - 1, 1 - y / height * 2);
@@ -502,9 +513,9 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     down.dragged = true;
     down.x = event.clientX;
     if (event.pointerType === 'touch' || dx === 0) return;
-    frame = null;
-    camera.updateMatrix();
-    controls.pan(dx, 0);
+    takeCameraControl();
+    panX += dx / width;
+    updateProjection();
   });
   renderer.domElement.addEventListener('pointerup', (event) => {
     if (event.button !== 0 || down?.id !== event.pointerId) return;
@@ -513,6 +524,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     if (!isClick) return;
     const bounds = renderer.domElement.getBoundingClientRect();
     const x = event.clientX - bounds.left, y = event.clientY - bounds.top;
+    camera.updateMatrixWorld();
     const exact = hitAt(x, y);
     const hit = exact?.valve ? exact : nearbyValve(x, y) ?? exact;
     if (hit?.circuit) selectCircuit(hit.circuit);
@@ -536,38 +548,35 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     }
   }
 
-  function animate(now) {
-    requestAnimationFrame(animate);
-    if (now - last < 24 || !container.isConnected || !displayed || document.hidden) return;
-    const dt = Math.min(0.075, (now - last) / 1000);
-    last = now;
-    if (frame) {
-      cameraOffset.subVectors(camera.position, controls.target);
-      const settled = controls.target.distanceTo(desired) < 0.006 &&
-        (!frame.offset || cameraOffset.distanceTo(frame.offset) < 0.006) &&
-        (frame.zoom === null || Math.abs(camera.zoom - frame.zoom) < 0.006);
-      const ease = motionReduced || settled ? 1 : 1 - Math.exp(-8 * dt);
-      controls.target.lerp(desired, ease);
-      if (frame.offset) {
-        // Keep the return path within the pitch limits when the camera is behind the model.
-        cameraOrbit.setFromVector3(cameraOffset);
-        destinationOrbit.setFromVector3(frame.offset);
-        const yawDelta = T.MathUtils.euclideanModulo(destinationOrbit.theta - cameraOrbit.theta + Math.PI, 2 * Math.PI) - Math.PI;
-        cameraOrbit.theta += yawDelta * ease;
-        cameraOrbit.phi = T.MathUtils.lerp(cameraOrbit.phi, destinationOrbit.phi, ease);
-        cameraOrbit.radius = T.MathUtils.lerp(cameraOrbit.radius, destinationOrbit.radius, ease);
-        cameraOffset.setFromSpherical(cameraOrbit);
-      }
-      camera.position.copy(controls.target).add(cameraOffset);
-      if (frame.zoom !== null) {
-        camera.zoom = T.MathUtils.lerp(camera.zoom, frame.zoom, ease);
-        camera.updateProjectionMatrix();
-      }
-      framing = true;
-      controls.update();
-      framing = false;
-      if (ease === 1) frame = null;
+  function animateCamera(dt) {
+    cameraOffset.subVectors(camera.position, controls.target);
+    const settled = controls.target.distanceTo(desired) < 0.006 &&
+      (!frame.offset || cameraOffset.distanceTo(frame.offset) < 0.006) &&
+      (frame.zoom === null || Math.abs(camera.zoom - frame.zoom) < 0.006) &&
+      (frame.panX === null || Math.abs(panX - frame.panX) * width < 0.5);
+    const ease = motionReduced || settled ? 1 : 1 - Math.exp(-8 * dt);
+    controls.target.lerp(desired, ease);
+    if (frame.offset) {
+      // Keep the return path within the pitch limits when the camera is behind the model.
+      cameraOrbit.setFromVector3(cameraOffset);
+      destinationOrbit.setFromVector3(frame.offset);
+      const yawDelta = T.MathUtils.euclideanModulo(destinationOrbit.theta - cameraOrbit.theta + Math.PI, 2 * Math.PI) - Math.PI;
+      cameraOrbit.theta += yawDelta * ease;
+      cameraOrbit.phi = T.MathUtils.lerp(cameraOrbit.phi, destinationOrbit.phi, ease);
+      cameraOrbit.radius = T.MathUtils.lerp(cameraOrbit.radius, destinationOrbit.radius, ease);
+      cameraOffset.setFromSpherical(cameraOrbit);
     }
+    camera.position.copy(controls.target).add(cameraOffset);
+    if (frame.zoom !== null) camera.zoom = T.MathUtils.lerp(camera.zoom, frame.zoom, ease);
+    if (frame.panX !== null) panX = T.MathUtils.lerp(panX, frame.panX, ease);
+    if (frame.zoom !== null || frame.panX !== null) updateProjection();
+    framing = true;
+    controls.update();
+    framing = false;
+    if (ease === 1) frame = null;
+  }
+
+  function animateProcess(dt) {
     internal.animate(data, dt, showInternals && data?.running && !motionReduced);
     for (const line of streams) {
       const { def, path, length, markers, material, color, valve, flanges } = line;
@@ -598,6 +607,21 @@ export function mountScene(container, host, select, pick, selectCircuit) {
       markers.instanceMatrix.needsUpdate = true;
     }
     highlightMat.color.set(alertAreas.has(focus) ? warningColor : trackedArea === focus ? trackedColor : selectionColor);
+  }
+
+  function animate(now) {
+    requestAnimationFrame(animate);
+    if (!displayed || !container.isConnected || document.hidden) return;
+    const processDue = now - lastProcessFrame >= processFrameInterval;
+    // Redraw changed camera poses on the next display frame while process motion keeps its own cadence.
+    if (!cameraDirty && !frame && !processDue) return;
+    if (frame) animateCamera(Math.min(0.075, (now - lastRender) / 1000));
+    if (processDue) {
+      animateProcess(Math.min(0.075, (now - lastProcessFrame) / 1000));
+      lastProcessFrame = now;
+    }
+    lastRender = now;
+    cameraDirty = false;
     camera.updateMatrixWorld();
     projectLabels();
     renderer.render(scene, camera);
@@ -615,17 +639,20 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     },
     // Camera pose for returning to a previous investigation position.
     view() {
-      return { target: controls.target.clone(), offset: camera.position.clone().sub(controls.target), zoom: camera.zoom };
+      return { target: controls.target.clone(), offset: camera.position.clone().sub(controls.target), zoom: camera.zoom, panX };
     },
     restoreView(saved) {
       if (!saved) return;
       desired.copy(saved.target);
-      frame = { zoom: saved.zoom, offset: saved.offset.clone() };
+      frame = { zoom: saved.zoom, offset: saved.offset.clone(), panX: saved.panX ?? 0 };
     },
     flow(enabled) { showFlow = enabled; },
     pressure(enabled) { showPressure = enabled; },
     circuit(id) { activeCircuit = id || ''; container.dataset.circuit = activeCircuit; },
-    display(enabled) { displayed = enabled; },
+    display(enabled) {
+      displayed = enabled;
+      if (enabled) cameraDirty = true;
+    },
     tags(visible) { showLabels = visible; },
     internals(visible) {
       showInternals = visible;
