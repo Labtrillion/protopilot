@@ -66,18 +66,13 @@
           <span class="diagram-hint">좌우 스크롤</span>
         </div>
       </div>
+      <section id="circuit-route" class="circuit-route" aria-labelledby="circuit-route-title" hidden></section>
     </section>
 
     <div class="plant-sidebar">
       <aside class="panel inspector" aria-labelledby="inspector-title">
-        <div class="panel-head"><div class="heading-inline"><span data-icon="box"></span><h2 id="inspector-title">설비 인스펙터</h2></div></div>
-        <div class="inspector-controls">
-          <label class="unit-select"><span class="sr-only">관측할 설비</span><select id="area-select"></select></label>
-          <div id="inspector-setpoint" class="inspector-setpoint" hidden>
-            <button id="inspector-response" type="button"><span id="inspector-sp-label"></span><b id="inspector-sp-value"></b></button>
-          </div>
-        </div>
-        <div id="inspector-content" class="inspector-content" role="region" tabindex="0" aria-label="선택한 설비의 계측 태그와 배관"></div>
+        <div class="panel-head"><div class="heading-inline"><span data-icon="box"></span><h2 id="inspector-title">연결 배관</h2></div></div>
+        <div id="inspector-content" class="inspector-content" role="region" tabindex="0" aria-label="선택한 설비의 연결 배관" aria-live="polite"></div>
       </aside>
       <section class="panel setpoint-panel" aria-labelledby="setpoint-title">
         <div class="panel-head">

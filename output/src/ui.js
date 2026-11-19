@@ -1,5 +1,6 @@
 import { AREAS, CIRCUITS, MEDIA, STREAMS, codeFor } from './topology.js';
 import { readColor } from './palette.js';
+import { SAMPLES } from './schematic.js';
 
 export const byId = (id) => document.getElementById(id);
 export const escape = (text = '') => String(text).replace(/[&<>"']/g, (char) =>
@@ -55,12 +56,13 @@ export function legend(circuit) {
   }).join('');
 }
 
-function routeDetails(circuit) {
-  if (!circuit) return '';
+export function renderCircuitRoute(circuit) {
+  const root = byId('circuit-route');
+  root.hidden = !circuit;
+  if (!circuit) return;
   const route = CIRCUITS[circuit];
   const paths = route.paths.map((path) => `<li>${path.map((item) => `<span>${escape(item)}</span>`).join('<i aria-hidden="true">→</i>')}</li>`).join('');
-  return `<section class="route-inspector">
-    <h3>${route.title} 경로</h3><ul>${paths}</ul><p>${route.info}</p></section>`;
+  root.innerHTML = `<h2 id="circuit-route-title">${escape(route.title)} 경로</h2><ul>${paths}</ul><p>${escape(route.info)}</p>`;
 }
 
 const trendColor = readColor('--plot-sparkline');
@@ -94,51 +96,22 @@ function renderChannelTrend(cell, series) {
   ctx.stroke();
 }
 
-export function renderInspector(areaKey, status, metadata, circuit = '', setpoint = null, control = null, tracked = '') {
-  const area = AREAS[areaKey];
-  const values = status?.values ?? {};
-  const setting = byId('inspector-setpoint');
-  setting.hidden = !setpoint;
-  if (setpoint) {
-    if (setting.dataset.setpoint !== setpoint.id) {
-      setting.dataset.setpoint = setpoint.id;
-      byId('inspector-sp-label').textContent = `${setpoint.label} · SP 응답`;
-    }
-    byId('inspector-sp-value').textContent = `${reading(status?.setpoints?.[setpoint.id], setpoint.unit)} ${setpoint.unit}`;
-  }
+export function renderInspector(areaKey) {
   const root = byId('inspector-content');
-  const panelKey = [areaKey, circuit, control?.id, metadata.size].join('/');
-  if (root.dataset.area !== panelKey) {
-    const rows = [...area.tags.map(codeFor), ...(area.extra ?? [])].map((tag) => {
-      const channel = metadata.get(tag);
-      return `<button class="inspect-tag" type="button" data-tag="${tag}" title="계측 표에서 보기"${channel ? '' : ' disabled'}>
-        <span>${escape(channel?.label ?? tag)}</span><small>${tag}</small></button>`;
-    }).join('');
-    const streams = STREAMS.filter((stream) => circuit ? stream.circuit === circuit : stream.area === areaKey && areaKey !== 'plant');
-    const routes = streams.map((stream) =>
-      `<div class="inspect-stream"><span class="line-id"><i style="--medium:var(${MEDIA[stream.media].colorToken})"></i>${stream.id}</span>
-        <b>${escape(stream.from)} → ${escape(stream.to)}</b></div>`).join('');
-    root.innerHTML = `${routeDetails(circuit)}<div class="inspector-label"><code>${area.code}</code><span>${area.en}</span></div>
-      ${control ? `<button type="button" class="inspect-setting" data-control="${control.id}"><span>${escape(control.label)}</span><b></b></button>` : ''}
-      <div class="inspect-tags">${rows}</div>${routes ? `<h3>연결 배관</h3><div class="inspect-streams">${routes}</div>` : ''}`;
-    root.dataset.area = panelKey;
-    root.scrollTop = 0;
+  if (areaKey === 'plant') {
+    root.innerHTML = '<p class="inspector-empty">공정도나 실시간 계측에서 설비를 선택하세요.</p>';
+    return;
   }
-  if (control) {
-    const current = status?.actuators?.[control.id];
-    const command = status?.manual[control.id] ?? values[control.id];
-    root.querySelector('[data-control] b').textContent = `실제 ${reading(current)}% · 명령 ${reading(command)}%`;
-  }
-  const activeAlarms = new Set(status?.alarms.map((alarm) => alarm.tag));
-  for (const button of root.querySelector('.inspect-tags').children) {
-    const tag = button.dataset.tag;
-    const alarming = activeAlarms.has(tag);
-    const tested = tag in (status?.offsets ?? {});
-    button.classList.toggle('alarming', alarming);
-    button.classList.toggle('tested', tested);
-    button.querySelector('small').textContent = [tag, alarming && '경보', tested && '시험'].filter(Boolean).join(' · ');
-    button.setAttribute('aria-current', tag === tracked);
-  }
+  const { code, name } = AREAS[areaKey];
+  const sampleId = SAMPLES[areaKey]?.[0];
+  const streams = STREAMS.filter(({ id, connectedAreas }) => connectedAreas.includes(areaKey) || id === sampleId);
+  const routes = streams.map(({ id, media, from, to }) => {
+    const path = id === sampleId ? `시료 채취점 → ${code} 시료 입구` : `${from} → ${to}`;
+    return `<li class="inspect-stream"><span class="line-id"><i aria-hidden="true" style="--medium:var(${MEDIA[media].colorToken})"></i>${escape(id)}</span><span>${escape(path)}</span></li>`;
+  }).join('');
+  root.innerHTML = `<h3 class="inspector-label"><code>${escape(code)}</code><span>${escape(name)}</span></h3>
+    ${routes ? `<ul class="inspect-streams" role="list">${routes}</ul>` : '<p class="inspector-empty">표시할 연결 배관이 없습니다.</p>'}`;
+  root.scrollTop = 0;
 }
 
 export function renderRows(channels, status, selected, recentReadings) {

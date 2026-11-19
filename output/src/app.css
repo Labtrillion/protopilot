@@ -152,28 +152,17 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .canvas-error { position: absolute; inset: 35% 12% auto; text-align: center; padding: 1rem; border: 1px solid var(--line); background: var(--surface); }
 
 .inspector { display: flex; flex-direction: column; max-height: 28rem; background: var(--surface); }
-.inspector-controls { padding: 0 0.65rem; flex: none; }
-.unit-select select { width: 100%; font-weight: 650; }
-.inspector-setpoint { display: grid; margin-top: 0.42rem; }
-#inspector-response {
-  display: grid; justify-content: stretch; gap: 0.12rem; min-width: 0; padding: 0.32rem 0.43rem;
-  color: var(--subtext); white-space: normal; text-align: left; font-size: 0.78rem;
-}
-#inspector-sp-value { color: var(--text); font: 650 0.74rem var(--mono); }
-.inspector-content { flex: 1; margin-top: 0.32rem; padding: 0 0.65rem 0.5rem; }
+.inspector-content { flex: 1; padding: 0 0.7rem 0.5rem; }
 .inspector-content, .table-scroll { overflow: auto; min-height: 0; scrollbar-width: thin; }
 .inspector-content:focus-visible, .table-scroll:focus-visible { outline-offset: -2px; }
-.inspector-label { display: flex; align-items: center; gap: 0.52rem; padding: 0.44rem 0 0.61rem; color: var(--muted); font-size: 0.83rem; }
-.inspector-label code { color: var(--text); font: 600 0.76rem var(--mono); }
-.inspect-tags { border-top: 1px solid var(--line-soft); }
-.inspect-tag { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; padding: 0.38rem 0.28rem; text-align: left; border: 0; border-bottom: 1px solid var(--line-soft); border-radius: 0; background: transparent; }
-.inspect-tag:focus-visible { outline-offset: -2px; }
-.inspect-tag > span { color: var(--subtext); font-size: 0.83rem; white-space: normal; overflow-wrap: anywhere; }
-.inspect-tag small { color: var(--muted); font: 0.71rem var(--mono); text-align: right; }
-.inspect-tag[aria-current="true"] small { color: var(--tracked); }
-.inspect-tag:is(.alarming, .tested) small { color: var(--warning); }
-.inspector h3 { font-size: 0.83rem; padding-block: 0.9rem 0.45rem; }
-.inspect-stream { display: grid; grid-template-columns: 2.7rem minmax(0, 1fr); gap: 0.25rem; margin-bottom: 0.41rem; font-size: 0.75rem; }
+.inspector-empty { padding-block: 0.4rem; color: var(--muted); font-size: 0.83rem; }
+.inspector-label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.52rem; padding: 0.44rem 0 0.61rem; color: var(--subtext); font-size: 0.83rem; }
+.inspector-label code { color: var(--text); font: 650 0.76rem var(--mono); }
+.inspect-streams { list-style: none; margin: 0; padding: 0; }
+.inspect-stream { display: grid; grid-template-columns: 2.7rem minmax(0, 1fr); gap: 0.25rem; padding-block: 0.41rem; border-top: 1px solid var(--line-soft); font-size: 0.75rem; }
+.inspect-stream .line-id { white-space: nowrap; font: 0.68rem var(--mono); color: var(--muted); padding-top: 0.14rem; }
+.inspect-stream .line-id i { width: 0.48rem; margin-right: 0.14rem; }
+.inspect-stream > :last-child { color: var(--subtext); overflow-wrap: anywhere; }
 
 .subtle-count { color: var(--muted); font: 0.78rem var(--mono); }
 .exports a { padding-inline: 0.50rem; font: 600 0.78rem var(--mono); }
@@ -294,17 +283,12 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .model-tag.has-pressure span { color: var(--text); font-size: 0.76rem; font-weight: 700; }
 .model-tag.in-alarm span { color: var(--warning); }
 .legend .level-key { background: none; height: 0; border-top: 2px dashed var(--plot-sp); }
-.route-inspector { margin: 0.08rem 0 0.60rem; padding-block: 0.57rem; border-bottom: 1px solid var(--line); }
-.route-inspector h3 { padding: 0; margin-bottom: 0.45rem; }
-.route-inspector ul { list-style: none; padding: 0; margin: 0; }
-.route-inspector li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.23rem; margin-block: 0.40rem; font-size: 0.76rem; }
-.route-inspector li i { font-style: normal; color: var(--muted); }
-.route-inspector p { margin-top: 0.5rem; color: var(--muted); font-size: 0.75rem; line-height: 1.46; }
-.inspect-setting { display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%; gap: 0.3rem; padding: 0.43rem; margin-bottom: 0.42rem; color: var(--subtext); font-size: 0.78rem; }
-.inspect-setting b { color: var(--text); font: 650 0.74rem var(--mono); }
-.inspect-stream .line-id { white-space: nowrap; font: 0.68rem var(--mono); color: var(--muted); padding-top: 0.2rem; }
-.inspect-stream .line-id i { width: 0.48rem; margin-right: 0.14rem; }
-.inspect-stream b { font-weight: 500; overflow-wrap: anywhere; }
+.circuit-route { flex: none; padding: 0.57rem 0.65rem; border-top: 1px solid var(--line-soft); }
+.circuit-route h2 { font-size: 0.83rem; }
+.circuit-route ul { list-style: none; padding: 0; margin: 0; }
+.circuit-route li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.23rem; margin-block: 0.40rem; font-size: 0.76rem; }
+.circuit-route li i { font-style: normal; color: var(--muted); }
+.circuit-route p { margin-top: 0.5rem; color: var(--muted); font-size: 0.75rem; line-height: 1.46; }
 
 /* Orthogonal Fig. 1 diagram. */
 .diagram { position: absolute; inset: 0; overflow: auto; scrollbar-width: thin; }

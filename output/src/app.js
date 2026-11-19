@@ -4,7 +4,7 @@ import { mountResponse } from './response.js';
 import { mountSetpointControls, setupControls } from './controls.js';
 import { mountScenario } from './scenario.js';
 import {
-  byId, elapsed, icon, initIcons, option, renderInspector, renderRows,
+  byId, elapsed, icon, initIcons, option, renderCircuitRoute, renderInspector, renderRows,
 } from './ui.js';
 
 // Representative closed loop per unit; used only when the server defines it for that unit.
@@ -16,11 +16,11 @@ const TREND_LENGTH = 60;
 
 const channels = new Map();
 const recentReadings = [];
-const reset = byId('reset'), run = byId('run'), speed = byId('speed'), select = byId('area-select');
+const reset = byId('reset'), run = byId('run'), speed = byId('speed');
 const connection = byId('connection');
 const pageId = crypto.randomUUID();
 let plantView, openControls, status, noticeTimer, pageRecorded = false;
-let circuit = '', setpoints = [], telemetryView = 'values';
+let setpoints = [], telemetryView = 'values';
 let focusedArea = 'plant', selection, connected = false;
 let visibleChannels = [], channelScope = 'primary', explicitTag = '';
 
@@ -86,20 +86,8 @@ function showTelemetry(view, setpoint) {
   response.show(show, setpoint);
 }
 
-function inspector() {
-  const chosen = selection?.item.area === focusedArea ? selection : null;
-  const tag = tagForSelection(selection);
-  const configured = chosen?.kind === 'setpoint' ? chosen.item : loopFor(focusedArea, tag);
-  renderInspector(focusedArea, status, channels, circuit, configured, chosen?.kind === 'mv' ? chosen.item : null, tag);
-}
-
 function renderChannels() {
   renderRows(visibleChannels, status, tagForSelection(selection), recentReadings);
-}
-
-function refresh() {
-  inspector();
-  renderChannels();
 }
 
 // With the SP tab open the central tracking and the response loop are the same loop;
@@ -129,7 +117,7 @@ function trackTag(tag, area = '') {
   explicitTag = tag;
   follow(channelSelection(channel));
   syncResponse(unitLoop(tag, focusedArea));
-  refresh();
+  renderChannels();
 }
 
 function follow(next) {
@@ -146,7 +134,7 @@ function focus(area, tag = '', resetCamera = false, next) {
   else if (channel && (tag || area !== 'plant' || !explicitTag)) follow(channelSelection(channel));
   explicitTag = tag || (next ? tagForSelection(next) : area === 'plant' ? explicitTag : '');
   focusedArea = area;
-  select.value = area;
+  if (moved) renderInspector(area);
   if (moved || resetCamera || tag.startsWith('XMV(') || FEED_FLOW_TAGS.has(tag)) {
     plantView?.focus(area, resetCamera, tag);
   }
@@ -154,18 +142,14 @@ function focus(area, tag = '', resetCamera = false, next) {
     if (area === 'plant') closeResponse();
     else syncResponse(tag ? unitLoop(tag, area) : loopFor(area));
   }
-  refresh();
+  renderChannels();
 }
 
-function trackSetpoint(id, jump = false) {
+function trackSetpoint(id) {
   const item = setpoints.find((entry) => entry.id === id);
   if (!item) return;
   focus(item.area, item.pv, false, { kind: 'setpoint', item });
   showTelemetry('response', id);
-  if (jump) {
-    byId('response-select').focus({ preventScroll: true });
-    byId('response-view').scrollIntoView({ block: 'nearest' });
-  }
 }
 
 function note(message, level = 'ok') {
@@ -230,7 +214,6 @@ function receive(next) {
   if (previous?.running !== status.running) run.innerHTML = status.running ? `${icon('pause')} 일시정지` : `${icon('play')} 실행`;
   if (document.activeElement !== speed) speed.value = status.speed;
   renderChannels();
-  inspector();
   plantView?.update(status);
   response.update(status);
 }
@@ -251,23 +234,9 @@ async function command(body, onSuccess) {
 }
 const doCommand = (body, callback) => command(body, callback).catch((error) => note(error.message, 'danger'));
 
-function selectTag(tag, navigate = false) {
+function selectTag(tag) {
   const ch = channels.get(tag);
-  if (!ch) return;
-  if (navigate && telemetryView === 'response') showTelemetry('values');
-  focus(ch.area, tag);
-  if (navigate) {
-    // Reveal the row; only widen the current filter when the row is not already listed.
-    if (!visibleChannels.includes(ch)) {
-      byId('channel-group').value = '';
-      byId('channel-area').value = '';
-      byId('search').value = tag;
-      filter();
-    }
-    const button = byId('rows').querySelector(`button[data-tag="${CSS.escape(tag)}"]`);
-    button?.focus({ preventScroll: true });
-    button?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  }
+  if (ch) focus(ch.area, tag);
 }
 
 function attachEvents() {
@@ -286,7 +255,7 @@ function attachEvents() {
   });
   byId('tab-values').addEventListener('click', () => {
     showTelemetry('values');
-    refresh();
+    renderChannels();
   });
   // Direct SP tab entry uses the same path as every other SP shortcut, so unit, tag and loop match.
   byId('tab-response').addEventListener('click', () => {
@@ -298,19 +267,14 @@ function attachEvents() {
     setScope('primary');
   });
   byId('scope-all').addEventListener('click', () => setScope('all'));
-  const inspectorSetpoint = byId('inspector-setpoint');
-  byId('inspector-response').addEventListener('click', () => trackSetpoint(inspectorSetpoint.dataset.setpoint, true));
-  byId('inspector-content').addEventListener('click', (event) => {
-    const channelButton = event.target.closest('button[data-tag]');
-    if (channelButton) selectTag(channelButton.dataset.tag, true);
-    const controlButton = event.target.closest('[data-control]');
-    if (controlButton) openControls?.(controlButton.dataset.control);
-  });
-  select.addEventListener('change', () => focus(select.value));
   // Active search/filters always look across all channels; clearing them returns to the chosen scope.
-  for (const [id, type] of [['search', 'input'], ['channel-group', 'change'], ['channel-area', 'change']]) {
-    byId(id).addEventListener(type, filter);
-  }
+  byId('search').addEventListener('input', filter);
+  byId('channel-group').addEventListener('change', filter);
+  byId('channel-area').addEventListener('change', (event) => {
+    const area = event.currentTarget.value;
+    if (area && area !== focusedArea) focus(area);
+    filter();
+  });
   byId('rows').addEventListener('click', (event) => {
     const row = event.target.closest('tr[data-tag]');
     if (row) selectTag(row.dataset.tag);
@@ -337,7 +301,6 @@ async function poll() {
       });
       follow({ kind: 'channel', item: channels.get('XMEAS(7)') });
       filter();
-      inspector();
     }
     if (!pageRecorded) {
       await command({ op: 'new_recording', page_id: pageId });
@@ -354,10 +317,8 @@ async function poll() {
 }
 
 initIcons();
-select.innerHTML = Object.entries(AREAS).map(([key, area]) => option(key, key === 'plant' ? '공정 전체' : `${area.code} · ${area.name}`)).join('');
-select.value = focusedArea;
 byId('channel-area').insertAdjacentHTML('beforeend', Object.entries(AREAS).filter(([key]) => key !== 'plant').map(([key, area]) => option(key, area.name)).join(''));
-inspector();
+renderInspector(focusedArea);
 attachEvents();
 plantView = mountPlantView({
   selectArea: focus,
@@ -369,7 +330,7 @@ plantView = mountPlantView({
     const channel = channels.get(tag);
     if (channel) { focus(channel.area, tag); openControls?.(tag); }
   },
-  onCircuit: (id) => { circuit = id; inspector(); },
+  onCircuit: renderCircuitRoute,
   trackTag,
 });
 poll();

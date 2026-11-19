@@ -5,7 +5,7 @@ export const AREAS = {
   plant:      { code: 'TEP', name: '공정 전체', en: 'Process overview', tags: [7, 9, 13, 16, 17, 20] },
   feeds:      { code: 'FD-100', name: '원료 공급', en: 'Feed manifold', tags: [1, 2, 3, 4] },
   reactor:    { code: 'R-101', name: '반응기', en: 'Reactor', tags: [7, 9, 8, 6, 21] },
-  condenser:  { code: 'E-101', name: '제품 응축기', en: 'Condenser', tags: [22], extra: ['XMEASADD(8)'] },
+  condenser:  { code: 'E-101', name: '제품 응축기', en: 'Condenser', tags: [22] },
   separator:  { code: 'V-101', name: '기액 분리기', en: 'Separator', tags: [13, 11, 12, 14] },
   compressor: { code: 'K-101', name: '재순환 압축기', en: 'Compressor', tags: [20, 5] },
   stripper:   { code: 'T-101', name: '제품 스트리퍼', en: 'Stripper', tags: [16, 18, 15, 17] },
@@ -101,39 +101,42 @@ export const CIRCUITS = {
   },
 };
 
+// [source label, destination label, connected equipment, optional circuit]
 const LINKS = {
-  '01': ['A 원료', '혼합 헤더'], '02': ['D 원료', '혼합 헤더'], '03': ['E 원료', '혼합 헤더'],
-  'M': ['A/D/E 합류', '재순환 합류점'],
-  '04': ['A/C 원료', 'T-101 하부'],
-  '05': ['T-101 상부', '압축기 토출측 혼합점', 'recycle'],
-  '06': ['혼합 헤더', 'R-101 입구', 'recycle'],
-  '07': ['R-101 상부', 'E-101 공정측 입구'],
-  '07B': ['E-101 공정측 출구', 'V-101 측면'],
-  '08': ['V-101 상부', '압축기 흡입 티', 'recycle'],
-  '08I': ['흡입 티', 'K-101 흡입', 'recycle'],
-  '08R': ['K-101 토출', '#05 합류점', 'recycle'],
-  '08M': ['#05 합류점', '원료 혼합 헤더', 'recycle'],
-  '08B': ['K-101 토출 티', 'K-101 흡입 티', 'recycle'],
-  '09': ['V-101 상부 분기', 'PURGE 출구'],
-  '10S': ['V-101 하부', 'P-101 흡입'],
-  '10': ['P-101 토출', 'T-101 상부 측면'],
-  '11S': ['T-101 하부', 'P-102 흡입'],
-  '11': ['P-102 토출', 'PRODUCT 출구'],
-  'CWS': ['CWS 배터리 리밋', '냉각수 공급 헤더', 'cooling'],
-  'CWR': ['냉각수 회수 헤더', 'CWR 배터리 리밋', 'cooling'],
-  '12I': ['CWS 공급 헤더', 'R-101 코일 입구', 'cooling'],
-  '12': ['R-101 코일 출구', 'CWR 회수 헤더', 'cooling'],
-  '13I': ['CWS 공급 헤더', 'E-101 냉각수 입구', 'cooling'],
-  '13': ['E-101 냉각수 출구', 'CWR 회수 헤더', 'cooling'],
-  'ST': ['STM 경계', 'E-102 스팀측', 'steam'],
-  'CD': ['E-102 스팀측', 'COND 경계', 'steam'],
-  'RB-I': ['T-101 하부 분기', 'E-102 공정측 입구', 'steam'],
-  'RB-R': ['E-102 공정측 출구', 'T-101 하부', 'steam'],
+  '01': ['A 원료', '혼합 헤더', ['feeds']],
+  '02': ['D 원료', '혼합 헤더', ['feeds']],
+  '03': ['E 원료', '혼합 헤더', ['feeds']],
+  'M': ['A/D/E 합류', '재순환 합류점', ['feeds']],
+  '04': ['A/C 원료', 'T-101 하부', ['feeds', 'stripper']],
+  '05': ['T-101 상부', '압축기 토출측 혼합점', ['stripper'], 'recycle'],
+  '06': ['혼합 헤더', 'R-101 입구', ['feeds', 'reactor'], 'recycle'],
+  '07': ['R-101 상부', 'E-101 공정측 입구', ['reactor', 'condenser']],
+  '07B': ['E-101 공정측 출구', 'V-101 측면', ['condenser', 'separator']],
+  '08': ['V-101 상부', '압축기 흡입 티', ['separator', 'compressor'], 'recycle'],
+  '08I': ['흡입 티', 'K-101 흡입', ['compressor'], 'recycle'],
+  '08R': ['K-101 토출', '#05 합류점', ['compressor'], 'recycle'],
+  '08M': ['#05 합류점', '원료 혼합 헤더', ['feeds'], 'recycle'],
+  '08B': ['K-101 토출 티', 'K-101 흡입 티', ['compressor'], 'recycle'],
+  '09': ['V-101 상부 분기', 'PURGE 출구', ['separator', 'purge']],
+  '10S': ['V-101 하부', 'P-101 흡입', ['separator', 'pump_sep']],
+  '10': ['P-101 토출', 'T-101 상부 측면', ['pump_sep', 'stripper']],
+  '11S': ['T-101 하부', 'P-102 흡입', ['stripper', 'pump_prod']],
+  '11': ['P-102 토출', 'PRODUCT 출구', ['pump_prod', 'product']],
+  'CWS': ['CWS 배터리 리밋', '냉각수 공급 헤더', [], 'cooling'],
+  'CWR': ['냉각수 회수 헤더', 'CWR 배터리 리밋', [], 'cooling'],
+  '12I': ['CWS 공급 헤더', 'R-101 코일 입구', ['reactor'], 'cooling'],
+  '12': ['R-101 코일 출구', 'CWR 회수 헤더', ['reactor'], 'cooling'],
+  '13I': ['CWS 공급 헤더', 'E-101 냉각수 입구', ['condenser'], 'cooling'],
+  '13': ['E-101 냉각수 출구', 'CWR 회수 헤더', ['condenser'], 'cooling'],
+  'ST': ['STM 경계', 'E-102 스팀측', ['reboiler'], 'steam'],
+  'CD': ['E-102 스팀측', 'COND 경계', ['reboiler'], 'steam'],
+  'RB-I': ['T-101 하부 분기', 'E-102 공정측 입구', ['stripper', 'reboiler'], 'steam'],
+  'RB-R': ['E-102 공정측 출구', 'T-101 하부', ['stripper', 'reboiler'], 'steam'],
 };
 
 export const STREAMS = PIPES.map((pipe) => {
-  const [from, to, circuit] = LINKS[pipe.id];
-  return { ...pipe, from, to, circuit };
+  const [from, to, connectedAreas, circuit] = LINKS[pipe.id];
+  return { ...pipe, from, to, connectedAreas, circuit };
 });
 
 export const FEED_TAGS = Object.fromEntries(STREAMS.filter(({ area, tag }) => area === 'feeds' && tag)
