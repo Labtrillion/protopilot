@@ -158,12 +158,15 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
 export function renderRows(channels, status, selected) {
   const holder = byId('rows');
   if (!channels.length) {
-    holder.innerHTML = '<tr><td colspan="6" class="empty-cell">검색 조건에 해당하는 채널이 없습니다.</td></tr>';
+    holder.innerHTML = '<tr><td colspan="3" class="empty-cell">검색 조건에 해당하는 채널이 없습니다.</td></tr>';
     return;
   }
   if (holder.children.length !== channels.length || channels.some((channel, i) => holder.children[i].dataset.tag !== channel.id)) {
-    holder.innerHTML = channels.map((ch) => `<tr data-tag="${escape(ch.id)}"><td class="tag-cell"><button type="button" data-tag="${escape(ch.id)}" title="신호와 설비 추적">${escape(ch.id)}</button></td>
-      <td title="${escape(ch.description)}">${escape(ch.label)}</td><td>${AREAS[ch.area].code}</td><td class="right numeric"></td><td class="channel-unit">${escape(ch.unit)}</td><td class="channel-state"></td></tr>`).join('');
+    holder.innerHTML = channels.map((ch) => `<tr data-tag="${escape(ch.id)}">
+      <td class="tag-cell"><button type="button" data-tag="${escape(ch.id)}" title="${escape(ch.description)}">
+        <span class="channel-name">${escape(ch.label)}</span><span class="channel-id"><code>${escape(ch.id)}</code> <span>${AREAS[ch.area].code}</span></span>
+      </button></td><td class="right numeric"><span></span><small class="channel-unit">${escape(ch.unit)}</small></td>
+      <td class="channel-state"></td></tr>`).join('');
   }
   const active = new Set((status?.alarms ?? []).map((alarm) => alarm.tag));
   channels.forEach((ch, i) => {
@@ -175,11 +178,11 @@ export function renderRows(channels, status, selected) {
     if (selected === ch.id) tr.cells[0].firstElementChild.setAttribute('aria-current', 'true');
     else tr.cells[0].firstElementChild.removeAttribute('aria-current');
     tr.classList.toggle('alarm-row', isAlarm);
-    tr.cells[3].textContent = reading(status?.values[ch.id], ch.unit);
+    tr.cells[1].firstElementChild.textContent = reading(status?.values[ch.id], ch.unit);
     const pending = manual && status.manual[ch.id] !== status.values[ch.id];
     const state = isAlarm ? '경보' : isOffset ? '시험' : pending ? '명령 대기' : manual ? '수동' : ch.period ? `${ch.period} h 샘플` : ch.group.endsWith('monitors') ? '진단' : '정상';
-    tr.cells[5].textContent = state;
-    if (ch.period) tr.cells[5].title = `갱신 ${ch.period} h / 지연 ${ch.delay} h`;
+    tr.cells[2].textContent = state;
+    if (ch.period) tr.cells[2].title = `갱신 ${ch.period} h / 지연 ${ch.delay} h`;
   });
 }
 

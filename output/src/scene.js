@@ -158,7 +158,7 @@ function createLabels(host, onSelect) {
     if (key === 'compressor') position.x -= 1.0;
     if (key === 'separator') position.x += 0.22;
     if (key === 'stripper') position.x += 1.15;
-    labels[key] = { button, position, value: button.querySelector('span') };
+    labels[key] = { button, position, value: button.querySelector('span'), width: 70, height: 36 };
   }
   return labels;
 }
@@ -232,6 +232,15 @@ export function mountScene(container, host, select) {
   const streams = buildStreams(scene, groups);
   const internal = buildInternals(groups, sight);
   const labels = createLabels(host, select);
+  const labelEntries = Object.entries(labels);
+  const labelSizes = new ResizeObserver((entries) => {
+    for (const { target, borderBoxSize } of entries) {
+      const { inlineSize, blockSize } = borderBoxSize[0];
+      if (!inlineSize || !blockSize) continue;
+      Object.assign(labels[target.dataset.area], { width: inlineSize, height: blockSize });
+    }
+  });
+  for (const [, label] of labelEntries) labelSizes.observe(label.button);
   const ports = makePortLabels(host);
   const highlightMat = new T.MeshBasicMaterial({ color: 0x53eff1, transparent: true, opacity: 0.85, depthWrite: false });
   const trackedColor = new T.Color(0xf0cf82);
@@ -295,17 +304,31 @@ export function mountScene(container, host, select) {
   }
 
   function projectLabels() {
-    for (const [area, label] of Object.entries(labels)) {
+    const placed = [];
+    const priority = (area) => (focus === area || trackedArea === area || alertAreas.has(area) ? 2 : CORE_PRESSURES[area] ? 1 : 0);
+    const ordered = [...labelEntries].sort(([a], [b]) => priority(b) - priority(a));
+    for (const [area, label] of ordered) {
       projected.copy(label.position).project(camera);
       const offscreen = Math.abs(projected.x) > 0.96 || Math.abs(projected.y) > 0.95 || projected.z > 1;
-      label.button.hidden = offscreen || (!showLabels && focus !== area && trackedArea !== area) ||
-        (!visibleLabels.has(area) && focus !== area && trackedArea !== area && !alertAreas.has(area));
+      const selected = area === focus || area === trackedArea;
+      if (offscreen || (!showLabels && !selected) || (!visibleLabels.has(area) && !selected && !alertAreas.has(area))) {
+        label.button.hidden = true;
+        continue;
+      }
+      const half = label.width / 2;
+      const x = T.MathUtils.clamp((projected.x + 1) * width / 2, half + 3, width - half - 3);
+      const anchor = (1 - projected.y) * height / 2;
+      const left = x - half, right = x + half;
+      let y = T.MathUtils.clamp(anchor, label.height + 3, height - 5);
+      // Reserve space for tracked units and pressure readings before placing nearby tags.
+      for (let overlap; (overlap = placed.find((other) => left < other.right + 3 && right > other.left - 3 &&
+        y > other.top - 3 && y - label.height < other.bottom + 3));) y = overlap.top - 3;
+      label.button.hidden = y < label.height + 3;
       if (label.button.hidden) continue;
-      const active = area === focus;
-      const x = (projected.x + 1) * width / 2;
-      const y = (1 - projected.y) * height / 2;
-      label.button.style.left = `${active ? T.MathUtils.clamp(x, 58, width - 58) : x}px`;
-      label.button.style.top = `${active ? Math.max(showPressure ? 64 : 51, y) : y}px`;
+      placed.push({ left, right, top: y - label.height, bottom: y });
+      label.button.style.left = `${x}px`;
+      label.button.style.top = `${y}px`;
+      label.button.style.setProperty('--tag-leader', `${Math.max(0, anchor - y)}px`);
       label.button.classList.toggle('selected', focus === area);
       label.button.classList.toggle('in-alarm', alertAreas.has(area));
       label.button.classList.toggle('has-pressure', showPressure && Boolean(CORE_PRESSURES[area]));

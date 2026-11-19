@@ -138,7 +138,8 @@ export function mountSignal() {
     const numeric = values.filter(Number.isFinite);
     const min = Math.min(...numeric), max = Math.max(...numeric);
     nodes['trace-count'].textContent = `${values.length}점`;
-    nodes['trace-range'].textContent = min === max ? format(min) : numeric.length ? `${format(min)} ~ ${format(max)}` : '—';
+    const start = kind === 'disturbance' ? format(min) : reading(min, item.unit);
+    nodes['trace-range'].textContent = min === max ? format(min) : numeric.length ? `${start} ~ ${format(max)}` : '—';
     drawTrace(nodes.chart, values, min, max, ['setpoint', 'disturbance', 'mv'].includes(kind));
   }
 

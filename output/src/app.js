@@ -236,9 +236,11 @@ function attachEvents() {
       const button = event.target.closest('button[data-tag]');
       if (!button) return;
       selectTag(button.dataset.tag, id === 'inspector-content');
-      if (id !== 'inspector-content') {
+      const detail = byId('signal-detail');
+      const bounds = detail.getBoundingClientRect();
+      if (id !== 'inspector-content' && (bounds.top < 0 || bounds.bottom > innerHeight)) {
         byId('signal-heading').focus({ preventScroll: true });
-        byId('signal-detail').scrollIntoView({ block: 'nearest' });
+        detail.scrollIntoView({ block: 'nearest' });
       }
     });
   }
