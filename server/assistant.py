@@ -52,15 +52,31 @@ def _zoro_endpoint():
     return endpoint, os.environ.get("ZORO_MODEL", "trillionlabs/Zoro-1")
 
 
-def zoro_choices(state, questions):
+def zoro_decide(state, questions, *, timeout=5):
+    """Ask Zoro-1's typed-decision head; return its raw `answers` after checking each fits its question."""
     endpoint, model = _zoro_endpoint()
     decision_request = {"state": state, "questions": questions}
     try:
-        decision = _request(f"{endpoint}/systemone", {"model": model, **decision_request, "reasoning": False}, timeout=5)
+        decision = _request(f"{endpoint}/systemone", {"model": model, **decision_request, "reasoning": False},
+                            timeout=timeout)
     except HTTPError as error:
         if error.code not in (404, 405):
             raise
-        decision = _request(f"{endpoint}/decide", {"request": decision_request, "reasoning": False}, timeout=5)
+        decision = _request(f"{endpoint}/decide", {"request": decision_request, "reasoning": False}, timeout=timeout)
+    answers = decision["answers"]
+    for name, question in questions.items():
+        answer = answers[name]
+        if question["type"] == "noul":
+            value = float(answer["noul"])
+            if not math.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError("Zoro-1 판단 형식 오류")
+        elif answer["choice"] not in question["criteria"]:
+            raise ValueError("Zoro-1 판단 형식 오류")
+    return answers
+
+
+def zoro_choices(state, questions):
+    decision = {"answers": zoro_decide(state, questions)}
     choices = {}
     for name, question in questions.items():
         answer = decision["answers"][name]
