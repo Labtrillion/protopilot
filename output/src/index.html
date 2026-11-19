@@ -51,6 +51,7 @@
       <div class="plant-body">
         <div class="stage" id="stage" data-view="3d">
           <div class="stage-caption"><span class="crosshair">+</span><span id="stage-caption-text">공정 모델</span></div>
+          <div id="stage-signal" class="stage-signal" hidden><code id="stage-signal-tag"></code><b id="stage-signal-value"></b></div>
           <div id="canvas" class="canvas" data-focus="plant"></div>
           <div id="model-labels" class="model-labels"></div>
           <div id="diagram" class="diagram" hidden></div>
@@ -67,6 +68,32 @@
           <div id="inspector-content" class="inspector-content"></div>
         </aside>
       </div>
+      <section class="signal-panel" aria-labelledby="signal-heading">
+        <div class="signal-head">
+          <div class="heading-inline"><span data-icon="activity"></span><h2 id="signal-heading" tabindex="-1">로컬 신호 추적</h2></div>
+          <div id="signal-frame" class="signal-frame">로컬 샘플 연결 중</div>
+        </div>
+        <div id="signal-detail" class="signal-detail" hidden>
+          <div class="signal-source">
+            <div class="signal-title"><code id="signal-tag"></code><b id="signal-name"></b></div>
+            <div class="signal-reading"><span id="signal-value-label"></span><b id="signal-value"></b></div>
+            <div class="signal-previous" id="signal-previous"></div>
+          </div>
+          <div id="signal-trace" class="signal-trace">
+            <div class="signal-trace-label"><span>최근 수신값</span><span id="signal-trace-count"></span></div>
+            <canvas id="signal-chart" aria-hidden="true"></canvas>
+            <span id="signal-trace-range"></span>
+          </div>
+          <div class="signal-destination">
+            <div class="signal-effect"><span data-icon="arrow"></span><b id="signal-location"></b></div>
+            <p id="signal-effect"></p>
+            <div class="signal-actions">
+              <button id="signal-locate" type="button" data-icon="scan">설비로 이동</button>
+              <button id="signal-response" type="button" data-icon="activity" hidden>SP 응답 보기</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </section>
 
     <section class="panel telemetry-panel" aria-labelledby="telemetry-title">
@@ -75,7 +102,7 @@
         <div class="telemetry-actions">
         <div class="segments telemetry-modes" role="group" aria-label="계측 화면">
           <button type="button" id="tab-values" aria-pressed="true">채널</button>
-          <button type="button" id="tab-response" aria-pressed="false">SP 응답</button>
+          <button type="button" id="tab-response" aria-pressed="false" disabled>SP 응답</button>
         </div>
         <div class="exports"><a data-icon="download" href="/api/export/csv">CSV</a><a href="/api/export/json">JSON</a></div></div>
       </div>
