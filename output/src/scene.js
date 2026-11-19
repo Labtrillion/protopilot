@@ -297,6 +297,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
   const projected = new T.Vector3(), pointer = new T.Vector2(), ray = new T.Raycaster();
   const desired = new T.Vector3();
   const cameraOffset = new T.Vector3();
+  const cameraOrbit = new T.Spherical(), destinationOrbit = new T.Spherical();
   const box = new T.Box3();
   let width = 1, height = 1, focus = 'plant', showFlow = true, showPressure = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
   let trackedArea = '', trackedTag = '';
@@ -492,10 +493,10 @@ export function mountScene(container, host, select, pick, selectCircuit) {
       if (event.pointerType === 'touch') down = null;
       return;
     }
-    if (event.button === 0) down = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    if (event.button === 0) down = { id: event.pointerId, x: event.clientX, y: event.clientY, dragged: false };
   });
   renderer.domElement.addEventListener('pointermove', (event) => {
-    if (down?.id !== event.pointerId) return;
+    if (down?.id !== event.pointerId || !(event.buttons & 1)) return;
     const dx = event.clientX - down.x;
     if (!down.dragged && Math.hypot(dx, event.clientY - down.y) <= clickSlop) return;
     down.dragged = true;
@@ -547,7 +548,16 @@ export function mountScene(container, host, select, pick, selectCircuit) {
         (frame.zoom === null || Math.abs(camera.zoom - frame.zoom) < 0.006);
       const ease = motionReduced || settled ? 1 : 1 - Math.exp(-8 * dt);
       controls.target.lerp(desired, ease);
-      if (frame.offset) cameraOffset.lerp(frame.offset, ease);
+      if (frame.offset) {
+        // Keep the return path within the pitch limits when the camera is behind the model.
+        cameraOrbit.setFromVector3(cameraOffset);
+        destinationOrbit.setFromVector3(frame.offset);
+        const yawDelta = T.MathUtils.euclideanModulo(destinationOrbit.theta - cameraOrbit.theta + Math.PI, 2 * Math.PI) - Math.PI;
+        cameraOrbit.theta += yawDelta * ease;
+        cameraOrbit.phi = T.MathUtils.lerp(cameraOrbit.phi, destinationOrbit.phi, ease);
+        cameraOrbit.radius = T.MathUtils.lerp(cameraOrbit.radius, destinationOrbit.radius, ease);
+        cameraOffset.setFromSpherical(cameraOrbit);
+      }
       camera.position.copy(controls.target).add(cameraOffset);
       if (frame.zoom !== null) {
         camera.zoom = T.MathUtils.lerp(camera.zoom, frame.zoom, ease);
