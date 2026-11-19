@@ -60,6 +60,8 @@ Brev에서는 `.runtime/zoro.env`에서 서버 환경을 설정합니다. 로컬
 
 ### 설정값 판단과 후속 대안 평가
 
+대시보드의 **Zoro 대응 검토**에서 알람 발생 시점의 설정값과 계측으로 분석합니다. 화면은 `POST /api/setpoint-decision`에 `run`과 `alarm_id`를 보내고 진행 중인 작업을 `GET /api/setpoint-decision/{job_id}`로 조회합니다. **시뮬레이션 결과 보기**에서 `/#simulation-result`를 열어 Zoro-1 판단, 검색 근거 및 분기 지표를 확인합니다.
+
 `POST /api/setpoint-decision`에 현재 `run`을 보내면 [Feature 1](features/feature1-setpoint-gate/README.md)이 최대 두 설정값을 바꾸는 기준안을 만들고, [Feature 2](features/feature2-sop-ranking/README.md)가 남은 후보 중 점수 상위 대안을 비교합니다. `feature2.recommended`에 최종 권고를 반환하며, 기존 `apply: true`는 Feature 1의 변경값을 적용합니다.
 
 ## Zoro-1과 개발 도구

@@ -1,116 +1,83 @@
-import { byId, elapsed, escape } from './ui.js';
+import { byId, elapsed } from './ui.js';
+import { renderZoroSummary, zoroVerdict } from './zoro-results.js';
 
-const OUTCOMES = { recommendation: '권고', human_review: '운영자 검토' };
-const REASONS = {
-  recommendation_ready: '권고 조건 충족', human_review_selected: '모델이 운영자 검토 선택', limit_reached: '시험 한도 도달',
-  unrecoverable_tool_error: '시뮬레이션 오류', no_valid_options: '유효한 선택지 없음',
-  model_response_invalid: '모델 응답 거부', model_call_failed: 'Zoro-1 호출 실패',
-};
-const SELECTION = {
-  select_case: '대응 case 선정', select_baseline: '현재 목표 유지(SOP 단독) 선정',
-  none_acceptable: '적격 case 없음', continue: '탐색 중',
-};
-const fixed = (value, digits = 3) => (Number.isFinite(value) ? Number(value).toFixed(digits) : '—');
-
-function renderCommand(command) {
-  const changes = command.setpoint_changes.map((change) => {
-    const delay = change.apply_at_s ? ` · ${Math.round(change.apply_at_s / 60)}분 후` : ' · 즉시';
-    return `<li><code>${escape(change.setpoint_id)}</code> ${fixed(change.from_value, 3)} → <b>${fixed(change.target_value, 3)}</b> ${escape(change.unit)}${delay}</li>`;
-  }).join('');
-  return `<section><h3>시뮬레이터 명령</h3>
-    <p><b>${command.decision === 'hold' ? '현재 목표 유지 (hold)' : '설정값 변경 제안'}</b> · case <code>${escape(command.case_id ?? '—')}</code></p>
-    ${changes ? `<ul>${changes}</ul>` : ''}
-    <p class="study-note">감독기 승인 후 적용 · 값은 예시 설정</p></section>`;
-}
-
-function renderBranches(data) {
-  const state = data.final_state;
-  const impacts = new Map(state.impacts.map((impact) => [impact.run_id, impact]));
-  const steps = new Map((data.final.case_selection?.steps ?? []).map((step) => [step.run_id, step]));
-  const rows = state.runs.map((run) => {
-    const impact = impacts.get(run.run_id);
-    const score = impact?.score;
-    const step = steps.get(run.run_id);
-    const verdict = step ? `${step.beats_baseline ? '기준 대비 우세' : '기준 대비 열세'} · ${escape(step.vs_baseline)}` : '기준(SOP 단독)';
-    return `<tr><td><code>${escape(run.case_id ?? run.action_id)}</code></td>
-      <td>${impact?.original_alarm_recovered ? '회복' : '미회복'}</td>
-      <td>${fixed(score?.tracking_accuracy)}</td><td>${fixed(score?.usd_per_m3)}</td>
-      <td>${fixed(score?.product_m3, 1)}</td><td>${escape((score?.failed_gates ?? []).join(', ') || '통과')}</td>
-      <td>${verdict}</td></tr>`;
-  }).join('');
-  const selection = data.final.case_selection;
-  return `<section><h3>분기 시뮬레이션 (알람 시점 복제, 가상 예측)</h3>
-    <div class="table-scroll"><table class="study-table"><thead><tr><th>case</th><th>알람</th><th>정확도</th><th>USD/m³</th><th>생산 m³</th><th>게이트</th><th>판정</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="7">실행한 분기 없음</td></tr>'}</tbody></table></div>
-    ${selection ? `<p><b>${SELECTION[selection.status] ?? escape(selection.status)}</b> · ${escape(selection.reason)}</p>` : ''}</section>`;
-}
-
-function renderDecisions(data) {
-  const items = data.decisions.map((decision) => {
-    const probability = decision.selection_distribution?.probabilities?.[decision.selected_option_id];
-    return `<li><code>${escape(decision.selected_option_id ?? '거부')}</code> · ${decision.decided_by === 'zoro' ? '모델' : '정책'}
-      ${Number.isFinite(probability) ? ` · 선택 분포 ${fixed(probability, 2)}` : ''}
-      ${decision.validation.valid ? '' : ` · <span class="danger-text">${escape(decision.validation.errors.join('; '))}</span>`}</li>`;
-  }).join('');
-  return `<section><h3>판단 과정 (${data.decisions.length}회)</h3><ol class="study-steps">${items}</ol>
-    <p class="study-note">선택 분포는 행동 선택 확률이며 안전·회복 확률이 아닙니다.</p></section>`;
-}
-
-function renderResult(data) {
-  const final = data.final;
-  const model = final.model_client_kind === 'real' ? 'Zoro-1' : '로컬 규칙 (Zoro-1 미연결)';
-  const uncertainties = final.uncertainties.slice(0, 6).map((item) => `<li>${escape(item)}</li>`).join('');
-  return `<section><h3>결과</h3>
-      <p><b>${OUTCOMES[final.outcome] ?? escape(final.outcome)}</b> · ${REASONS[final.termination_reason] ?? escape(final.termination_reason)} · 판단: ${model}</p>
-      <p>${escape(final.summary)}</p></section>
-    ${renderCommand(final.setpoint_command)}${renderBranches(data)}${renderDecisions(data)}
-    <section><h3>남은 불확실성</h3><ul>${uncertainties}</ul></section>
-    <p class="study-note">${escape(final.disclaimer)}</p>`;
-}
-
-export function mountZoroAgent(request) {
+export function mountZoroAgent(request, openSimulationResults, getSetpoints) {
   const dialog = byId('zoro-agent-dialog');
   const status = byId('zoro-agent-status');
   const result = byId('zoro-agent-result');
   const retry = byId('retry-zoro-agent');
-  let selection;
-  let requestNumber = 0;
+  const simulations = byId('open-zoro-simulation-results');
+  const latestPanel = byId('latest-zoro-review');
+  let selection, study, latest, run, requestNumber = 0;
 
-  async function analyze() {
+  function update(runId) {
+    run = runId;
+    latestPanel.hidden = !latest || latest.run !== run;
+    if (dialog.open && selection.run !== run) {
+      status.textContent = '실행이 바뀌었습니다. 현재 알람에서 다시 검토하세요.';
+      result.hidden = retry.hidden = simulations.hidden = true;
+    }
+  }
+
+  async function analyze(shouldRetry = false) {
     const number = ++requestNumber;
-    status.textContent = 'Zoro 에이전트가 SOP 후보 중 시험할 분기를 고르고, 알람 시점에서 분기 시뮬레이션을 실행하는 중입니다.';
+    const isCurrent = () => number === requestNumber && dialog.open && selection.run === run;
+    status.textContent = '알람 시점의 Zoro-1 판단을 요청하고 있습니다.';
     status.removeAttribute('data-error');
-    result.hidden = true;
-    retry.hidden = true;
+    result.hidden = retry.hidden = simulations.hidden = true;
+    study = undefined;
     try {
-      const data = await request('/api/zoro-agent', {
+      let data = await request('/api/setpoint-decision', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ run: selection.run, alarm_id: selection.alarm.id }),
-        signal: AbortSignal.timeout(300000),
+        body: JSON.stringify({ run: selection.run, alarm_id: selection.alarm.id, retry: shouldRetry }),
       });
-      if (number !== requestNumber || !dialog.open) return;
-      if (data.status === 'unsupported') {
-        status.textContent = '등록된 대응 절차가 없어 운영자 확인이 필요합니다.';
-        return;
+      while (isCurrent() && data.job_id) {
+        const message = data.status === 'queued' ? '앞선 분석이 끝나면 시작합니다.'
+          : 'Zoro-1이 근거를 검토하고 후보를 채점합니다. 선별된 조합은 시뮬레이터에서 비교합니다.';
+        if (status.textContent !== message) status.textContent = message;
+        await new Promise((resolve) => setTimeout(resolve, 1250));
+        if (!isCurrent()) return;
+        data = await request(`/api/setpoint-decision/${encodeURIComponent(data.job_id)}`);
       }
-      result.innerHTML = renderResult(data);
-      result.hidden = false;
-      status.textContent = '라이브 관제와 분리해 계산한 결과입니다.';
+      if (!isCurrent()) return;
+      const { decision, feature2, start, branches, decision_id: decisionId, handoff } = data;
+      study = {
+        kind: 'zoro', run, alarm: selection.alarm, decision, feature2, start, branches, decision_id: decisionId,
+        setpoints: Object.fromEntries(getSetpoints().map(({ id, label, unit }) => [id, { label, unit }])),
+        evidence: (handoff.rag_result?.evidence ?? []).map(({ source_document, statement }) => ({ source_document, statement })),
+      };
+      result.innerHTML = renderZoroSummary(study);
+      result.hidden = simulations.hidden = false;
+      retry.hidden = feature2.status !== 'human_review' && !feature2.selection?.reason?.startsWith('score_unavailable')
+        && !feature2.selection?.choice_error;
+      status.textContent = '';
+      latest = study;
+      byId('latest-zoro-summary').textContent = `${study.alarm.label} · ${zoroVerdict(study)}`;
+      update(run);
     } catch (error) {
-      if (number !== requestNumber || !dialog.open) return;
-      status.textContent = error.name === 'TimeoutError' ? '에이전트 실행 시간이 초과됐습니다.' : error.message;
+      if (!isCurrent()) return;
+      status.textContent = error.name === 'TimeoutError' ? '서버 응답 시간이 초과됐습니다.'
+        : error instanceof TypeError ? '서버에 연결할 수 없습니다.' : error.message;
       status.dataset.error = 'true';
       retry.hidden = false;
     }
   }
 
   byId('close-zoro-agent').addEventListener('click', () => dialog.close());
-  retry.addEventListener('click', analyze);
+  byId('open-latest-zoro-results').addEventListener('click', () => openSimulationResults(latest));
+  retry.addEventListener('click', () => analyze(true));
+  simulations.addEventListener('click', () => {
+    dialog.close();
+    openSimulationResults(study);
+  });
   return {
-    open(run, alarm) {
-      selection = { run, alarm };
+    update,
+    open(runId, alarm) {
+      if (dialog.open) return;
+      selection = { run: runId, alarm };
       byId('zoro-agent-title').textContent = alarm.label;
-      byId('zoro-agent-context').textContent = ['ZORO 대응 검토', alarm.tag, elapsed(alarm.time_hours)].filter(Boolean).join(' · ');
+      byId('zoro-agent-context').textContent = ['Zoro-1 대응 검토', alarm.tag, alarm.source, elapsed(alarm.time_hours)]
+        .filter(Boolean).join(' · ');
       dialog.showModal();
       dialog.scrollTop = 0;
       analyze();

@@ -92,6 +92,21 @@ def capture_point(plant):
     )
 
 
+def capture_alarm_point(checkpoint):
+    alarms = list(monitor_alarms(checkpoint.monitor))
+    rule_ids = {alarm["rule"] for alarm in alarms}
+    for alarm in checkpoint.related_alarms:
+        rule = f"LIMIT {alarm['tag']} {alarm['side']}" if alarm["kind"] == "warning" else f"TRIP {alarm['tag']}"
+        if rule not in rule_ids:
+            alarms.append({**alarm, "rule": rule, "limit": alarm.get("limit"), "side": alarm.get("side")})
+    return DecisionPoint(
+        checkpoint.run_id, checkpoint.step, checkpoint.seed, checkpoint.alarm["time_hours"],
+        checkpoint.native, checkpoint.controller, checkpoint.measurements, checkpoint.manual, checkpoint.idv,
+        checkpoint.decision_history, checkpoint.base_setpoints, checkpoint.timeline, tuple(alarms),
+        checkpoint.limits, checkpoint.offsets, checkpoint.monitor,
+    )
+
+
 def adjustable_setpoints(controller):
     return [name for name in SETPOINTS if name != "pct_g" or controller.enable_pct_g_feedback]
 

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#eef0f2">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27%3E%3Cpath fill=%27%23242a30%27 d=%27M0 6l6-6h14v5H8L5 8v12H0z%27/%3E%3C/svg%3E">
   <title>ProtoPilot · TEP 시뮬레이터</title>
-  <link rel="stylesheet" href="/app.css?v=2">
+  <link rel="stylesheet" href="/app.css?v=3">
 </head>
 <body>
   <header class="topbar" id="dashboard-topbar">
@@ -97,6 +97,10 @@
         <div id="event-monitor-content" class="event-monitor-content" role="region" tabindex="0" aria-label="현재 알람">
           <p class="monitor-message" role="status">알람 데이터 연결 중</p>
           <ul class="event-list" role="list" hidden></ul>
+        </div>
+        <div id="latest-zoro-review" class="latest-zoro-review" hidden>
+          <div><strong>최근 Zoro-1 검토</strong><p id="latest-zoro-summary" role="status"></p></div>
+          <button type="button" id="open-latest-zoro-results">결과 보기</button>
         </div>
       </aside>
       <section class="panel setpoint-panel" id="setpoint-panel" aria-labelledby="setpoint-title">
@@ -216,7 +220,10 @@
       <button id="close-zoro-agent" type="button" class="icon-button" data-icon="close" aria-label="Zoro 대응 검토 닫기"></button>
     </div>
     <div class="zoro-agent-body"><p id="zoro-agent-status" role="status"></p><div id="zoro-agent-result" hidden></div></div>
-    <div class="dialog-actions"><button id="retry-zoro-agent" type="button" hidden>다시 시도</button></div>
+    <div class="dialog-actions">
+      <button id="retry-zoro-agent" type="button" hidden>다시 시도</button>
+      <button id="open-zoro-simulation-results" type="button" class="solid" hidden>시뮬레이션 결과 보기</button>
+    </div>
   </dialog>
   <dialog id="scenario-dialog" aria-labelledby="scenario-title">
     <form id="scenario-form">
@@ -266,8 +273,9 @@
         <p id="simulation-context"></p>
         <p id="simulation-sensor-note" class="simulation-note" hidden>센서 시험 전의 모델 측정값으로 비교했습니다.</p>
       </header>
-      <section aria-labelledby="simulation-cards-title">
+      <section id="simulation-comparison" aria-labelledby="simulation-cards-title">
         <h2 id="simulation-cards-title">대응안 비교</h2>
+        <div id="simulation-zoro-summary" class="simulation-verdict" hidden></div>
         <div id="simulation-sweep" hidden>
           <div class="simulation-verdict" id="simulation-verdict"></div>
           <details class="simulation-baseline" id="simulation-baseline">

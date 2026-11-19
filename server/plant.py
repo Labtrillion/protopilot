@@ -56,6 +56,9 @@ class AlarmCheckpoint:
     monitor: object = None
     offsets: dict = field(default_factory=dict)
     history: tuple = ()  # (time_hours, observed) samples for SOP alignment, newest last
+    decision_history: tuple = ()
+    base_setpoints: object = None
+    timeline: tuple = ()
 
 
 def control_action(controller, measurements, time, manual):
@@ -300,12 +303,14 @@ class Plant:
         snapshot = self.sim.snapshot()
         controller = deepcopy(self.controller)
         related = tuple(dict(alarm) for alarm in self.active.values())
+        decision_history, timeline = tuple(self.history), tuple(self.timeline)
         for alarm in alarms:
             self.alarm_checkpoints[alarm["id"]] = AlarmCheckpoint(
                 self.recording.id, self.step, self.seed, dict(alarm), snapshot, controller,
                 self.measurements.copy(), self.manual.copy(), self.idv.copy(), self.limits.copy(),
                 observed, tuple(self.cooling_trend), related,
                 monitor=self.alarm_monitor.copy(), offsets=self.offsets.copy(), history=tuple(self.sop_history),
+                decision_history=decision_history, base_setpoints=self.base_setpoints, timeline=timeline,
             )
         while len(self.alarm_checkpoints) > self.events.maxlen:
             active_ids = {alarm["id"] for alarm in self.active.values()}

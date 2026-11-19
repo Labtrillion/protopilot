@@ -5,7 +5,9 @@ from threading import RLock
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-from server.app import ConsoleHandler
+from server.alarm_studies import AlarmStudies
+
+from server.app import ConsoleHandler, analyze_alarm_setpoints
 from server.plant import Plant
 from server.scenario import STEP_HOURS
 from sop_ranking.score_selection import build_candidates, select_candidates
@@ -166,3 +168,36 @@ def test_feature1_alarm_rag_reaches_every_model_request(monkeypatch):
     result = select_candidates(handoff, state, timeout=5, request_id="test")
     assert requests == ["score"] * 5 + ["choice"]
     assert len(result["selected"]) == 54
+
+def test_alarm_endpoint_evaluates_the_checkpoint_even_after_live_changes(tmp_path, monkeypatch):
+    plant = Plant(tmp_path)
+    plant.command({"op": "cooling_demo"})
+    while not plant.alarm_checkpoints:
+        plant.tick()
+    checkpoint = next(iter(plant.alarm_checkpoints.values()))
+    alarm_id = checkpoint.alarm["id"]
+    trace_path = tmp_path / "agent-trace.jsonl"
+    plant.command({"op": "setpoint", "id": "reactor_pressure", "value": 2550})
+
+    def analyze(point, path, *, evaluate_alternatives):
+        assert point.step == checkpoint.step
+        assert point.native.model_bytes == checkpoint.native.model_bytes
+        assert point.controller.setpoints.reactor_pressure == checkpoint.controller.setpoints.reactor_pressure
+        assert point.controller.setpoints.reactor_pressure != plant.controller.setpoints.reactor_pressure
+        assert any(alarm["tag"] == checkpoint.alarm["tag"] for alarm in point.alarms)
+        assert path == trace_path
+        return {"decision": {"status": "human_review"}, "feature2": {}, "branches": []}
+
+    monkeypatch.setattr("server.app.analyze_setpoints", analyze)
+    studies = AlarmStudies(trace_path, workers=1, analyze=lambda point: analyze_alarm_setpoints(point, trace_path))
+    handler = SimpleNamespace(plant=plant, lock=RLock(), setpoint_studies=studies, respond=Mock())
+    handler.alarm_setpoint_decision = lambda body: ConsoleHandler.alarm_setpoint_decision(handler, body)
+    handler.alarm_study_status = lambda *args: ConsoleHandler.alarm_study_status(handler, *args)
+    try:
+        ConsoleHandler.setpoint_decision(handler, {"run": plant.recording.id, "alarm_id": alarm_id})
+        _, job = studies.submit(checkpoint)
+        result = job.result(timeout=5)
+        assert result["decision"]["status"] == "human_review"
+        assert plant.controller.setpoints.reactor_pressure == 2550
+    finally:
+        studies.close()
