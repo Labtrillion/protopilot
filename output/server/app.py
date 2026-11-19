@@ -3,28 +3,43 @@
 import argparse
 import json
 import logging
+import sys
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Event, RLock, Thread
 from urllib.parse import urlsplit
+from wsgiref.simple_server import ServerHandler, WSGIRequestHandler, WSGIServer
 
 from .catalog import METADATA
+from .experiments import EXPERIMENTS_PATH, create_experiments
 from .plant import Plant, TICK_SECONDS
 from .recording import encode
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-class ConsoleHandler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, plant, lock, **kwargs):
+class ConsoleServer(ThreadingHTTPServer):
+    def server_bind(self):
+        super().server_bind()
+        WSGIServer.setup_environ(self)
+
+
+class ConsoleHandler(SimpleHTTPRequestHandler, WSGIRequestHandler):
+    def __init__(self, *args, plant, lock, experiments, **kwargs):
         self.plant = plant
         self.lock = lock
+        self.experiments = experiments
         super().__init__(*args, directory=str(ROOT / "dist"), **kwargs)
 
     def log_message(self, format, *args):
         if args[1] not in ("200", "304"):
             super().log_message(format, *args)
+
+    def serve_experiments(self):
+        handler = ServerHandler(self.rfile, self.wfile, sys.stderr, self.get_environ(), multithread=True)
+        handler.request_handler = self
+        handler.run(self.experiments)
 
     def respond(self, body, status=200, *, attachment=None):
         payload = encode(body).encode()
@@ -39,7 +54,9 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = urlsplit(self.path).path
-        if path == "/api/schema":
+        if path.startswith(EXPERIMENTS_PATH):
+            self.serve_experiments()
+        elif path == "/api/schema":
             self.respond(METADATA)
         elif path == "/api/live":
             with self.lock:
@@ -53,6 +70,9 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
+        if urlsplit(self.path).path.startswith(EXPERIMENTS_PATH):
+            self.serve_experiments()
+            return
         if self.path != "/api/command":
             self.send_error(404)
             return
@@ -131,7 +151,9 @@ def main():
         parser.error("먼저 npm run build를 실행하세요.")
     lock, stop = RLock(), Event()
     plant = Plant(args.data)
-    with ThreadingHTTPServer(("127.0.0.1", args.port), partial(ConsoleHandler, plant=plant, lock=lock)) as server:
+    experiments = create_experiments(args.data)
+    handler = partial(ConsoleHandler, plant=plant, lock=lock, experiments=experiments.server)
+    with ConsoleServer(("127.0.0.1", args.port), handler) as server:
         thread = Thread(target=advance_forever, args=(plant, lock, stop), daemon=True)
         thread.start()
         print(f"ProtoPilot  http://127.0.0.1:{args.port}  |  {args.data.resolve()}", flush=True)

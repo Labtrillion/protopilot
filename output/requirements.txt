@@ -1,1 +1,6 @@
 tep-studio @ git+https://github.com/khalidlabs/tep-studio.git@852f0c69ab974540750d61bd1dbfafd56bfd80bb
+dash>=3,<5
+plotly>=5.9,<7
+pyarrow>=14
+comm>=0.2
+mcp>=1.2,<2
