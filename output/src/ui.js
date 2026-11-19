@@ -39,7 +39,6 @@ const icons = {
   box: '<path d="m12 3 9 5-9 5-9-5zm-9 5v8l9 5 9-5V8m-9 5v8"/>',
   activity: '<path d="M2 12h5l3-8 4 16 3-8h5"/>',
   download: '<path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/>',
-  search: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 5 5"/>',
   bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12a2 2 0 0 0 4 0"/>',
   bolt: '<path d="m13 2-9 12h7l-1 8 10-12h-8z"/>',
   close: '<path d="m6 6 12 12M18 6 6 18"/>',
@@ -124,7 +123,7 @@ export function renderPipeDetails(areaKey, circuit) {
 export function renderRows(channels, status, selected, recentReadings) {
   const holder = byId('rows');
   if (!channels.length) {
-    holder.innerHTML = '<tr><td colspan="3" class="empty-cell">검색 조건에 해당하는 채널이 없습니다.</td></tr>';
+    holder.innerHTML = '<tr><td colspan="3" class="empty-cell">선택한 필터에 해당하는 채널이 없습니다.</td></tr>';
     return;
   }
   if (holder.children.length !== channels.length || channels.some((channel, i) => holder.children[i].dataset.tag !== channel.id)) {

@@ -272,10 +272,6 @@ button.event-entry:focus-visible { outline-offset: -2px; }
 .filter-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 0.36rem; padding: 0.44rem 0.65rem; border-bottom: 1px solid var(--line); flex: none; }
 .channel-summary { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 0.36rem; }
 .channel-scope button { padding: 0.2rem 0.55rem; font-size: 0.78rem; }
-.search { position: relative; grid-column: 1 / -1; }
-.search svg { position: absolute; left: 0.51rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
-.search input { width: 100%; min-height: var(--control-size); padding: 0.24rem 0.42rem 0.24rem 1.96rem; }
-.search input::placeholder { color: var(--muted); }
 .filter-bar select { --select-arrow-inset: 0.5rem; width: 100%; font-size: 0.9rem; }
 .matches { color: var(--muted); white-space: nowrap; font: 0.76rem var(--mono); }
 .table-scroll { flex: 1; }
@@ -577,8 +573,8 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 }
 
 @media (min-width: 530px) and (max-height: 460px) {
-  .filter-bar { grid-template-columns: auto minmax(0, 1.35fr) repeat(2, minmax(0, 1fr)); padding-block: 0.28rem; }
-  .filter-bar :is(.channel-summary, .search) { grid-column: auto; }
+  .filter-bar { grid-template-columns: auto repeat(2, minmax(0, 1fr)); padding-block: 0.28rem; }
+  .channel-summary { grid-column: auto; }
 }
 
 @media (min-width: 960px) and (max-height: 620px) {

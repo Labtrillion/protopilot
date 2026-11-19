@@ -166,7 +166,7 @@ function note(message, level = 'ok') {
   noticeTimer = setTimeout(() => { box.hidden = true; }, 4500);
 }
 
-const filtersActive = () => Boolean(byId('search').value.trim() || byId('channel-group').value || byId('channel-area').value);
+const filtersActive = () => Boolean(byId('channel-group').value || byId('channel-area').value);
 
 function setScope(scope) {
   channelScope = scope;
@@ -176,13 +176,10 @@ function setScope(scope) {
 function filter() {
   const group = byId('channel-group').value;
   const area = byId('channel-area').value;
-  const query = byId('search').value.toLowerCase().replace(/[\s()]/g, '');
-  // Any search or filter always looks across every channel, never only the primary summary.
+  // Active filters apply to all channels; clearing them returns to the chosen scope.
   const primary = channelScope === 'primary' && !filtersActive();
-  visibleChannels = primary ? PRIMARY_TAGS.map((tag) => channels.get(tag)).filter(Boolean) : [...channels.values()].filter((ch) => {
-    const text = `${ch.id} ${ch.name} ${ch.label} ${ch.description} ${AREAS[ch.area].code}`.toLowerCase().replace(/[\s()]/g, '');
-    return (!group || group === ch.group) && (!area || area === ch.area) && text.includes(query);
-  });
+  visibleChannels = primary ? PRIMARY_TAGS.map((tag) => channels.get(tag)).filter(Boolean)
+    : [...channels.values()].filter((ch) => (!group || group === ch.group) && (!area || area === ch.area));
   byId('scope-primary').setAttribute('aria-pressed', primary);
   byId('scope-all').setAttribute('aria-pressed', !primary);
   byId('matches').textContent = primary ? `주요 ${visibleChannels.length}개` : `${visibleChannels.length} / ${channels.size}개`;
@@ -290,12 +287,10 @@ function attachEvents() {
     if (loop) trackSetpoint(loop.id);
   });
   byId('scope-primary').addEventListener('click', () => {
-    for (const id of ['search', 'channel-group', 'channel-area']) byId(id).value = '';
+    for (const id of ['channel-group', 'channel-area']) byId(id).value = '';
     setScope('primary');
   });
   byId('scope-all').addEventListener('click', () => setScope('all'));
-  // Active search/filters always look across all channels; clearing them returns to the chosen scope.
-  byId('search').addEventListener('input', filter);
   byId('channel-group').addEventListener('change', filter);
   byId('channel-area').addEventListener('change', (event) => {
     const area = event.currentTarget.value;
