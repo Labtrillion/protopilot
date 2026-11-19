@@ -74,10 +74,11 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
   const lines = STREAMS.map((stream) => {
     const d = ROUTING[stream.id];
     const { color } = MEDIA[stream.media];
+    const hit = stream.circuit ? `<path class="pipe-hit" d="${d}" vector-effect="non-scaling-stroke"/>` : '';
     return `<g class="pfd-stream" data-stream="${stream.id}" data-circuit="${stream.circuit ?? ''}" style="--pipe:${color}">
       <title>${stream.id} · ${stream.from} → ${stream.to}</title>
       <path class="pipe-sleeve" d="${d}"/><path class="pipe-line" d="${d}" marker-end="url(#arrow-${stream.media})"/>
-      <path class="pipe-ticks" d="${d}"/></g>`;
+      <path class="pipe-ticks" d="${d}"/>${hit}</g>`;
   }).join('');
   const arrows = Object.entries(MEDIA).map(([id, { color }]) =>
     `<marker id="arrow-${id}" viewBox="0 0 9 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 9 4 0 8 2 4Z" fill="${color}"/></marker>`).join('');
@@ -85,12 +86,13 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     `<g class="pfd-port" transform="translate(${x} ${y})"><rect x="0" y="-10" width="${x === 1040 ? 78 : 47}" height="20" rx="3"/>
       <text x="${x === 1040 ? 39 : 23}" y="4">${name}</text></g>`).join('');
   const meterMarkup = METERS.map(([id,x,y]) => `<text class="pfd-id" x="${x}" y="${y}">#${id}</text>`).join('');
+  const target = '<rect class="pfd-hit" aria-hidden="true" rx="3"/>';
   const valves = VALVES.map(([id,x,y,r = 0]) => `<g class="pfd-valve" data-valve="XMV(${id})" tabindex="0" role="button" aria-label="XMV(${id}) 밸브 조정" transform="translate(${x} ${y}) rotate(${r})">
-    <rect class="valve-hit" x="-12" y="-16" width="24" height="30" rx="3"/><path d="M-8-5 8 5V-5L-8 5ZM0 0v-8m-4 0h8"/></g>`).join('');
+    ${target}<path d="M-8-5 8 5V-5L-8 5ZM0 0v-8m-4 0h8"/></g>`).join('');
   const labels = anchors.map(([id, [x, y]]) => {
     const { code, name } = AREAS[id];
     return `<g class="pfd-unit" role="button" tabindex="0" data-area="${id}" aria-label="${code} ${name}" transform="translate(${x} ${y})">
-      <title>${name}</title><rect x="-22" y="-12" width="44" height="17" rx="3"/><text y="0">${code}</text></g>`;
+      <title>${name}</title>${target}<rect class="pfd-chip" x="-22" y="-12" width="44" height="17" rx="3"/><text y="0">${code}</text></g>`;
   }).join('');
   const levelClips = Object.entries(LEVELS).map(([id, { body }]) => `<clipPath id="level-clip-${id}">${vessel(...body)}</clipPath>`).join('');
   const levelLayers = Object.entries(LEVELS).map(([id, { body, datum }]) => {
@@ -110,17 +112,47 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     <g class="pfd-junctions">${DOTS.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3"/>`).join('')}</g>
     ${equipment()}${levelLayers}${valves}${portsMarkup}${meterMarkup}${labels}${readouts}${flowReadouts}</svg>`;
   const svg = host.firstElementChild;
-  function activate(target) {
-    const valve = target.closest('[data-valve]');
-    const unit = target.closest('.pfd-unit');
-    const stream = target.closest('[data-circuit]');
+  const targets = [...svg.querySelectorAll('.pfd-hit')];
+  const touch = matchMedia('(pointer: coarse)');
+  function sizeTargets() {
+    const box = svg.viewBox.baseVal;
+    const scale = Math.min(svg.clientWidth / box.width, svg.clientHeight / box.height);
+    if (!scale) return;
+    const side = (touch.matches ? 36 : 28) / scale;
+    for (const rect of targets) {
+      rect.setAttribute('width', side);
+      rect.setAttribute('height', side);
+      rect.setAttribute('x', -side / 2);
+      rect.setAttribute('y', -side / 2 - 3);
+    }
+  }
+  new ResizeObserver(sizeTargets).observe(svg);
+  touch.addEventListener('change', sizeTargets);
+
+  function activate(node) {
+    const valve = node.closest('[data-valve]');
+    const unit = node.closest('.pfd-unit, .pfd-symbol');
+    const stream = node.closest('[data-circuit]');
     if (valve) openValve(valve.dataset.valve);
-    else if (unit) selectArea(unit.dataset.area);
+    else if (unit) selectArea(unit.dataset.area ?? unit.dataset.symbol);
     else if (stream?.dataset.circuit) selectCircuit(stream.dataset.circuit);
   }
-  svg.addEventListener('click', (event) => activate(event.target));
+  svg.addEventListener('click', (event) => {
+    let node = event.target;
+    if (node.classList.contains('pfd-hit')) {
+      let distance = Infinity;
+      // Hit regions can overlap in a fitted diagram. Choose the closest visible label or valve.
+      for (const hit of document.elementsFromPoint(event.clientX, event.clientY)) {
+        if (!hit.classList.contains('pfd-hit') || !svg.contains(hit)) continue;
+        const rect = hit.getBoundingClientRect();
+        const d = Math.hypot(rect.x + rect.width / 2 - event.clientX, rect.y + rect.height / 2 - event.clientY);
+        if (d < distance) { node = hit; distance = d; }
+      }
+    }
+    activate(node);
+  });
   svg.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
+    if (!(event.key === 'Enter' || event.key === ' ') || !event.target.matches('.pfd-unit, .pfd-valve')) return;
     event.preventDefault();
     activate(event.target);
   });
