@@ -49,12 +49,12 @@ export function initIcons() {
 }
 export const option = (id, label) => `<option value="${escape(id)}">${escape(label)}</option>`;
 
-export function legend(circuit, interiors) {
+export function legend(circuit) {
   const media = circuit ? Object.keys(MEDIA).filter((kind) => STREAMS.some((line) => line.circuit === circuit && line.media === kind)) : Object.keys(MEDIA);
   byId('legend').innerHTML = media.map((key) => {
     const { colorToken, name } = MEDIA[key];
     return `<span><i style="--medium:var(${colorToken})"></i>${name}</span>`;
-  }).join('') + (interiors ? '<span><i class="level-key"></i>액위 SP</span>' : '');
+  }).join('');
 }
 
 function routeDetails(circuit) {

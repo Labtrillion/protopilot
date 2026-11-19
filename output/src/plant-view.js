@@ -7,7 +7,7 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
   const canvas = byId('canvas'), labels = byId('model-labels'), diagramRoot = byId('diagram');
   const threeButton = byId('view-3d'), twoButton = byId('view-2d');
   const flows = byId('view-flow'), pressure = byId('view-pressure'), internals = byId('toggle-internals'), tags = byId('toggle-tags');
-  const internalsLabel = byId('internals-label'), partStrip = byId('interior-parts');
+  const internalsLabel = byId('internals-label'), interiorTools = byId('interior-tools'), partStrip = byId('interior-parts');
   const circuitButtons = [...document.querySelectorAll('.circuit-controls button[data-circuit]')];
   let scene, area = 'plant', circuit = '', visible = '3d', tracked = '', focusedTag = '';
   const flags = { flows: true, pressure: true, internals: false, tags: true };
@@ -29,9 +29,9 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
     const list = INTERIOR_PARTS[area];
     internalsLabel.textContent = list ? `${AREAS[area].code} 내부` : '내부 전체';
     internals.title = list ? `${AREAS[area].code} 단면만 표시` : '모든 설비 내부 표시';
-    const show = Boolean(list && flags.internals && visible === '3d' && scene);
-    partStrip.hidden = !show;
-    if (!show) return;
+    interiorTools.hidden = !(flags.internals && visible === '3d' && scene);
+    partStrip.hidden = interiorTools.hidden || !list;
+    if (partStrip.hidden) return;
     const key = `${area}/${tracked}`;
     if (partStrip.dataset.key === key) return;
     partStrip.dataset.key = key;
@@ -58,7 +58,6 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
     byId('canvas-error').hidden = !three || Boolean(scene);
     scene?.display(three);
     diagram.focus(area, area === 'plant', focusedTag);
-    legend(circuit, three && flags.internals);
     renderInterior();
   }
 
@@ -68,7 +67,7 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
     for (const button of circuitButtons) button.setAttribute('aria-pressed', button.dataset.circuit === next);
     scene?.circuit(next);
     diagram.circuit(next);
-    legend(next, visible === '3d' && flags.internals);
+    legend(next);
     if (refocus && next) selectArea('plant', '', true);
     onCircuit(next);
   }
@@ -95,7 +94,6 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
   // Toggling the interior keeps the selected unit, camera, tracked tag and telemetry view.
   toggle(internals, 'internals', (enabled) => {
     scene?.internals(enabled);
-    legend(circuit, visible === '3d' && enabled);
     renderInterior();
   });
 

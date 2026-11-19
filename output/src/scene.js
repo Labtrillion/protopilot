@@ -375,7 +375,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
       const x = (projected.x + 1) * width / 2, y = (1 - projected.y) * height / 2;
       const left = x - part.width / 2, right = x + part.width / 2, top = y - part.height / 2, bottom = y + part.height / 2;
       const outside = Math.abs(projected.x) > 0.97 || Math.abs(projected.y) > 0.95 || projected.z > 1;
-      // Overlapping part tags hide; the selected unit keeps a stable button strip outside the canvas.
+      // Overlapping part tags hide; the selected unit keeps a stable button strip over the canvas.
       const blocked = placed.some((other) => left < other.right + 2 && right > other.left - 2 && top < other.bottom + 2 && bottom > other.top - 2);
       button.hidden = outside || blocked;
       if (button.hidden) continue;
