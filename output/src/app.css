@@ -171,9 +171,7 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .inspect-tag[aria-current="true"] small { color: var(--tracked); }
 .inspect-tag:is(.alarming, .tested) small { color: var(--warning); }
 .inspector h3 { font-size: 0.83rem; padding-block: 0.9rem 0.45rem; }
-.inspect-stream { display: flex; gap: 0.25rem; justify-content: space-between; align-items: center; margin-bottom: 0.41rem; font-size: 0.75rem; }
-.inspect-stream i { flex: 0 0 0.53rem; margin: 0; }
-.inspect-stream span { margin-right: auto; min-width: 0; }
+.inspect-stream { display: grid; grid-template-columns: 2.7rem minmax(0, 1fr); gap: 0.25rem; margin-bottom: 0.41rem; font-size: 0.75rem; }
 
 .subtle-count { color: var(--muted); font: 0.78rem var(--mono); }
 .subtle-count.alarming { color: var(--warning); }
@@ -199,8 +197,7 @@ tr[data-tag] { cursor: pointer; }
 tr[data-tag]:hover .channel-name { text-decoration: underline; }
 tr.alarm-row :is(.numeric > span, .channel-state) { color: var(--warning); }
 .tag-cell { padding: 0; }
-.tag-cell button { display: grid; width: 100%; min-width: 0; gap: 0.18rem; justify-content: stretch; justify-items: start; border: 0; border-radius: 0; background: transparent; padding: 0.42rem 0.62rem; color: var(--subtext); white-space: normal; text-align: left; }
-.tag-cell button { scroll-margin-block-start: 2rem; }
+.tag-cell button { display: grid; width: 100%; min-width: 0; gap: 0.18rem; justify-content: stretch; justify-items: start; border: 0; border-radius: 0; background: transparent; padding: 0.42rem 0.62rem; color: var(--subtext); white-space: normal; text-align: left; scroll-margin-block-start: 2rem; }
 .tag-cell button:focus-visible { outline-offset: -2px; }
 .channel-name { color: var(--text); font-size: 0.82rem; line-height: 1.35; overflow-wrap: anywhere; }
 .channel-id { display: flex; flex-wrap: wrap; column-gap: 0.36rem; font: 0.71rem var(--mono); }
@@ -343,7 +340,6 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .route-inspector p { margin-top: 0.5rem; color: var(--muted); font-size: 0.75rem; line-height: 1.46; }
 .inspect-setting { display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%; gap: 0.3rem; padding: 0.43rem; margin-bottom: 0.42rem; color: var(--subtext); font-size: 0.78rem; }
 .inspect-setting b { color: var(--text); font: 650 0.74rem var(--mono); }
-.inspect-stream { display: grid; grid-template-columns: 2.7rem minmax(0, 1fr); align-items: start; }
 .inspect-stream .line-id { white-space: nowrap; font: 0.68rem var(--mono); color: var(--muted); padding-top: 0.2rem; }
 .inspect-stream .line-id i { width: 0.48rem; margin-right: 0.14rem; }
 .inspect-stream b { font-weight: 500; overflow-wrap: anywhere; }

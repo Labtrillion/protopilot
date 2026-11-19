@@ -273,15 +273,13 @@ function receive(next) {
   const previous = status;
   const runChanged = previous?.run !== next.run;
   const sampled = runChanged || previous?.sample !== next.sample;
-  const change = next.events[0];
-  const adjusted = change?.kind === 'change' && change.id !== previous?.events[0]?.id;
   status = next;
   connected = true;
   if (runChanged) {
     recentReadings.length = 0;
     seenAlarms = new Set();
   }
-  if (sampled || adjusted) {
+  if (sampled) {
     recentReadings.push(next.values);
     if (recentReadings.length > TREND_LENGTH) recentReadings.shift();
   }
