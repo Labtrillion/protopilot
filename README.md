@@ -20,7 +20,7 @@ ProtoPilot은 Tennessee Eastman Process(TEP)에서 알람 발생 시점의 공�
   <tr>
     <td align="center" valign="top" width="20%">
       <a href="https://github.com/kanade012"><img src="https://avatars.githubusercontent.com/u/87456609?s=128&amp;v=4" width="56" alt=""><br><strong>장영하</strong></a><br>
-      <sub>라이브데모 개발</sub>
+      <sub>라이브 데모<br>개발</sub>
     </td>
     <td align="center" valign="top" width="20%">
       <a href="https://github.com/hongjiyeon56"><img src="https://avatars.githubusercontent.com/u/237960924?s=128&amp;v=4" width="56" alt=""><br><strong>홍지연</strong></a><br>
