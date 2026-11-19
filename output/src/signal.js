@@ -99,7 +99,7 @@ export function mountSignal() {
   let selection, status, connected;
 
   function render() {
-    nodes.frame.textContent = status ? `${connected && !status.error ? '' : '마지막 수신 · '}#${status.sample.toLocaleString('ko-KR')} · ${elapsed(status.time_hours)}` : '로컬 샘플 연결 중';
+    nodes.frame.textContent = status ? `${connected && !status.error ? '샘플' : '마지막 샘플'} #${status.sample.toLocaleString('ko-KR')} · ${elapsed(status.time_hours)}` : '로컬 샘플 연결 중';
     stage.hidden = nodes.detail.hidden = !selection || !status;
     if (!selection || !status) return;
 
