@@ -581,7 +581,8 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       const { value, alarm, state } = pressureReading(status, tag);
       if (label.value.textContent !== value) label.value.textContent = value;
       if (label.state.textContent !== state) label.state.textContent = state;
-      label.value.parentElement.title = alarm ? `${value} kPa(g) · ${alarm.label}` : `${value} kPa(g)`;
+      const title = `${value} kPa(g)${state ? ` · ${state}` : ''}${alarm ? ` · ${alarm.label}` : ''}`;
+      if (label.value.parentElement.title !== title) label.value.parentElement.title = title;
       label.button.classList.toggle('pressure-alarm', Boolean(alarm));
     }
     alertAreas.clear();
