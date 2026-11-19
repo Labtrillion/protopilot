@@ -15,6 +15,29 @@ npm start
 
 서버 실행 후 브라우저에서 [시뮬레이터 열기](http://127.0.0.1:8765/). 초기화 버튼은 Mode 1 초기 상태에서 **일시정지된 새 실행**을 만듭니다.
 
+## Brev 서버 구성
+
+| 경로 | 내용 |
+| --- | --- |
+| `src/`, `server/` | 관제 화면과 시뮬레이터 API |
+| `zoro/` | 판단 에이전트, RAG, SOP와 인덱스 |
+| `vendor/trida-stack/` | Zoro-1 서빙용 Trida Stack 서브모듈 |
+| `scripts/` | Brev 실행과 Zoro-1 환경 설치 |
+| `.runtime/` | 서버 설정, Zoro-1 가상환경, 로그 및 PID |
+| `worktrees/pp-setpoint/` | Brev의 기존 setpoint 개발용 워크트리 |
+
+새로 체크아웃한 Brev 서버에서 Zoro-1을 준비하고 실행하려면 저장소 루트에서 다음을 실행합니다. 기존 가상환경이 있는 서버에서는 다시 설치할 필요가 없습니다.
+
+```sh
+git submodule update --init vendor/trida-stack
+scripts/install-zoro.sh
+scripts/start-zoro.sh
+npm run build
+scripts/start-protopilot.sh
+```
+
+Brev에서는 `.runtime/zoro.env`에서 서버 환경을 설정합니다. 로컬 Zoro-1을 사용하는 값은 `ZORO_BASE_URL=http://127.0.0.1:30001`입니다. 기존 체크포인트를 사용할 때는 `TRIDA_DECIDE_MODEL`에 해당 디렉터리를 지정합니다. 모델 캐시는 Hugging Face 설정을 따릅니다.
+
 ## 라이브 제어와 시나리오
 
 - **값 조정**에서 폐루프 목표 9개를 변경할 수 있습니다. `ya`는 반응기 입구의 `100 × A / (A+C)`, `yac`는 `A+C` 몰백분율입니다. 두 값은 GC-106의 지연이 적용된 원계측으로 계산합니다.
