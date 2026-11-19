@@ -3,8 +3,9 @@ import { mountPlantView } from './plant-view.js';
 import { mountResponse } from './response.js';
 import { mountSetpointControls, setupControls } from './controls.js';
 import { mountScenario } from './scenario.js';
+import { mountEventMonitor } from './event-monitor.js';
 import {
-  byId, elapsed, icon, initIcons, option, renderCircuitRoute, renderInspector, renderRows,
+  byId, elapsed, icon, initIcons, option, renderPipeDetails, renderRows,
 } from './ui.js';
 
 // Representative closed loop per unit; used only when the server defines it for that unit.
@@ -25,6 +26,9 @@ let focusedArea = 'plant', selection, connected = false;
 let visibleChannels = [], channelScope = 'primary', explicitTag = '';
 
 const response = mountResponse(trackSetpoint);
+const eventMonitor = mountEventMonitor(({ area, tag }) => {
+  focus(area, channels.has(tag) ? tag : '');
+});
 let latestSetpointChange = 0;
 const setpointControls = mountSetpointControls((id, value) => {
   const change = ++latestSetpointChange;
@@ -134,7 +138,8 @@ function focus(area, tag = '', resetCamera = false, next) {
   else if (channel && (tag || area !== 'plant' || !explicitTag)) follow(channelSelection(channel));
   explicitTag = tag || (next ? tagForSelection(next) : area === 'plant' ? explicitTag : '');
   focusedArea = area;
-  if (moved) renderInspector(area);
+  if (area !== 'plant') plantView?.circuit('', false);
+  else if (moved) renderPipeDetails(area);
   if (moved || resetCamera || tag.startsWith('XMV(') || FEED_FLOW_TAGS.has(tag)) {
     plantView?.focus(area, resetCamera, tag);
   }
@@ -187,6 +192,7 @@ function filter() {
 function renderConnection() {
   scenario.update(status, connected);
   setpointControls.update(status, connected);
+  eventMonitor.update(status, connected);
   const kind = !connected || status?.error ? 'offline' : status?.shutdown.terminated ? 'trip' : status?.running ? 'live' : 'paused';
   const labels = { offline: '연결 끊김', trip: '모델 트립', live: '시뮬레이션 실행 중', paused: '일시정지' };
   connection.className = `status ${kind}`;
@@ -328,7 +334,7 @@ async function poll() {
 
 initIcons();
 byId('channel-area').insertAdjacentHTML('beforeend', Object.entries(AREAS).filter(([key]) => key !== 'plant').map(([key, area]) => option(key, area.name)).join(''));
-renderInspector(focusedArea);
+renderPipeDetails(focusedArea);
 attachEvents();
 plantView = mountPlantView({
   selectArea: focus,
@@ -340,7 +346,7 @@ plantView = mountPlantView({
     const channel = channels.get(tag);
     if (channel) { focus(channel.area, tag); openControls?.(tag); }
   },
-  onCircuit: renderCircuitRoute,
+  onCircuit: (circuit) => renderPipeDetails(focusedArea, circuit),
   trackTag,
 });
 poll();

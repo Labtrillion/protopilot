@@ -56,15 +56,6 @@ export function legend(circuit) {
   }).join('');
 }
 
-export function renderCircuitRoute(circuit) {
-  const root = byId('circuit-route');
-  root.hidden = !circuit;
-  if (!circuit) return;
-  const route = CIRCUITS[circuit];
-  const paths = route.paths.map((path) => `<li>${path.map((item) => `<span>${escape(item)}</span>`).join('<i aria-hidden="true">→</i>')}</li>`).join('');
-  root.innerHTML = `<h2 id="circuit-route-title">${escape(route.title)} 경로</h2><ul>${paths}</ul><p>${escape(route.info)}</p>`;
-}
-
 const trendColor = readColor('--plot-sparkline');
 const channelTrend = document.createElement('canvas');
 channelTrend.className = 'channel-trend';
@@ -96,10 +87,22 @@ function renderChannelTrend(cell, series) {
   ctx.stroke();
 }
 
-export function renderInspector(areaKey) {
-  const root = byId('inspector-content');
+export function renderPipeDetails(areaKey, circuit) {
+  const root = byId('pipe-details-content');
+  const view = circuit || areaKey;
+  if (root.dataset.view === view) return;
+  root.dataset.view = view;
+  const title = byId('pipe-details-title');
+  const route = CIRCUITS[circuit];
+  title.textContent = route ? `${route.title} 경로` : '연결 배관';
+  if (route) {
+    const paths = route.paths.map((path) => `<li>${path.map((item) => `<span>${escape(item)}</span>`).join('<i aria-hidden="true">→</i>')}</li>`).join('');
+    root.innerHTML = `<ul class="circuit-paths" role="list">${paths}</ul><p class="circuit-note">${escape(route.info)}</p>`;
+    root.scrollTop = 0;
+    return;
+  }
   if (areaKey === 'plant') {
-    root.innerHTML = '<p class="inspector-empty">공정도나 실시간 계측에서 설비를 선택하세요.</p>';
+    root.innerHTML = '<p class="pipe-empty">공정도나 실시간 계측에서 설비를 선택하세요.</p>';
     return;
   }
   const { code, name } = AREAS[areaKey];
@@ -109,8 +112,8 @@ export function renderInspector(areaKey) {
     const path = id === sampleId ? `시료 채취점 → ${code} 시료 입구` : `${from} → ${to}`;
     return `<li class="inspect-stream"><span class="line-id"><i aria-hidden="true" style="--medium:var(${MEDIA[media].colorToken})"></i>${escape(id)}</span><span>${escape(path)}</span></li>`;
   }).join('');
-  root.innerHTML = `<h3 class="inspector-label"><code>${escape(code)}</code><span>${escape(name)}</span></h3>
-    ${routes ? `<ul class="inspect-streams" role="list">${routes}</ul>` : '<p class="inspector-empty">표시할 연결 배관이 없습니다.</p>'}`;
+  root.innerHTML = `<p class="pipe-equipment"><code>${escape(code)}</code><span>${escape(name)}</span></p>
+    ${routes ? `<ul class="inspect-streams" role="list">${routes}</ul>` : '<p class="pipe-empty">표시할 연결 배관이 없습니다.</p>'}`;
   root.scrollTop = 0;
 }
 

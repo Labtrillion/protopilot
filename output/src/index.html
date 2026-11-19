@@ -37,10 +37,10 @@
       <div class="model-toolbar">
         <div class="circuit-controls" role="group" aria-label="배관 경로 추적">
           <span class="toolbar-label">배관 추적</span>
-          <button type="button" data-circuit="" aria-pressed="true">전체</button>
-          <button type="button" data-circuit="recycle" aria-pressed="false">재순환</button>
-          <button type="button" data-circuit="cooling" aria-pressed="false">냉각수</button>
-          <button type="button" data-circuit="steam" aria-pressed="false">스팀·재비기</button>
+          <button type="button" data-circuit="" aria-controls="pipe-details" aria-pressed="true">전체</button>
+          <button type="button" data-circuit="recycle" aria-controls="pipe-details" aria-pressed="false">재순환</button>
+          <button type="button" data-circuit="cooling" aria-controls="pipe-details" aria-pressed="false">냉각수</button>
+          <button type="button" data-circuit="steam" aria-controls="pipe-details" aria-pressed="false">스팀·재비기</button>
         </div>
         <div class="layer-controls" role="group" aria-label="공정 표시 레이어">
           <button id="view-flow" type="button" data-icon="flow" aria-pressed="true">유량</button>
@@ -66,13 +66,25 @@
           <span class="diagram-hint">좌우 스크롤</span>
         </div>
       </div>
-      <section id="circuit-route" class="circuit-route" aria-labelledby="circuit-route-title" hidden></section>
+      <section id="pipe-details" class="pipe-details" aria-labelledby="pipe-details-title" aria-live="polite">
+        <h2 id="pipe-details-title">연결 배관</h2>
+        <div id="pipe-details-content" class="pipe-details-content" role="region" tabindex="0" aria-labelledby="pipe-details-title"></div>
+      </section>
     </section>
 
     <div class="plant-sidebar">
-      <aside class="panel inspector" aria-labelledby="inspector-title">
-        <div class="panel-head"><div class="heading-inline"><span data-icon="box"></span><h2 id="inspector-title">연결 배관</h2></div></div>
-        <div id="inspector-content" class="inspector-content" role="region" tabindex="0" aria-label="선택한 설비의 연결 배관" aria-live="polite"></div>
+      <aside class="panel event-monitor" aria-labelledby="event-monitor-title">
+        <div class="panel-head">
+          <div class="heading-inline"><span data-icon="bell"></span><h2 id="event-monitor-title">알람 및 이벤트 추적</h2></div>
+        </div>
+        <div class="segments event-monitor-controls" role="group" aria-label="알람 및 이벤트 보기">
+          <button type="button" data-event-mode="alarms" aria-controls="event-monitor-content" aria-pressed="true">알람<span id="active-alarm-count" class="subtle-count"></span></button>
+          <button type="button" data-event-mode="events" aria-controls="event-monitor-content" aria-pressed="false">이벤트</button>
+        </div>
+        <div id="event-monitor-content" class="event-monitor-content" role="region" tabindex="0" aria-label="현재 알람">
+          <p class="monitor-message" role="status">알람 데이터 연결 중</p>
+          <ul class="event-list" role="list" hidden></ul>
+        </div>
       </aside>
       <section class="panel setpoint-panel" aria-labelledby="setpoint-title">
         <div class="panel-head">

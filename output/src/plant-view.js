@@ -63,11 +63,13 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
 
   function chooseCircuit(next, refocus = true) {
     if (next && !(next in CIRCUITS)) return;
-    circuit = next;
-    for (const button of circuitButtons) button.setAttribute('aria-pressed', button.dataset.circuit === next);
-    scene?.circuit(next);
-    diagram.circuit(next);
-    legend(next);
+    if (circuit !== next) {
+      circuit = next;
+      for (const button of circuitButtons) button.setAttribute('aria-pressed', button.dataset.circuit === next);
+      scene?.circuit(next);
+      diagram.circuit(next);
+      legend(next);
+    }
     if (refocus && next) selectArea('plant', '', true);
     onCircuit(next);
   }

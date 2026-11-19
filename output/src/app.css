@@ -210,18 +210,42 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .model-tag.compact:not(.selected):not(.tracked):not(.in-alarm) b { display: none; }
 .canvas-error { position: absolute; inset: 35% 12% auto; text-align: center; padding: 1rem; border: 1px solid var(--line); background: var(--surface); }
 
-.inspector { display: flex; flex-direction: column; max-height: 28rem; background: var(--surface); }
-.inspector-content { flex: 1; padding: 0 0.7rem 0.5rem; }
-.inspector-content, .table-scroll { overflow: auto; min-height: 0; scrollbar-width: thin; }
-.inspector-content:focus-visible, .table-scroll:focus-visible { outline-offset: -2px; }
-.inspector-empty { padding-block: 0.4rem; color: var(--muted); font-size: 0.83rem; }
-.inspector-label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.52rem; padding: 0.44rem 0 0.61rem; color: var(--subtext); font-size: 0.83rem; }
-.inspector-label code { color: var(--text); font: 650 0.76rem var(--mono); }
+.pipe-details {
+  display: flex; flex-direction: column; flex: none; block-size: 9.5rem;
+  border-top: 1px solid var(--line-soft);
+}
+.pipe-details h2 { flex: none; padding: 0.57rem 0.65rem 0.12rem; font-size: 0.83rem; }
+.pipe-details-content, .event-monitor-content { flex: 1; overscroll-behavior: contain; }
+.pipe-details-content { padding: 0 0.65rem 0.57rem; }
+:is(.pipe-details-content, .event-monitor-content, .table-scroll) { overflow: auto; min-height: 0; scrollbar-width: thin; }
+:is(.pipe-details-content, .event-monitor-content, .table-scroll):focus-visible { outline-offset: -2px; }
+.pipe-empty, .monitor-message { padding-block: 0.4rem; color: var(--muted); font-size: 0.83rem; }
+.pipe-equipment { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.52rem; padding: 0.44rem 0 0.61rem; color: var(--subtext); font-size: 0.83rem; }
+.pipe-equipment code { color: var(--text); font: 650 0.76rem var(--mono); }
 .inspect-streams { list-style: none; margin: 0; padding: 0; }
 .inspect-stream { display: grid; grid-template-columns: 2.7rem minmax(0, 1fr); gap: 0.25rem; padding-block: 0.41rem; border-top: 1px solid var(--line-soft); font-size: 0.75rem; }
 .inspect-stream .line-id { white-space: nowrap; font: 0.68rem var(--mono); color: var(--muted); padding-top: 0.14rem; }
 .inspect-stream .line-id i { width: 0.48rem; margin-right: 0.14rem; }
 .inspect-stream > :last-child { color: var(--subtext); overflow-wrap: anywhere; }
+
+.event-monitor { display: flex; flex-direction: column; max-height: 28rem; }
+.event-monitor-controls { flex: none; gap: 0.35rem; padding: 0 0.7rem 0.48rem; border-bottom: 1px solid var(--line-soft); }
+.event-monitor-controls button { padding-inline: 0.56rem; font-size: 0.81rem; }
+.monitor-message { padding: 0.65rem 0.7rem; }
+.event-list { list-style: none; margin: 0; padding: 0; }
+.event-list li + li { border-top: 1px solid var(--line-soft); }
+.event-entry {
+  display: grid; width: 100%; gap: 0.22rem; padding: 0.48rem 0.7rem; border: 0; border-radius: 0;
+  justify-content: stretch; text-align: left; white-space: normal; overflow-wrap: anywhere;
+}
+button.event-entry:hover { background: var(--surface-raised); }
+button.event-entry:focus-visible { outline-offset: -2px; }
+.event-meta { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.15rem 0.45rem; color: var(--muted); font-size: 0.73rem; }
+.event-meta[data-kind=warning] { color: var(--warning); }
+.event-meta[data-kind=trip] { color: var(--danger); }
+.event-time { color: var(--muted); font: 0.7rem var(--mono); }
+.event-label { font-size: 0.83rem; font-weight: 650; }
+.event-context { color: var(--muted); font-size: 0.72rem; font-weight: 400; }
 
 .subtle-count { color: var(--muted); font: 0.78rem var(--mono); }
 .exports a { padding-inline: 0.50rem; font: 600 0.78rem var(--mono); }
@@ -357,12 +381,10 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .has-pressure .model-pressure-test { display: block; grid-area: 1 / 2; align-self: center; color: var(--warning); font-size: 0.72rem; line-height: 1; }
 .model-tag.in-alarm .model-pressure-value { color: var(--warning); }
 .legend .level-key { background: none; height: 0; border-top: 2px dashed var(--plot-sp); }
-.circuit-route { flex: none; padding: 0.57rem 0.65rem; border-top: 1px solid var(--line-soft); }
-.circuit-route h2 { font-size: 0.83rem; }
-.circuit-route ul { list-style: none; padding: 0; margin: 0; }
-.circuit-route li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.23rem; margin-block: 0.40rem; font-size: 0.76rem; }
-.circuit-route li i { font-style: normal; color: var(--muted); }
-.circuit-route p { margin-top: 0.5rem; color: var(--muted); font-size: 0.75rem; line-height: 1.46; }
+.circuit-paths { list-style: none; padding: 0; margin: 0; }
+.circuit-paths li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.23rem; margin-block: 0.40rem; font-size: 0.76rem; }
+.circuit-paths i { font-style: normal; color: var(--muted); }
+.circuit-note { margin-top: 0.5rem; color: var(--muted); font-size: 0.75rem; line-height: 1.46; }
 
 /* Orthogonal Fig. 1 diagram. */
 .diagram { position: absolute; inset: 0; overflow: auto; scrollbar-width: thin; }
@@ -450,7 +472,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .model-toolbar button { padding-inline: 0.43rem; }
   .stage[data-view="2d"] { height: 386px; }
   .stage[data-view="2d"] .stage-footer { top: 0.5rem; }
-  .inspector { max-height: 23rem; }
+  .event-monitor { max-height: 23rem; }
 }
 @media (max-width: 440px) {
   .telemetry-panel > .panel-head { padding-inline: 0.53rem; }
@@ -492,12 +514,12 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
     grid-template-areas: "telemetry plant sidebar";
   }
   .plant-sidebar { grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; }
-  .inspector { max-height: none; }
+  .event-monitor { max-height: none; }
   .setpoint-panel { max-height: calc(100dvh - 13rem); }
   .stage { flex: 1; min-height: 0; height: auto; }
   .pfd-svg { min-width: 0; min-height: 0; }
   .table-scroll { height: auto; flex: 1; }
-  .inspector-content, .table-scroll { overscroll-behavior: contain; }
+  .table-scroll { overscroll-behavior: contain; }
   .response-chart-wrap { height: auto; flex: 1; min-height: 0; }
   .topbar { min-width: 0; }
 }
