@@ -126,17 +126,17 @@ function trackTag(tag, area = '') {
 
 function follow(next) {
   selection = next;
-  plantView?.track(next.item.area, tagForSelection(next));
+  plantView?.track(next?.item.area ?? '', tagForSelection(next));
 }
 
 function focus(area, tag = '', resetCamera = false, next) {
   if (!(area in AREAS)) return;
   const moved = area !== focusedArea;
   const channel = channels.get(tag || codeFor(AREAS[area].tags[0]));
-  if (next) follow(next);
+  if (next !== undefined) follow(next);
   // The process overview tracks reactor pressure (AREAS.plant.tags[0]) unless the user picked a tag.
   else if (channel && (tag || area !== 'plant' || !explicitTag)) follow(channelSelection(channel));
-  explicitTag = tag || (next ? tagForSelection(next) : area === 'plant' ? explicitTag : '');
+  explicitTag = next === null ? '' : tag || (next ? tagForSelection(next) : area === 'plant' ? explicitTag : '');
   focusedArea = area;
   if (area !== 'plant') plantView?.circuit('', false);
   else if (moved) renderPipeDetails(area);
@@ -148,6 +148,11 @@ function focus(area, tag = '', resetCamera = false, next) {
     else syncResponse(tag ? unitLoop(tag, area) : loopFor(area));
   }
   renderChannels();
+}
+
+function selectEquipment(area, tag, resetCamera) {
+  if (area !== 'plant' && area === focusedArea) focus('plant', '', false, null);
+  else focus(area, tag, resetCamera);
 }
 
 function trackSetpoint(id) {
@@ -343,7 +348,7 @@ byId('channel-area').insertAdjacentHTML('beforeend', Object.entries(AREAS).filte
 renderPipeDetails(focusedArea);
 attachEvents();
 plantView = mountPlantView({
-  selectArea: focus,
+  selectArea: selectEquipment,
   selectFeed: (tag) => {
     plantView.reveal(tag);
     selectTag(tag);

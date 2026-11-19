@@ -180,6 +180,7 @@ function createLabels(host, onSelect) {
     button.dataset.area = key;
     button.title = AREAS[key].en;
     button.setAttribute('aria-label', `${AREAS[key].code} ${AREAS[key].name}`);
+    button.setAttribute('aria-pressed', 'false');
     const caption = `<small>${AREAS[key].code}</small><b>${AREAS[key].name}</b>`;
     button.innerHTML = hasPressure ? `
       <span class="model-tag-caption">${caption}<span class="model-pressure-state" id="model-pressure-state-${key}"></span></span>
@@ -471,6 +472,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       const tracked = trackedArea === area && !trackedFeed;
       el.classList.toggle('selected', selected);
       el.classList.toggle('tracked', tracked);
+      el.setAttribute('aria-pressed', selected);
       listEntry.setAttribute('aria-current', selected);
       listEntry.classList.toggle('tracked', tracked);
     }

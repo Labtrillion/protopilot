@@ -134,7 +134,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
   svg.addEventListener('keydown', (event) => {
     if (!(event.key === 'Enter' || event.key === ' ') || !event.target.matches('.pfd-unit, .pfd-valve, .pfd-port[data-feed-tag]')) return;
     event.preventDefault();
-    activate(event.target);
+    if (!event.repeat) activate(event.target);
   });
   const levelByArea = [...svg.querySelectorAll('[data-level]')].map((node) => ({
     area: node.dataset.level, fill: node.querySelector('rect'),
