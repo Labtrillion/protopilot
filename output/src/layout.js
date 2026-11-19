@@ -158,7 +158,8 @@ export const SAMPLE_ROUTES_3D = Object.fromEntries(Object.entries(SAMPLES).map((
 export const LABEL_POINTS = Object.fromEntries(Object.entries(ANCHORS).map(([area, point]) => {
   // HTML tags sit beside their symbols with clearance for the larger pressure readouts.
   const [x, y] = point;
-  if (area === 'compressor') return [area, scenePoint([x - 13, y + 54], 1)];
+  if (area === 'compressor') return [area, scenePoint([x, y + 40], 1)];
+  if (area === 'product') return [area, scenePoint([x + 16, y + 15], 1)];
   return [area, scenePoint([x, y + (area === 'reboiler' ? 18 : 7)], 1)];
 }));
 
@@ -168,8 +169,8 @@ export const PORTS_3D = [
     const { media, circuit = '' } = STREAMS.find((stream) => stream.id === id);
     const [x, y] = ROUTES[id].at(end === 'start' ? 0 : -1);
     const point = ROUTES_3D[id].at(end === 'start' ? 0 : -1);
-    const dx = circuit === 'cooling' ? -24 : 39;
-    const dy = circuit ? 0 : 10;
+    const dx = circuit === 'cooling' ? -24 : 65;
+    const dy = id === '11' ? 28 : circuit ? 0 : 18;
     return [name, scenePoint([x + dx, y + dy], point.y + 0.4), media, circuit];
   }),
 ];

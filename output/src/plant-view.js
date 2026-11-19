@@ -13,7 +13,10 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
   const flags = { flows: true, pressure: true, internals: false, tags: true };
   const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve);
   try {
-    scene = mountScene(canvas, labels, selectArea, trackTag);
+    scene = mountScene(canvas, labels, (unit, valve) => {
+      if (valve) selectValve(valve);
+      else selectArea(unit);
+    }, trackTag, chooseCircuit);
   } catch (error) {
     console.warn('WebGL scene unavailable', error);
     threeButton.disabled = true;

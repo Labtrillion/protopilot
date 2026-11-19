@@ -14,17 +14,27 @@ const initialOrbit = new T.Spherical().setFromVector3(initialOffset);
 const orbitLimit = T.MathUtils.degToRad(25);
 const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
-const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'compressor', 'stripper', 'product', 'purge']);
+const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'stripper']);
 
 function setupSite(scene, groups) {
   const footprint = new T.Box3();
-  for (const group of Object.values(groups)) footprint.expandByObject(group);
+  const bounds = new T.Box3();
+  const depthPerHeight = initialOffset.z / initialOffset.y;
+  let backInCamera = Infinity;
+  for (const group of Object.values(groups)) {
+    bounds.setFromObject(group);
+    footprint.union(bounds);
+    backInCamera = Math.min(backInCamera, bounds.min.z - depthPerHeight * bounds.max.y);
+  }
   for (const route of Object.values(ROUTES_3D)) {
-    for (const point of route) footprint.expandByPoint(point);
+    for (const point of route) {
+      footprint.expandByPoint(point);
+      backInCamera = Math.min(backInCamera, point.z - depthPerHeight * point.y);
+    }
   }
   const margin = 1.4;
   const halfWidth = Math.max(OVERVIEW.halfWidth, Math.abs(footprint.min.x), Math.abs(footprint.max.x)) + margin;
-  const back = Math.min(scenePoint([0, 30], 0).z, footprint.min.z - margin);
+  const back = Math.min(backInCamera, footprint.min.z) - margin;
   const front = Math.max(scenePoint([0, 472], 0).z, footprint.max.z + margin);
   const width = 2 * halfWidth, depth = front - back;
   const center = (back + front) / 2;
@@ -111,6 +121,7 @@ function buildStreams(scene, groups) {
     const material = new T.MeshBasicMaterial({ color, toneMapped: false });
     const radius = ['06','07','07B','08','08I','08R','08M','10','10S','11','11S'].includes(def.id) ? 0.114 : 0.079;
     const tube = new T.Mesh(new T.TubeGeometry(path, Math.ceil(Math.max(18, length * 10)), radius, 12), material);
+    tube.userData.circuit = def.circuit;
     scene.add(tube);
     const count = Math.max(1, Math.ceil(length / (def.tag ? 2.15 : 4.0)));
     const markers = new T.InstancedMesh(markerGeometry, markerMaterial, count);
@@ -130,7 +141,7 @@ function buildStreams(scene, groups) {
       const group = groups[def.area];
       valve = geo.controlValve(group, point.sub(group.position), tangent, def.valve);
     }
-    return { def, path, length, markers, material, color, valve, phase: 0, flanges };
+    return { def, path, length, tube, markers, material, color, valve, phase: 0, flanges };
   });
 }
 
@@ -191,7 +202,7 @@ function makePartLabels(host, parts, onPick) {
   });
 }
 
-export function mountScene(container, host, select, pick = () => {}) {
+export function mountScene(container, host, select, pick, selectCircuit) {
   const scene = new T.Scene();
   scene.background = new T.Color(readColor('--stage'));
   const renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -243,6 +254,7 @@ export function mountScene(container, host, select, pick = () => {}) {
 
   const { groups, models, sight } = buildEquipment(scene);
   const streams = buildStreams(scene, groups);
+  const pickable = [...Object.values(groups), ...streams.filter(({ def }) => def.circuit).map(({ tube }) => tube)];
   const overviewFrame = setupSite(scene, groups);
   const internal = buildInternals(models, sight);
   const labels = createLabels(host, select);
@@ -453,8 +465,12 @@ export function mountScene(container, host, select, pick = () => {}) {
     const bounds = renderer.domElement.getBoundingClientRect();
     pointer.set((event.clientX - bounds.left) / width * 2 - 1, 1 - (event.clientY - bounds.top) / height * 2);
     ray.setFromCamera(pointer, camera);
-    const hit = ray.intersectObjects(Object.values(groups), true)[0];
+    const hit = ray.intersectObjects(pickable, true)[0];
     if (!hit) return;
+    if (hit.object.userData.circuit) {
+      selectCircuit(hit.object.userData.circuit);
+      return;
+    }
     let obj = hit.object, valve;
     while (!obj.userData.area && obj.parent) {
       valve ||= obj.userData.valve;
