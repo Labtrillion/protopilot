@@ -1,7 +1,7 @@
 import { AREAS, CIRCUITS, CORE_PRESSURES, INTERIOR_PARTS, INTERIOR_TAGS, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { mountDiagram } from './diagram.js';
 import { mountScene } from './scene.js';
-import { byId, escape, legend, renderPressures } from './ui.js';
+import { byId, escape, legend } from './ui.js';
 
 export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag }) {
   const canvas = byId('canvas'), labels = byId('model-labels'), diagramRoot = byId('diagram');
@@ -9,7 +9,7 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
   const flows = byId('view-flow'), pressure = byId('view-pressure'), internals = byId('toggle-internals'), tags = byId('toggle-tags');
   const internalsLabel = byId('internals-label'), partStrip = byId('interior-parts');
   const circuitButtons = [...document.querySelectorAll('.circuit-controls button[data-circuit]')];
-  let scene, current, area = 'plant', circuit = '', visible = '3d', tracked = '', focusedTag = '';
+  let scene, area = 'plant', circuit = '', visible = '3d', tracked = '', focusedTag = '';
   const flags = { flows: true, pressure: true, internals: false, tags: true };
   const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve);
   try {
@@ -103,12 +103,7 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
   function applyPressure(enabled) {
     scene?.pressure(enabled);
     diagram.pressure(enabled);
-    renderPressures(current, enabled, tracked);
   }
-  byId('pressure-overview').addEventListener('click', (event) => {
-    const button = event.target.closest('[data-pressure-tag]');
-    if (button) selectArea(button.dataset.area, button.dataset.pressureTag);
-  });
   diagram.flow(true);
   applyPressure(true);
   legend('');
@@ -122,11 +117,10 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
       renderInterior();
     },
     circuit: chooseCircuit,
-    track(signalArea, tag) {
+    track(tagArea, tag) {
       tracked = tag;
-      scene?.track(signalArea, tag);
-      diagram.track(signalArea, tag);
-      renderPressures(current, flags.pressure, tracked);
+      scene?.track(tagArea, tag);
+      diagram.track(tagArea, tag);
       renderInterior();
     },
     reveal(tag) {
@@ -156,10 +150,8 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
       if (saved.scroll && visible === '2d') [diagramRoot.scrollLeft, diagramRoot.scrollTop] = saved.scroll;
     },
     update(status) {
-      current = status;
       scene?.updateVisuals(status);
       diagram.update(status);
-      renderPressures(status, flags.pressure, tracked);
     },
   };
 }

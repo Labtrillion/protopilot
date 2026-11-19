@@ -1,4 +1,4 @@
-import { AREAS, CIRCUITS, CORE_PRESSURES, MEDIA, STREAMS, codeFor } from './topology.js';
+import { AREAS, CIRCUITS, MEDIA, STREAMS, codeFor } from './topology.js';
 import { readColor } from './palette.js';
 
 export const byId = (id) => document.getElementById(id);
@@ -57,27 +57,6 @@ export function legend(circuit, interiors) {
   }).join('') + (interiors ? '<span><i class="level-key"></i>액위 SP</span>' : '');
 }
 
-export function renderPressures(status, enabled, tracked = '') {
-  const root = byId('pressure-overview');
-  root.hidden = !enabled;
-  if (!enabled) return;
-  if (!root.children.length) root.innerHTML = Object.entries(CORE_PRESSURES).map(([area, tag]) =>
-    `<button type="button" data-pressure-tag="${codeFor(tag)}" data-area="${area}" title="${AREAS[area].name} · ${codeFor(tag)}">
-      <span>${AREAS[area].code}</span><b>—</b></button>`).join('');
-  for (const row of root.children) {
-    const tag = row.dataset.pressureTag;
-    const alarming = status?.alarms.some((alarm) => alarm.tag === tag);
-    const value = status?.values[tag];
-    const formatted = reading(value, 'kPa(g)');
-    const tested = tag in (status?.offsets ?? {});
-    row.querySelector('b').innerHTML = `${formatted}<small>kPa(g)${tested ? ' · 시험' : ''}</small>`;
-    row.classList.toggle('alarming', alarming);
-    row.classList.toggle('tested', tested);
-    row.toggleAttribute('data-tracked', tag === tracked);
-    row.setAttribute('aria-current', tag === tracked);
-  }
-}
-
 function routeDetails(circuit) {
   if (!circuit) return '';
   const route = CIRCUITS[circuit];
@@ -87,51 +66,34 @@ function routeDetails(circuit) {
 }
 
 const trendColor = readColor('--plot-sparkline');
+const channelTrend = document.createElement('canvas');
+channelTrend.className = 'channel-trend';
+channelTrend.width = 88;
+channelTrend.height = 20;
+channelTrend.setAttribute('role', 'img');
+channelTrend.setAttribute('aria-label', '선택한 계측의 최근 추세');
+channelTrend.title = '최근 수신값 추세';
 
-function drawTrend(canvas, values) {
-  const ctx = canvas.getContext('2d');
-  const series = values.filter(Number.isFinite);
-  const { width: w, height: h } = canvas;
-  ctx.clearRect(0, 0, w, h);
-  if (series.length < 2) return;
-  const min = Math.min(...series), max = Math.max(...series), spread = max - min || 1;
-  ctx.strokeStyle = trendColor;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  series.forEach((value, i) => ctx.lineTo(i * (w - 2) / (series.length - 1) + 1, h - 4 - (value - min) / spread * (h - 8)));
-  ctx.stroke();
-}
-
-// Always-on summary: safety/process state first, then production.
-export const KPI_TAGS = [[7, '반응기 압력'], [9, '반응기 온도'], [12, '분리기 액위'], [17, '제품 유량']].map(([i, label]) => [codeFor(i), label]);
-// Combined text state so alarm / sensor test / tracking never rely on color alone.
-export function stateText(tag, status, tracked) {
-  return [
-    status?.alarms.some((event) => event.tag === tag) && '경보',
-    tag in (status?.offsets ?? {}) && '시험',
-    tag === tracked && '추적',
-  ].filter(Boolean);
-}
-export function renderKpis(status, metadata, trends, tracked) {
-  const root = byId('kpis');
-  if (!root.children.length) root.innerHTML = KPI_TAGS.map(([tag, label]) =>
-    `<button type="button" data-tag="${tag}"><span>${label}</span><b>—</b><small></small><em class="kpi-state"></em><canvas width="88" height="34" aria-hidden="true"></canvas></button>`).join('');
-  for (const card of root.children) {
-    const tag = card.dataset.tag;
-    const unit = metadata.get(tag)?.unit ?? '';
-    const states = stateText(tag, status, tracked);
-    const tested = tag in status.offsets;
-    card.querySelector('b').textContent = reading(status.values[tag], unit);
-    card.querySelector('small').textContent = unit;
-    card.querySelector('em').textContent = tested
-      ? `${states.filter((s) => s !== '시험').concat('시험 표시값').join(' · ')} · 원계측 ${reading(status.native_values?.[tag], unit)} ${unit}`
-      : states.join(' · ');
-    card.classList.toggle('alarming', states.includes('경보'));
-    card.classList.toggle('tested', tested);
-    card.toggleAttribute('data-tracked', tag === tracked);
-    card.setAttribute('aria-pressed', tag === tracked);
-    drawTrend(card.querySelector('canvas'), trends.get(tag) ?? []);
+function renderChannelTrend(cell, series) {
+  if (!cell || series.length < 2) {
+    channelTrend.remove();
+    return;
   }
+  if (channelTrend.parentElement !== cell) cell.append(channelTrend);
+  const ctx = channelTrend.getContext('2d');
+  const { width: w, height: h } = channelTrend;
+  ctx.clearRect(0, 0, w, h);
+  const min = Math.min(...series), max = Math.max(...series), spread = max - min;
+  ctx.strokeStyle = trendColor;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  series.forEach((value, i) => {
+    const x = 2 + i * (w - 4) / (series.length - 1);
+    const y = spread ? h - 3 - (value - min) / spread * (h - 6) : h / 2;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
 }
 
 export function renderInspector(areaKey, status, metadata, circuit = '', setpoint = null, control = null, tracked = '') {
@@ -142,19 +104,17 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
   if (root.dataset.area !== panelKey) {
     const rows = [...area.tags.map(codeFor), ...(area.extra ?? [])].map((tag) => {
       const channel = metadata.get(tag);
-      return `<button class="inspect-value" type="button" data-tag="${tag}" title="${tag} · ${escape(channel?.label ?? tag)}">
-        <span>${escape(channel?.label ?? tag)}</span><b><span>—</span> <small>${escape(channel?.unit ?? '')}</small></b></button>`;
+      return `<button class="inspect-tag" type="button" data-tag="${tag}" title="계측 표에서 보기"${channel ? '' : ' disabled'}>
+        <span>${escape(channel?.label ?? tag)}</span><small>${tag}</small></button>`;
     }).join('');
     const streams = STREAMS.filter((stream) => circuit ? stream.circuit === circuit : stream.area === areaKey && areaKey !== 'plant');
-    const flows = streams.map((stream) => {
-      const tag = codeFor(stream.tag);
-      return `<div class="inspect-stream"><span class="line-id"><i style="--medium:var(${MEDIA[stream.media].colorToken})"></i>${stream.id}</span>
-        <span><b>${escape(stream.from)} → ${escape(stream.to)}</b>${tag ? `<small data-flow-tag="${tag}"></small>` : '<small>흐름 방향</small>'}</span></div>`;
-    }).join('');
+    const routes = streams.map((stream) =>
+      `<div class="inspect-stream"><span class="line-id"><i style="--medium:var(${MEDIA[stream.media].colorToken})"></i>${stream.id}</span>
+        <b>${escape(stream.from)} → ${escape(stream.to)}</b></div>`).join('');
     root.innerHTML = `${routeDetails(circuit)}<div class="inspector-label"><code>${area.code}</code><span>${area.en}</span></div>
       ${setpoint ? `<button type="button" class="inspect-setting" data-response="${setpoint.id}"><span>${escape(setpoint.label)} · SP 응답</span><b></b></button>` : ''}
       ${control ? `<button type="button" class="inspect-setting" data-control="${control.id}"><span>${escape(control.label)}</span><b></b></button>` : ''}
-      <div class="inspect-values">${rows}</div>${flows ? `<h3>연결 배관</h3><div class="inspect-streams">${flows}</div>` : ''}`;
+      <div class="inspect-tags">${rows}</div>${routes ? `<h3>연결 배관</h3><div class="inspect-streams">${routes}</div>` : ''}`;
     root.dataset.area = panelKey;
     root.scrollTop = 0;
   }
@@ -165,24 +125,18 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
     root.querySelector('[data-control] b').textContent = `실제 ${reading(current)}% · 명령 ${reading(command)}%`;
   }
   const activeAlarms = new Set(status?.alarms.map((alarm) => alarm.tag));
-  for (const button of root.querySelector('.inspect-values').children) {
+  for (const button of root.querySelector('.inspect-tags').children) {
     const tag = button.dataset.tag;
+    const alarming = activeAlarms.has(tag);
     const tested = tag in (status?.offsets ?? {});
-    button.classList.toggle('alarming', activeAlarms.has(tag));
+    button.classList.toggle('alarming', alarming);
     button.classList.toggle('tested', tested);
-    button.querySelector('b span').textContent = reading(values[tag], metadata.get(tag)?.unit);
-    button.querySelector('b small').textContent = `${metadata.get(tag)?.unit ?? ''}${tested ? ' · 시험' : ''}`;
-    button.toggleAttribute('data-tracked', tag === tracked);
+    button.querySelector('small').textContent = [tag, alarming && '경보', tested && '시험'].filter(Boolean).join(' · ');
     button.setAttribute('aria-current', tag === tracked);
-  }
-  for (const flow of root.querySelectorAll('[data-flow-tag]')) {
-    const tag = flow.dataset.flowTag;
-    const unit = metadata.get(tag)?.unit;
-    flow.textContent = `${reading(values[tag], unit)}${unit ? ` ${unit}` : ''}`;
   }
 }
 
-export function renderRows(channels, status, selected) {
+export function renderRows(channels, status, selected, recentReadings) {
   const holder = byId('rows');
   if (!channels.length) {
     holder.innerHTML = '<tr><td colspan="3" class="empty-cell">검색 조건에 해당하는 채널이 없습니다.</td></tr>';
@@ -196,19 +150,21 @@ export function renderRows(channels, status, selected) {
       <td class="channel-state"></td></tr>`).join('');
   }
   const active = new Set((status?.alarms ?? []).map((alarm) => alarm.tag));
+  let trendCell;
   channels.forEach((ch, i) => {
     const tr = holder.children[i];
     const isAlarm = active.has(ch.id);
     const isOffset = ch.id in (status?.offsets ?? {});
     const isSelected = selected === ch.id;
     const manual = ch.id in (status?.manual ?? {});
-    tr.classList.toggle('selected-row', selected === ch.id);
-    if (selected === ch.id) tr.cells[0].firstElementChild.setAttribute('aria-current', 'true');
-    else tr.cells[0].firstElementChild.removeAttribute('aria-current');
+    tr.classList.toggle('selected-row', isSelected);
+    tr.cells[0].firstElementChild.setAttribute('aria-current', isSelected);
+    if (isSelected) trendCell = tr.cells[1];
     tr.classList.toggle('alarm-row', isAlarm);
     tr.classList.toggle('tested-row', isOffset);
-    tr.cells[1].firstElementChild.textContent = reading(status?.values[ch.id], ch.unit);
-    tr.cells[1].lastElementChild.textContent = `${ch.unit ?? ''}${isOffset ? `${ch.unit ? ' · ' : ''}시험` : ''}`;
+    const [value, unit] = tr.cells[1].children;
+    value.textContent = reading(status?.values[ch.id], ch.unit);
+    unit.textContent = `${ch.unit ?? ''}${isOffset ? `${ch.unit ? ' · ' : ''}시험` : ''}`;
     tr.cells[1].title = isOffset ? `센서 시험 표시값 · 원계측 ${reading(status.native_values?.[ch.id], ch.unit)} ${ch.unit ?? ''} · 오프셋 ${reading(status.offsets[ch.id])}` : '';
     const pending = manual && status.manual[ch.id] !== status.values[ch.id];
     const base = status?.limited_manual?.includes(ch.id) ? '보호 제어 제한' : pending ? '명령 대기' : manual ? '수동' : ch.period ? `${ch.period} h 샘플` : ch.group.endsWith('monitors') ? '진단' : '정상';
@@ -217,6 +173,7 @@ export function renderRows(channels, status, selected) {
     tr.cells[2].textContent = (flags.length && !manual ? flags : [...flags, base]).join(' · ');
     if (ch.period) tr.cells[2].title = `갱신 ${ch.period} h / 지연 ${ch.delay} h`;
   });
+  renderChannelTrend(trendCell, trendCell ? recentReadings.map((values) => values[selected]).filter(Number.isFinite) : []);
 }
 
 const KIND = { warning: '경고', trip: '트립', change: '조작', clear: '복구', ack: '확인', protection: '보호 제어' };

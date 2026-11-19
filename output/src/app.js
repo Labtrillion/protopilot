@@ -2,11 +2,10 @@ import { AREAS, codeFor } from './topology.js';
 import { mountPlantView } from './plant-view.js';
 import { mountResponse } from './response.js';
 import { setupControls } from './controls.js';
-import { mountSignal, signalTag } from './signal.js';
 import { mountScenario } from './scenario.js';
 import { mountAlarmResponse } from './alarm-response.js';
 import {
-  KPI_TAGS, byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderKpis, renderRows,
+  byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderRows,
   unacknowledgedAlarms, wallTime,
 } from './ui.js';
 
@@ -14,9 +13,10 @@ import {
 const REPRESENTATIVE_LOOP = { reactor: 'reactor_pressure', separator: 'separator_level', stripper: 'stripper_level' };
 // Channel tab first screen: gas pressure, level, temperature, inlet/product/purge flow of the main units.
 const PRIMARY_TAGS = [7, 13, 16, 8, 12, 15, 9, 11, 18, 6, 17, 10].map(codeFor);
+const TREND_LENGTH = 60;
 
 const channels = new Map();
-const trends = new Map();
+const recentReadings = [];
 const reset = byId('reset'), run = byId('run'), speed = byId('speed'), select = byId('area-select');
 const connection = byId('connection');
 const pageId = crypto.randomUUID();
@@ -26,7 +26,6 @@ let focusedArea = 'plant', selection, alarmTab = 'active', connected = false;
 let seenAlarms = new Set(), visibleChannels = [];
 let channelScope = 'primary', returnPoint = null, explicitTag = '';
 
-const signal = mountSignal((tag) => loopForTag(tag));
 const response = mountResponse((id) => openControls?.(id), (id) => trackSetpoint(id));
 const alarmResponse = mountAlarmResponse(request);
 const scenario = mountScenario(request, async (body) => {
@@ -58,6 +57,7 @@ function loopFor(area, tag = '') {
     ?? setpoints.find((item) => item.area === area);
 }
 const channelSelection = (channel) => ({ kind: channel.group === 'manipulated_variables' ? 'mv' : 'channel', item: channel });
+const tagForSelection = (target) => target?.item.pv ?? target?.item.id ?? '';
 
 function showTelemetry(view, setpoint) {
   // Leaving the SP view keeps tracking the loop's measured PV instead of a stale SP selection.
@@ -75,14 +75,18 @@ function showTelemetry(view, setpoint) {
 
 function inspector() {
   const chosen = selection?.item.area === focusedArea ? selection : null;
-  const tag = signalTag(selection);
+  const tag = tagForSelection(selection);
   const configured = chosen?.kind === 'setpoint' ? chosen.item : loopFor(focusedArea, tag);
   renderInspector(focusedArea, status, channels, circuit, configured, chosen?.kind === 'mv' ? chosen.item : null, tag);
 }
 
+function renderChannels() {
+  renderRows(visibleChannels, status, tagForSelection(selection), recentReadings);
+}
+
 function refresh() {
   inspector();
-  renderRows(visibleChannels, status, signalTag(selection));
+  renderChannels();
 }
 
 // With the SP tab open the central tracking and the response loop are the same loop;
@@ -116,26 +120,22 @@ function trackTag(tag, area = '') {
 }
 
 function follow(next) {
-  const tag = signalTag(next);
   selection = next;
-  signal.select(next);
-  plantView?.track(next.item.area, tag);
-  // Re-render KPI state text and aria-pressed now; a paused model sends no new status to do it.
-  if (status && channels.size) renderKpis(status, channels, trends, tag);
+  plantView?.track(next.item.area, tagForSelection(next));
 }
 
-function focus(area, tag = '', resetCamera = false, next, recenter = false) {
+function focus(area, tag = '', resetCamera = false, next) {
   if (!(area in AREAS)) return;
   const moved = area !== focusedArea;
   const channel = channels.get(tag || codeFor(AREAS[area].tags[0]));
   if (next) follow(next);
   // The process overview tracks reactor pressure (AREAS.plant.tags[0]) unless the user picked a tag.
   else if (channel && (tag || area !== 'plant' || !explicitTag)) follow(channelSelection(channel));
-  explicitTag = tag || (next ? signalTag(next) : area === 'plant' ? explicitTag : '');
+  explicitTag = tag || (next ? tagForSelection(next) : area === 'plant' ? explicitTag : '');
   focusedArea = area;
   select.value = area;
   // Re-tracking keeps the camera in place while explicit navigation can reframe it.
-  if (moved || resetCamera || recenter || tag.startsWith('XMV(')) plantView?.focus(area, resetCamera, tag);
+  if (moved || resetCamera || tag.startsWith('XMV(')) plantView?.focus(area, resetCamera, tag);
   if (next?.kind !== 'setpoint' && telemetryView === 'response') {
     if (area === 'plant') closeResponse();
     else syncResponse(tag ? unitLoop(tag, area) : loopFor(area));
@@ -184,7 +184,7 @@ function filter() {
   byId('scope-primary').setAttribute('aria-pressed', primary);
   byId('scope-all').setAttribute('aria-pressed', !primary);
   byId('matches').textContent = primary ? `주요 ${visibleChannels.length}개` : `${visibleChannels.length} / ${channels.size}개`;
-  renderRows(visibleChannels, status, signalTag(selection));
+  renderChannels();
 }
 
 // Return point for alarm investigation: the first original position survives consecutive alarm visits.
@@ -200,7 +200,7 @@ function renderReturn() {
   const button = byId('return-back');
   button.hidden = !returnPoint;
   if (!returnPoint) return;
-  const tag = signalTag(returnPoint.selection);
+  const tag = tagForSelection(returnPoint.selection);
   byId('return-label').textContent = `이전 위치로 돌아가기 · ${AREAS[returnPoint.area].code}${tag ? ` · ${tag}` : ''}`;
   button.title = `${AREAS[returnPoint.area].name}, ${returnPoint.view === 'response' ? 'SP 응답' : '채널'} 보기, ${returnPoint.plant?.view === '2d' ? '2D' : '3D'}${returnPoint.plant?.flags.internals ? ' 내부' : ''} 화면으로 복원`;
 }
@@ -222,7 +222,7 @@ function restoreReturn() {
   focusedArea = saved.area;
   select.value = saved.area;
   if (saved.selection) follow(saved.selection);
-  plantView?.focus(saved.area, false, signalTag(saved.selection));
+  plantView?.focus(saved.area, false, tagForSelection(saved.selection));
   plantView?.restore(saved.plant);
   for (const [id, value] of saved.filters) byId(id).value = value;
   channelScope = saved.scope;
@@ -273,19 +273,17 @@ function receive(next) {
   const previous = status;
   const runChanged = previous?.run !== next.run;
   const sampled = runChanged || previous?.sample !== next.sample;
+  const change = next.events[0];
+  const adjusted = change?.kind === 'change' && change.id !== previous?.events[0]?.id;
   status = next;
   connected = true;
   if (runChanged) {
-    trends.clear();
+    recentReadings.length = 0;
     seenAlarms = new Set();
   }
-  if (sampled) {
-    for (const [tag] of KPI_TAGS) {
-      const values = trends.get(tag) ?? [];
-      values.push(status.native_values?.[tag] ?? status.values[tag]);
-      if (values.length > 70) values.shift();
-      trends.set(tag, values);
-    }
+  if (sampled || adjusted) {
+    recentReadings.push(next.values);
+    if (recentReadings.length > TREND_LENGTH) recentReadings.shift();
   }
   const pending = unacknowledgedAlarms(status);
   const newAlarm = pending.filter((alarm) => !seenAlarms.has(alarm.id)).sort((a, b) => b.id - a.id)[0];
@@ -307,14 +305,11 @@ function receive(next) {
   if (previous?.running !== status.running) run.innerHTML = status.running ? `${icon('pause')} 일시정지` : `${icon('play')} 실행`;
   if (document.activeElement !== speed) speed.value = status.speed;
   byId('clear-test').hidden = !('XMEAS(7)' in status.offsets);
-  // KPI cards refresh on every status so sensor test apply/clear shows while paused too.
-  renderKpis(status, channels, trends, signalTag(selection));
-  renderRows(visibleChannels, status, signalTag(selection));
+  renderChannels();
   inspector();
   renderAlarms(status, alarmTab, channels);
   plantView?.update(status);
   response.update(status);
-  signal.update(status, connected);
 }
 
 async function request(path, options = {}) {
@@ -336,8 +331,9 @@ const doCommand = (body, callback) => command(body, callback).catch((error) => n
 function selectTag(tag, navigate = false) {
   const ch = channels.get(tag);
   if (!ch) return;
+  if (navigate && telemetryView === 'response') showTelemetry('values');
   focus(ch.area, tag);
-  if (navigate && telemetryView === 'values') {
+  if (navigate) {
     // Reveal the row; only widen the current filter when the row is not already listed.
     if (!visibleChannels.includes(ch)) {
       byId('channel-group').value = '';
@@ -345,7 +341,9 @@ function selectTag(tag, navigate = false) {
       byId('search').value = tag;
       filter();
     }
-    byId('rows').querySelector(`tr[data-tag="${CSS.escape(tag)}"]`)?.scrollIntoView({ block: 'nearest' });
+    const button = byId('rows').querySelector(`button[data-tag="${CSS.escape(tag)}"]`);
+    button?.focus({ preventScroll: true });
+    button?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 }
 
@@ -372,7 +370,7 @@ function attachEvents() {
   });
   // Direct SP tab entry uses the same path as every other SP shortcut, so unit, tag and loop match.
   byId('tab-response').addEventListener('click', () => {
-    const tag = signalTag(selection);
+    const tag = tagForSelection(selection);
     const loop = selection?.kind === 'setpoint' ? selection.item
       : loopForTag(tag) ?? (focusedArea === 'plant' ? setpoints.find((item) => item.id === 'reactor_pressure') : loopFor(focusedArea))
         ?? setpoints.find((item) => item.id === response.selected()) ?? setpoints[0];
@@ -383,18 +381,9 @@ function attachEvents() {
     setScope('primary');
   });
   byId('scope-all').addEventListener('click', () => setScope('all'));
-  byId('signal-locate').addEventListener('click', () => {
-    if (!selection) return;
-    const tag = signalTag(selection);
-    plantView.reveal(tag);
-    focus(selection.item.area, tag, false, selection, true);
-    byId('stage').scrollIntoView({ block: 'nearest' });
-  });
-  byId('signal-response').addEventListener('click', () => {
-    const loop = selection?.kind === 'setpoint' ? selection.item : loopForTag(signalTag(selection));
-    if (loop) trackSetpoint(loop.id, true);
-  });
   byId('inspector-content').addEventListener('click', (event) => {
+    const channelButton = event.target.closest('button[data-tag]');
+    if (channelButton) selectTag(channelButton.dataset.tag, true);
     const responseButton = event.target.closest('[data-response]');
     if (responseButton) trackSetpoint(responseButton.dataset.response, true);
     const controlButton = event.target.closest('[data-control]');
@@ -405,19 +394,10 @@ function attachEvents() {
   for (const [id, type] of [['search', 'input'], ['channel-group', 'change'], ['channel-area', 'change']]) {
     byId(id).addEventListener(type, filter);
   }
-  for (const id of ['inspector-content', 'kpis', 'rows']) {
-    byId(id).addEventListener('click', (event) => {
-      const target = event.target.closest(id === 'rows' ? 'tr[data-tag]' : 'button[data-tag]');
-      if (!target) return;
-      selectTag(target.dataset.tag, id === 'inspector-content');
-      const detail = byId('signal-detail');
-      const bounds = detail.getBoundingClientRect();
-      if (id !== 'inspector-content' && (bounds.top < 0 || bounds.bottom > innerHeight)) {
-        byId('signal-heading').focus({ preventScroll: true });
-        detail.scrollIntoView({ block: 'nearest' });
-      }
-    });
-  }
+  byId('rows').addEventListener('click', (event) => {
+    const row = event.target.closest('tr[data-tag]');
+    if (row) selectTag(row.dataset.tag);
+  });
   for (const [id, tab] of [['active-tab', 'active'], ['history-tab', 'history']]) {
     byId(id).addEventListener('click', () => {
       alarmTab = tab;
@@ -471,7 +451,7 @@ async function poll() {
       response.init(setpoints);
       openControls = setupControls(schema, () => status, command, (kind, item) => {
         const next = { kind, item };
-        const tag = signalTag(next);
+        const tag = tagForSelection(next);
         plantView.reveal(tag);
         focus(item.area, tag, false, next);
         if (kind === 'setpoint') showTelemetry('response', item.id);
@@ -489,7 +469,6 @@ async function poll() {
   } catch {
     connected = false;
     renderConnection();
-    signal.update(status, connected);
   } finally {
     setTimeout(poll, connected ? 430 : 1400);
   }
