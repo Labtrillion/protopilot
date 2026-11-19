@@ -140,6 +140,7 @@ function buildStreams(scene, groups) {
       const { point, tangent } = valvePosition(def);
       const group = groups[def.area];
       valve = geo.controlValve(group, point.sub(group.position), tangent, def.valve);
+      valve.userData.area = def.area;
     }
     return { def, path, length, tube, markers, material, color, valve, phase: 0, flanges };
   });
@@ -255,6 +256,8 @@ export function mountScene(container, host, select, pick, selectCircuit) {
   const { groups, models, sight } = buildEquipment(scene);
   const streams = buildStreams(scene, groups);
   const pickable = [...Object.values(groups), ...streams.filter(({ def }) => def.circuit).map(({ tube }) => tube)];
+  const valveTargets = streams.filter(({ valve }) => valve).map(({ valve }) => ({ valve, x: 0, y: 0, onScreen: false }));
+  const largerTargets = matchMedia('(max-width: 600px), (pointer: coarse)');
   const overviewFrame = setupSite(scene, groups);
   const internal = buildInternals(models, sight);
   const labels = createLabels(host, select);
@@ -294,7 +297,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
   const box = new T.Box3();
   let width = 1, height = 1, focus = 'plant', showFlow = true, showPressure = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
   let trackedArea = '', trackedTag = '';
-  let down = null, last = 0, framing = false;
+  let down = null, last = 0, framing = false, valveRadius = 14;
   const alertAreas = new Set();
   const geometryBounds = {};
   scene.updateMatrixWorld(true);
@@ -392,6 +395,18 @@ export function mountScene(container, host, select, pick, selectCircuit) {
 
   function projectLabels() {
     const placed = [];
+    // Reserve the valve silhouettes for labels. The larger hit radius helps with aim on the canvas.
+    const pixelsPerUnit = height * camera.zoom / (camera.top - camera.bottom);
+    const clearance = Math.max(5, 0.4 * pixelsPerUnit);
+    valveRadius = Math.max(largerTargets.matches ? 18 : 14, clearance);
+    for (const target of valveTargets) {
+      target.valve.localToWorld(projected.set(0, 0.16, 0)).project(camera);
+      const x = (projected.x + 1) * width / 2, y = (1 - projected.y) * height / 2;
+      const left = x - clearance, right = x + clearance, top = y - clearance, bottom = y + clearance;
+      const onScreen = Math.abs(projected.z) <= 1 && right > 0 && left < width && bottom > 0 && top < height;
+      Object.assign(target, { x, y, onScreen });
+      if (onScreen) placed.push({ left, right, top, bottom });
+    }
     const priority = (area) => (focus === area || trackedArea === area || alertAreas.has(area) ? 3 :
       CORE_PRESSURES[area] ? 2 : primaryLabels.has(area) ? 1 : 0);
     const ordered = [...labelEntries].sort(([a], [b]) => priority(b) - priority(a));
@@ -447,6 +462,28 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     }
   });
 
+  function hitAt(x, y) {
+    pointer.set(x / width * 2 - 1, 1 - y / height * 2);
+    ray.setFromCamera(pointer, camera);
+    let object = ray.intersectObjects(pickable, true)[0]?.object;
+    while (object && !object.userData.area && !object.userData.circuit) object = object.parent;
+    return object?.userData;
+  }
+
+  function nearbyValve(x, y) {
+    let closest, distance = valveRadius;
+    for (const target of valveTargets) {
+      if (!target.onScreen) continue;
+      const gap = Math.hypot(x - target.x, y - target.y);
+      if (gap > distance) continue;
+      // Only extend the hit area of a valve whose center is visible from this angle.
+      if (hitAt(target.x, target.y)?.valve !== target.valve.userData.valve) continue;
+      closest = target.valve.userData;
+      distance = gap;
+    }
+    return closest;
+  }
+
   renderer.domElement.addEventListener('pointerdown', (event) => {
     if (!event.isPrimary) {
       if (event.pointerType === 'touch') down = null;
@@ -463,20 +500,11 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     down = null;
     if (!withinClickDistance) return;
     const bounds = renderer.domElement.getBoundingClientRect();
-    pointer.set((event.clientX - bounds.left) / width * 2 - 1, 1 - (event.clientY - bounds.top) / height * 2);
-    ray.setFromCamera(pointer, camera);
-    const hit = ray.intersectObjects(pickable, true)[0];
-    if (!hit) return;
-    if (hit.object.userData.circuit) {
-      selectCircuit(hit.object.userData.circuit);
-      return;
-    }
-    let obj = hit.object, valve;
-    while (!obj.userData.area && obj.parent) {
-      valve ||= obj.userData.valve;
-      obj = obj.parent;
-    }
-    if (obj.userData.area) select(obj.userData.area, valve);
+    const x = event.clientX - bounds.left, y = event.clientY - bounds.top;
+    const exact = hitAt(x, y);
+    const hit = exact?.valve ? exact : nearbyValve(x, y) ?? exact;
+    if (hit?.circuit) selectCircuit(hit.circuit);
+    else if (hit?.area) select(hit.area, hit.valve);
   });
   renderer.domElement.addEventListener('lostpointercapture', (event) => {
     if (down?.id === event.pointerId) down = null;
@@ -549,6 +577,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
       markers.instanceMatrix.needsUpdate = true;
     }
     highlightMat.color.set(alertAreas.has(focus) ? warningColor : trackedArea === focus ? trackedColor : selectionColor);
+    camera.updateMatrixWorld();
     projectLabels();
     renderer.render(scene, camera);
   }
