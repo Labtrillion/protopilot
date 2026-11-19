@@ -6,6 +6,8 @@ import { buildInternals } from './internals.js';
 import * as geo from './geometry.js';
 
 const initialOffset = new T.Vector3(6.8, 18, 28);
+const initialOrbit = new T.Spherical().setFromVector3(initialOffset);
+const orbitLimit = T.MathUtils.degToRad(25);
 const home = new T.Vector3(0, 2.76, -0.8);
 const up = new T.Vector3(0, 1, 0);
 const primary = {
@@ -195,11 +197,16 @@ export function mountScene(container, host, select) {
   camera.position.copy(home).add(initialOffset);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.copy(home);
-  controls.minZoom = 0.6;
-  controls.maxZoom = 4.8;
-  controls.maxPolarAngle = Math.PI / 2.04;
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.13;
+  controls.enablePan = false;
+  controls.mouseButtons.MIDDLE = null;
+  controls.mouseButtons.RIGHT = null;
+  controls.minAzimuthAngle = initialOrbit.theta - orbitLimit;
+  controls.maxAzimuthAngle = initialOrbit.theta + orbitLimit;
+  controls.minPolarAngle = controls.maxPolarAngle = initialOrbit.phi;
+  controls.rotateSpeed = 0.35;
+  controls.minZoom = 1;
+  controls.maxZoom = 3.5;
+  renderer.domElement.style.touchAction = 'pan-y';
   controls.update();
 
   scene.add(new T.HemisphereLight(0xdef8ff, 0x6e899b, 2.27));
@@ -234,10 +241,10 @@ export function mountScene(container, host, select) {
   const marker = new T.Object3D();
   const projected = new T.Vector3(), pointer = new T.Vector2(), ray = new T.Raycaster();
   const desired = new T.Vector3();
-  const desiredCamera = new T.Vector3();
+  const cameraOffset = new T.Vector3();
   const box = new T.Box3();
   let width = 1, height = 1, focus = 'plant', showFlow = true, showPressure = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
-  let down = null, last = 0, dragging = false;
+  let down = null, last = 0, framing = false;
   const alertAreas = new Set();
   const geometryBounds = {};
   scene.updateMatrixWorld(true);
@@ -268,16 +275,13 @@ export function mountScene(container, host, select) {
     const equipment = AREAS[area];
     desired.copy(area === 'plant' ? home : geo.v3(equipment.position));
     if (area !== 'plant') desired.y = Math.min(4, groups[area].userData.top * 0.47);
-    const offset = resetOrientation ? initialOffset : camera.position.clone().sub(controls.target);
-    desiredCamera.copy(desired).add(offset);
     const valve = streams.find((line) => line.valve?.userData.valve === tag && line.def.area === area)?.valve;
     const zoom = area === 'plant' ? 1 : Math.min(3.3, Math.max(2.04, 19.2 / (groups[area].userData.top + 1.9)));
     if (valve) {
       valve.getWorldPosition(desired);
       desired.y = Math.max(1.3, desired.y);
-      desiredCamera.copy(desired).add(offset);
     }
-    frame = { zoom };
+    frame = { zoom, resetOrientation };
     highlight.visible = area !== 'plant';
     if (highlight.visible) {
       highlight.position.copy(valve ? valve.getWorldPosition(new T.Vector3()) : geo.v3(equipment.position));
@@ -319,14 +323,29 @@ export function mountScene(container, host, select) {
     }
   }
 
+  controls.addEventListener('change', () => {
+    if (frame && !framing) {
+      // Manual orbit and zoom can take over while the selected target stays centered.
+      frame.resetOrientation = false;
+      frame.zoom = null;
+    }
+  });
+
   renderer.domElement.addEventListener('pointerdown', (event) => {
-    down = [event.clientX, event.clientY];
-    dragging = true;
-    frame = null;
+    if (!event.isPrimary) {
+      if (event.pointerType === 'touch') down = null;
+      return;
+    }
+    if (event.button === 0) down = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  });
+  renderer.domElement.addEventListener('pointermove', (event) => {
+    if (down?.id === event.pointerId && Math.hypot(event.clientX - down.x, event.clientY - down.y) > 5) down = null;
   });
   renderer.domElement.addEventListener('pointerup', (event) => {
-    dragging = false;
-    if (!down || Math.hypot(event.clientX - down[0], event.clientY - down[1]) > 5) return;
+    if (event.button !== 0 || down?.id !== event.pointerId) return;
+    const withinClickDistance = Math.hypot(event.clientX - down.x, event.clientY - down.y) <= 5;
+    down = null;
+    if (!withinClickDistance) return;
     const bounds = renderer.domElement.getBoundingClientRect();
     pointer.set((event.clientX - bounds.left) / width * 2 - 1, 1 - (event.clientY - bounds.top) / height * 2);
     ray.setFromCamera(pointer, camera);
@@ -339,8 +358,9 @@ export function mountScene(container, host, select) {
     }
     if (obj.userData.area) select(obj.userData.area, valve);
   });
-  renderer.domElement.addEventListener('pointercancel', () => { dragging = false; });
-  renderer.domElement.addEventListener('wheel', () => { frame = null; }, { passive: true });
+  renderer.domElement.addEventListener('lostpointercapture', (event) => {
+    if (down?.id === event.pointerId) down = null;
+  });
 
   function updateVisuals(status) {
     data = status;
@@ -360,15 +380,24 @@ export function mountScene(container, host, select) {
     if (now - last < 24 || !container.isConnected || !displayed || document.hidden) return;
     const dt = Math.min(0.075, (now - last) / 1000);
     last = now;
-    if (frame && !dragging) {
-      const ease = motionReduced ? 1 : 1 - Math.exp(-8 * dt);
+    if (frame) {
+      cameraOffset.subVectors(camera.position, controls.target);
+      const settled = controls.target.distanceTo(desired) < 0.006 &&
+        (!frame.resetOrientation || cameraOffset.distanceTo(initialOffset) < 0.006) &&
+        (frame.zoom === null || Math.abs(camera.zoom - frame.zoom) < 0.006);
+      const ease = motionReduced || settled ? 1 : 1 - Math.exp(-8 * dt);
       controls.target.lerp(desired, ease);
-      camera.position.lerp(desiredCamera, ease);
-      camera.zoom = T.MathUtils.lerp(camera.zoom, frame.zoom, ease);
-      camera.updateProjectionMatrix();
-      if (controls.target.distanceTo(desired) < 0.006 && Math.abs(camera.zoom - frame.zoom) < 0.006) frame = null;
+      if (frame.resetOrientation) cameraOffset.lerp(initialOffset, ease);
+      camera.position.copy(controls.target).add(cameraOffset);
+      if (frame.zoom !== null) {
+        camera.zoom = T.MathUtils.lerp(camera.zoom, frame.zoom, ease);
+        camera.updateProjectionMatrix();
+      }
+      framing = true;
+      controls.update();
+      framing = false;
+      if (ease === 1) frame = null;
     }
-    controls.update();
     internal.animate(data, dt, showInternals && data?.running && !motionReduced);
     for (const line of streams) {
       const { def, path, length, markers, material, pipeColor, color, valve, flanges } = line;
