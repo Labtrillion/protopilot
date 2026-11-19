@@ -84,6 +84,7 @@ select {
 }
 select:disabled { cursor: default; }
 @supports (appearance: base-select) and selector(select::picker(select)) {
+  :root:has(select:open) { overflow-y: auto; }
   select, select::picker(select) { appearance: base-select; }
   select {
     align-items: center;
@@ -93,15 +94,15 @@ select:disabled { cursor: default; }
   }
   select::picker-icon { color: var(--muted); flex: none; }
   select::picker(select) {
+    position: absolute;
     position-area: block-end span-inline-end;
-    position-try-fallbacks: flip-block;
+    position-try-fallbacks: none;
     inline-size: anchor-size(self-inline);
     max-inline-size: 100%;
-    max-block-size: min(18rem, calc(50dvh - var(--control-size)));
+    max-block-size: none;
     margin: 0.25rem 0;
     padding: 0.25rem;
-    overflow: auto;
-    overscroll-behavior: contain;
+    overflow: visible;
     border: 0;
     border-radius: 5px;
     outline: none;
