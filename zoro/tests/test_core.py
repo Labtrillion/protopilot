@@ -442,7 +442,7 @@ from zoro_agent.alarm_adapter import adapt_alarm_event  # noqa: E402
 from zoro_agent.benchmark import (  # noqa: E402
     RunScore, TrackedVariable, beats, closeness, evaluation_spec, read_studio_csv, score_timeseries, select_case)
 
-RAG_DIR = Path(__file__).resolve().parents[1] / "zoro-rag"
+RAG_DIR = Path(__file__).resolve().parents[1] / "rag_jiyeon" / "legacy"
 
 
 def rs(rid, acc, upm, ok=True, vol=100.0):
@@ -452,7 +452,7 @@ def rs(rid, acc, upm, ok=True, vol=100.0):
                     failed_gates=[] if ok else ["final_window_inside"])
 
 
-@pytest.mark.skipif(not (RAG_DIR / "validation").exists(), reason="zoro-rag 검증 CSV 없음")
+@pytest.mark.skipif(not (RAG_DIR / "validation").exists(), reason="이전 RAG의 검증 CSV 없음")
 def test_cost_matches_rag_studio_eval(sc):
     ref = json.loads((RAG_DIR / "validation" / "measured_results.json").read_text(encoding="utf-8"))
     for name in ("nominal", "cooling_step", "cooling_combined"):

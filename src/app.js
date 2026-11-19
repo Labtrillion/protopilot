@@ -6,6 +6,7 @@ import { mountScenario } from './scenario.js';
 import { mountEventMonitor } from './event-monitor.js';
 import { mountAlarmResponse } from './alarm-response.js';
 import { mountSimulationResults } from './simulation-results.js';
+import { mountZoroAgent } from './zoro-agent.js';
 import {
   byId, elapsed, icon, initIcons, option, renderPipeDetails, renderRows,
 } from './ui.js';
@@ -31,10 +32,11 @@ let visibleChannels = [], channelScope = 'primary', explicitTag = '';
 
 const response = mountResponse(trackSetpoint);
 const alarmResponse = mountAlarmResponse(request, mountSimulationResults());
+const zoroAgent = mountZoroAgent(request);
 const eventMonitor = mountEventMonitor((event) => {
   if (status?.alarms.some(({ id }) => id === event.id)) locateAlarm(event);
   else focus(event.area, channels.has(event.tag) ? event.tag : '');
-}, openAlarmResponse, silenceAlarm);
+}, openAlarmResponse, silenceAlarm, openZoroReview);
 let latestSetpointChange = 0;
 const setpointControls = mountSetpointControls((id, value) => {
   const change = ++latestSetpointChange;
@@ -172,6 +174,10 @@ function locateAlarm({ area, tag }) {
 
 function openAlarmResponse(alarm) {
   if (status?.response_events?.includes(alarm.id)) alarmResponse.open(status.run, alarm);
+}
+
+function openZoroReview(alarm) {
+  if (status?.response_events?.includes(alarm.id)) zoroAgent.open(status.run, alarm);
 }
 
 function silenceAlarm(alarm) {

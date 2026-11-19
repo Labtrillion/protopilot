@@ -17,7 +17,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 ROOT = Path(__file__).resolve().parent
 KNOWLEDGE = ROOT / "Zoro-RAG-Knowledge"
-STRUCTURED = KNOWLEDGE / "05_Structured_Knowledge"
+IDV_CATALOG = ROOT.parent / "zoro_rag_knowledge" / "05_Disturbance_knowledge" / "idv_catalog.json"
 STATE = ROOT / "index"
 INDEX = STATE / "corpus.json"
 EMBEDDING_MODEL = "BAAI/bge-m3"
@@ -337,7 +337,7 @@ class HybridSearch:
 class EvidenceRAG:
     def __init__(self, mode="local", device=None, qdrant_url=None):
         self.index = read_json(INDEX) if INDEX.exists() else build()
-        self.catalog = {row["id"]: row for row in read_json(STRUCTURED / "idv_catalog.json")}
+        self.catalog = {row["id"]: row for row in read_json(IDV_CATALOG)}
         if self.index.get("schema") != 4:
             self.index = build()
         self.mode = mode

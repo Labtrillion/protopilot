@@ -13,9 +13,9 @@
 
 ### 비용 — USD/m³ (낮을수록 좋음)
 - **시뮬레이터 분기(ProtoPilot, `server/zoro_bridge.py`)**: `feat/setpoint-decision` 의 정의를 그대로 씁니다. TEP 내부 운전비 `operating_cost_internal_per_hour` 를 제어 스텝마다 적분한 총액(`server/alarm_response.step_cost`)을 같은 스텝 적분 생산량으로 나눕니다(`branch_summary` 의 `cost_per_m3`). `RunScore.cost_basis = "tep_operating_cost_internal"`, `cost_usd` 에는 `total` 만 있습니다. 생산 손실(`production_loss_m3`)과 알람 시간(`alarm_minutes`, `AlarmMonitor` 실제값 채널)도 같은 정의로 지표에 붙습니다. 같은 체크포인트·horizon 에서 `alarm_response.run_branch` 와 값이 같은지 `test_branch_cost_and_alarm_minutes_match_the_alarm_response_branch` 로 확인합니다.
-- **오프라인 시계열(TEP Studio CSV 등)**: 스텝 적분값이 없으므로 Downs & Vogel (1993) 표 9의 네 운전비(퍼지 손실, 제품 손실, 압축기 동력, 스팀)를 표본 시각 기준 사다리꼴 적분합니다. 식은 `zoro-rag/studio_eval.py` 와 같습니다. 검증 CSV 3개로 대조했고 **총비용·m³당 비용·생산량이 상대오차 1e-9 이내로 일치**합니다(`test_cost_matches_rag_studio_eval`). `cost_basis = "downs_vogel_table9"`.
+- **오프라인 시계열(TEP Studio CSV 등)**: 스텝 적분값이 없으므로 Downs & Vogel (1993) 표 9의 네 운전비(퍼지 손실, 제품 손실, 압축기 동력, 스팀)를 표본 시각 기준 사다리꼴 적분합니다. 식은 `rag_jiyeon/legacy/studio_eval.py` 와 같습니다. 검증 CSV 3개로 대조했고 **총비용·m³당 비용·생산량이 상대오차 1e-9 이내로 일치**합니다(`test_cost_matches_rag_studio_eval`). `cost_basis = "downs_vogel_table9"`.
 - 비용 정의가 다른 run 끼리는 비교하지 않습니다(`beats` 가 거부).
-- 총액이 아니라 **생산량당 비용**으로 비교합니다. 정책 간 생산량이 최대 1% 다를 수 있으므로(STUDIO.md 짝비교 조건), 총액으로 비교하면 감산만으로 1% 절감처럼 보일 수 있습니다.
+- 두 정책은 **생산량당 비용**으로 비교합니다. 정책 간 생산량이 최대 1% 다를 수 있으므로(`rag_jiyeon/legacy/STUDIO.md` 짝비교 조건), 총액으로 비교하면 감산만으로 1% 절감처럼 보일 수 있습니다.
 
 ### 정확도 — tracking accuracy (0~1, 높을수록 좋음)
 추적 변수마다 매 표본에서

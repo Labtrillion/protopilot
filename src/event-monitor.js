@@ -24,7 +24,7 @@ function renderEvent(event, canRespond, active) {
     ${entry}${active || canRespond ? `<div class="alarm-card-actions">${alarmActions(event, canRespond, active)}</div>` : ''}</li>`;
 }
 
-export function mountEventMonitor(selectEvent, openResponse, silenceAlarm) {
+export function mountEventMonitor(selectEvent, openResponse, silenceAlarm, openZoroReview) {
   const content = byId('event-monitor-content');
   const announcement = byId('alarm-announcement');
   const message = content.querySelector('.monitor-message');
@@ -43,7 +43,7 @@ export function mountEventMonitor(selectEvent, openResponse, silenceAlarm) {
     const key = JSON.stringify([status?.run, mode, current, available]);
     if (renderKey !== key) {
       const focused = document.activeElement;
-      const { eventId, responseId, ackId } = focused?.dataset ?? {};
+      const { eventId, responseId, ackId, zoroId } = focused?.dataset ?? {};
       entries = current.slice().sort((a, b) => b.id - a.id);
       list.classList.toggle('alarm-list', alarmMode);
       const restoreFocus = list.contains(focused);
@@ -51,7 +51,7 @@ export function mountEventMonitor(selectEvent, openResponse, silenceAlarm) {
       list.hidden = !entries.length;
       if (restoreFocus) {
         const selector = responseId ? `[data-response-id="${responseId}"]` : eventId ? `[data-event-id="${eventId}"]`
-          : `[data-ack-id="${ackId}"]`;
+          : zoroId ? `[data-zoro-id="${zoroId}"]` : `[data-ack-id="${ackId}"]`;
         const nextFocus = list.querySelector(selector) ?? content;
         nextFocus.focus({ preventScroll: true });
       }
@@ -76,11 +76,11 @@ export function mountEventMonitor(selectEvent, openResponse, silenceAlarm) {
     render(true);
   });
   list.addEventListener('click', (event) => {
-    const button = event.target.closest('button[data-event-id], button[data-response-id], button[data-ack-id]');
+    const button = event.target.closest('button[data-event-id], button[data-response-id], button[data-ack-id], button[data-zoro-id]');
     if (!button) return;
-    const { eventId, responseId, ackId } = button.dataset;
-    const entry = entries.find(({ id }) => id === Number(responseId ?? eventId ?? ackId));
-    if (entry) (ackId ? silenceAlarm : responseId ? openResponse : selectEvent)(entry);
+    const { eventId, responseId, ackId, zoroId } = button.dataset;
+    const entry = entries.find(({ id }) => id === Number(responseId ?? eventId ?? ackId ?? zoroId));
+    if (entry) (zoroId ? openZoroReview : ackId ? silenceAlarm : responseId ? openResponse : selectEvent)(entry);
   });
   return {
     update(next, online) {

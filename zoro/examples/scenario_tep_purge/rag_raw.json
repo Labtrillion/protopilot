@@ -1,5 +1,5 @@
 {
-  "_comment": "임시 원본 형식 예시. content 는 zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json v1.0 원문 인용. kg.suggested_actions 의 연결(대응 후보↔근거)은 예시이며 지연님 출력으로 교체",
+  "_comment": "임시 원본 형식 예시. content 는 rag_jiyeon/legacy/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json v1.0 원문 인용. kg.suggested_actions 의 연결(대응 후보↔근거)은 예시이며 지연님 출력으로 교체",
   "query_id": "RQ-TEP-0001",
   "retrieved": [
     {
@@ -12,7 +12,7 @@
       "section": "S05 procedure 1",
       "content": "정상 경로는 퍼지 B 조성 XMEAS(30) → CONTRL19 → CONTRL6 유량 목표 → XMEAS(10)·XMV(6)이다. 목표 B는 13.823 mol%다.",
       "score": 0.88,
-      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S05"
+      "uri": "rag_jiyeon/legacy/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S05"
     },
     {
       "chunk_id": "team-sop/tep-studio-closed-loop/S05#stop",
@@ -24,7 +24,7 @@
       "section": "S05 stop_conditions",
       "content": "압력 우선 제어 중에는 경제 조정을 보류한다. 트립 시 종료한다.",
       "score": 0.84,
-      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S05"
+      "uri": "rag_jiyeon/legacy/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S05"
     },
     {
       "chunk_id": "team-sop/tep-studio-closed-loop/S08#p2",
@@ -36,7 +36,7 @@
       "section": "S08 procedure 2",
       "content": "SOP 단독은 기존 목표를 유지한다. Zoro 시험에서도 같은 하위 제어기를 유지하며, 연결된 감독기가 승인한 상위 설정값 후보만 기록·적용한다. 바꿀 근거가 부족하면 현재 목표를 유지한다.",
       "score": 0.79,
-      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S08"
+      "uri": "rag_jiyeon/legacy/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S08"
     },
     {
       "chunk_id": "team-sop/tep-studio-closed-loop/S04#c1",
@@ -48,7 +48,7 @@
       "section": "S04 constraints",
       "content": "원료·퍼지 분석기는 6분 간격으로 이전 시료를 보고한다. 같은 값이 반복되는 3분 로그 두 행을 독립적인 조성 변화로 세지 않는다.",
       "score": 0.71,
-      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S04"
+      "uri": "rag_jiyeon/legacy/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S04"
     },
     {
       "chunk_id": "team-sop/tep-studio-closed-loop/S08#c1",
@@ -60,7 +60,7 @@
       "section": "S08 constraints",
       "content": "Studio 평가에는 Downs & Vogel 표 9의 기준 환산을 적용한다. 경제 조정에도 생산 목표·품질 규격·제어 보호 설정은 고정한다.",
       "score": 0.55,
-      "uri": "zoro-rag/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S08"
+      "uri": "rag_jiyeon/legacy/Zoro-RAG-Knowledge/SOP/tep-studio-closed-loop.json#S08"
     }
   ],
   "kg": {

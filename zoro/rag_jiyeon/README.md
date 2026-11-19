@@ -8,7 +8,7 @@
 python main.py --config config/tep_studio.yaml --input examples/tep_studio/alarm_event.json --output artifacts/tep_studio/result.json
 ```
 
-`examples/tep_studio/knowledge/tep_studio_braatz_sop.json` 은 상위 프로젝트의 `scripts/build_tep_studio_sop.py` 가 TEP Studio 제어 코드(tep-rust tepsim-control)에서 생성한 센서별 대응 SOP입니다. 계측 41개마다 제어 루프·P/PI·주기·최종 밸브·퍼지 오버라이드를 적고, 감독기가 바꿀 수 있는 SETPT(19) case 계획을 담았습니다. 사람이 읽는 표는 `docs/SOP_TEP_STUDIO.md` 입니다.
+`examples/tep_studio/knowledge/tep_studio_braatz_sop.json` 은 상위 프로젝트의 `scripts/build_tep_studio_sop.py` 가 TEP Studio 제어 코드(tep-rust tepsim-control)에서 생성한 센서별 대응 SOP입니다. 계측 41개마다 제어 루프·P/PI·주기·최종 밸브·퍼지 오버라이드를 적고, 감독기가 바꿀 수 있는 SETPT(19) case 계획을 담았습니다. 사람이 읽는 표는 [SOP 문서](../docs/SOP_TEP_STUDIO.md)에 있습니다.
 
 ### 이번에 고친 것
 - **정답 누출 차단**: `simulation_context.disturbance_id` 와 `recent_changes` 의 주입 외란은 기본으로 검색·결과에 쓰지 않습니다(`alarm.use_simulation_disturbance_id: false`). 제거한 필드는 `alarm_context.withheld_ground_truth_fields` 에 남습니다.
@@ -25,7 +25,7 @@ python main.py --config config/tep_studio.yaml --input examples/tep_studio/alarm
 ## IDV(8) 시나리오 처음 실행
 
 ```bash
-cd /home/yongbin53/DUARO/rag
+cd zoro/rag_jiyeon
 source .venv/bin/activate
 python main.py
 ```
@@ -103,7 +103,8 @@ SOP 검토 계획에는 `snapshot_id`와 `active_objective`도 함께 반환합�
 - `main.py`, `src/zoro_rag/`: 실행 코드, 파싱·청킹·검색·알람 처리.
 - `examples/idv8/`: 이번 시나리오 입력과 SOP.
 - `examples/alarm_event.json`, `examples/multi_alarm_event.json`: 기존 입력 예제. 테스트에서 사용합니다.
-- `zoro_rag_knowledge/`: 원본 지식 문서. 손상 PDF의 복구 경고와 일부 깨진 문자가 남아 있습니다.
+- `zoro_rag_knowledge/`: 원본 지식 문서와 두 검색기가 공유하는 외란 가이드 및 IDV 카탈로그. 손상 PDF의 복구 경고와 일부 깨진 문자가 남아 있습니다.
+- [`legacy/`](legacy/README.md): 이전 검색기, 팀 SOP 원문, Studio 평가 도구와 검증 CSV.
 - `artifacts/`: 실행할 때 생성되는 결과.
 - `config/`: 기본·데모·테스트 설정.
 - `scripts/`: 설치·환경 확인·모델 다운로드.
