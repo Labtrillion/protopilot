@@ -5,9 +5,10 @@ import logging
 import math
 import os
 import re
+from time import perf_counter
 from dataclasses import dataclass
 from threading import Lock
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
@@ -48,13 +49,16 @@ def _zoro_plan(text, history, tools):
     if not base:
         raise ValueError("ZORO_BASE_URL 설정 없음")
     endpoint = f"{base}/v1" if not base.endswith("/v1") else base
-    decision = _request(f"{endpoint}/decide", {
-        "request": {
-            "state": {"request": text, "recent_turns": history[-4:]},
-            "questions": {"tool": {"type": "choice", "instructions": "Choose the simulation tool that fulfills the request.", "criteria": ROUTES}},
-        },
-        "reasoning": False,
-    }, timeout=5)
+    model = os.environ.get("ZORO_MODEL", "trillionlabs/Zoro-1")
+    state = {"request": text, "recent_turns": history[-4:]}
+    question = {"type": "choice", "instructions": "Choose the simulation tool that fulfills the request.", "criteria": ROUTES}
+    decision_request = {"state": state, "questions": {"tool": question}}
+    try:
+        decision = _request(f"{endpoint}/systemone", {"model": model, **decision_request, "reasoning": False}, timeout=5)
+    except HTTPError as error:
+        if error.code not in (404, 405):
+            raise
+        decision = _request(f"{endpoint}/decide", {"request": decision_request, "reasoning": False}, timeout=5)
     answer = decision["answers"]["tool"]
     route, confidence = answer["choice"], float(answer["confidence"])
     if route not in ROUTES or not math.isfinite(confidence) or not 0 <= confidence <= 1:
@@ -66,7 +70,7 @@ def _zoro_plan(text, history, tools):
     schema = next(spec["input_schema"] for spec in tools.tool_specs() if spec["name"] == route)
     catalog = tools.describe_plant() if route.startswith("run_") else {"stored_runs": tools.store.ids()}
     reply = _request(f"{endpoint}/chat/completions", {
-        "model": os.environ.get("ZORO_MODEL", "trillionlabs/Zoro-1"),
+        "model": model,
         "messages": [
             {"role": "system", "content": (
                 f"Construct arguments for {route}. Return one JSON object with no code fence or commentary. "
@@ -77,6 +81,7 @@ def _zoro_plan(text, history, tools):
         ],
         "temperature": 0,
         "max_tokens": 1536,
+        "chat_template_kwargs": {"enable_thinking": False},
     }, timeout=20)
     content = reply["choices"][0]["message"]["content"].strip()
     content = re.sub(r"^<think>.*?</think>\s*", "", content, flags=re.DOTALL)
@@ -103,12 +108,12 @@ def _local_plan(text, history):
         return "list_runs", {}
     if not re.search(r"실행|시뮬레이션|비교|\brun\b|\bsimulate\b|\bidv\s*\(?\d|baseline", normalized):
         return "describe_plant", {}
-    mode = re.search(r"(?:mode|모드)\s*([1-6])\b", normalized)
+    mode = re.search(r"(?:mode|모드)\s*([1-6])(?!\d)", normalized)
     onset = re.search(r"(\d+(?:\.\d+)?)\s*(?:시간|hours?\b|h\b)\s*(?:후|부터|이후|onset)", normalized)
     duration = normalized if onset is None else normalized[:onset.start()] + normalized[onset.end():]
     horizon = re.search(r"(\d+(?:\.\d+)?)\s*(?:시간|hours?\b|h\b)", duration)
-    seed = re.search(r"(?:seed|시드)\s*(\d+)\b", normalized)
-    faults = list(dict.fromkeys(re.findall(r"\bidv\s*\(?\s*0*(\d{1,2})\b", normalized)))
+    seed = re.search(r"(?:seed|시드)\s*(\d+)", normalized)
+    faults = list(dict.fromkeys(re.findall(r"\bidv\s*\(?\s*0*(\d{1,2})(?!\d)", normalized)))
     config = {
         "name": "agent_" + ("_".join(f"IDV{i}" for i in faults) if faults else "baseline"),
         "mode": f"mode{mode[1]}" if mode else "mode1",
@@ -143,8 +148,10 @@ def _summary(result, route, run_ids):
 
 
 def respond(text, history, tools, trace_path):
+    started = perf_counter()
     model, confidence, fallback_reason = "Zoro-1", None, None
     route, ids = "describe_plant", []
+    decision_ms = None
     try:
         try:
             route, arguments, confidence = _zoro_plan(text, history, tools)
@@ -152,6 +159,7 @@ def respond(text, history, tools, trace_path):
             model = FALLBACK
             fallback_reason = type(error).__name__ if os.environ.get("ZORO_BASE_URL") else "not_configured"
             route, arguments = _local_plan(text, history)
+        decision_ms = round((perf_counter() - started) * 1000, 2)
         result = tools.dispatch(route, arguments)
         if route == "run_scenario" and result.get("ok"):
             ids = [result["run_id"]]
@@ -162,7 +170,11 @@ def respond(text, history, tools, trace_path):
         result, ids, answer = {"ok": False}, [], str(error)
     trace = {"time_utc": timestamp(), "decision_id": uuid4().hex, "model": model,
              "fallback": model == FALLBACK, "fallback_reason": fallback_reason, "confidence": confidence,
-             "tool": route, "result": "ok" if result.get("ok", True) else "error", "run_ids": ids}
+             "decision_ms": decision_ms, "tool": route, "result": "ok" if result.get("ok", True) else "error",
+             "run_ids": ids, "runs": [
+                 {"summary": run.summary(), "scenario": run.scenario.to_dict()}
+                 for run_id in ids if (run := tools.store.get(run_id)) is not None
+             ]}
     try:
         with TRACE_LOCK, trace_path.open("a", encoding="utf-8") as stream:
             stream.write(encode(trace) + "\n")

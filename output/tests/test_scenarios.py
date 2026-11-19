@@ -1,0 +1,119 @@
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from tep_studio.agent.tools import TepToolset
+
+from server.assistant import respond
+from server.experiments import create_experiments
+from server.plant import Plant
+from server.recording import ArchivedRecording, encode
+
+
+class LiveScenarioTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.plant = Plant(self.root)
+
+    def test_replay_restores_native_outputs_at_the_same_step(self):
+        plant = self.plant
+        self.assertEqual(len(plant.latest["values"]), 264)
+        self.assertEqual(len(plant.latest["setpoints"]), 9)
+        self.assertEqual(len(plant.latest["state"]), 50)
+        self.assertAlmostEqual(plant.latest["derived"]["YA"], 54.955, places=3)
+        plant.command({"op": "setpoint", "id": "ya", "value": 56})
+        plant.tick()
+        plant.command({"op": "setpoint", "id": "yac", "value": 60})
+        plant.command({"op": "speed", "value": 15})
+        plant.command({"op": "disturbance", "id": "IDV(4)", "value": 1})
+        plant.tick()
+        plant.command({"op": "pressure_test"})
+        plant.tick()
+        expected = plant.latest
+        original = ArchivedRecording.open(self.root, plant.recording.id)
+        scenario = json.loads(encode(original.scenario()))
+        self.assertEqual(original.series("XMEAS(7)")["points"][-1][1], expected["values"]["XMEAS(7)"])
+        plant.command({"op": "replay_scenario", "scenario": scenario})
+        self.assertFalse(plant.running)
+        self.assertEqual(plant.step, 0)
+        plant.command({"op": "run", "enabled": True})
+        while plant.running:
+            plant.tick()
+        for key in ("step", "time_hours", "values", "native_values", "actuators", "control",
+                    "hours_since_onset", "setpoints", "derived", "metrics", "shutdown"):
+            self.assertEqual(expected[key], plant.latest[key], key)
+        self.assertFalse(any(plant.protection.values()))
+        self.assertTrue(any(alarm["source"] == "센서 시험" for alarm in plant.active.values()))
+
+    def test_invalid_upload_leaves_the_active_run_untouched(self):
+        plant = self.plant
+        run = plant.recording.id
+        invalid = {**plant.scenario(), "timeline": [{"step": 0, "op": "setpoint", "id": "ya", "value": 101}]}
+        with self.assertRaises(ValueError):
+            plant.command({"op": "replay_scenario", "scenario": invalid})
+        self.assertEqual(plant.recording.id, run)
+        self.assertTrue(plant.running)
+
+    def test_control_locks_in_both_protection_actions_on_native_pv(self):
+        plant = self.plant
+        self.assertTrue(plant.latest["controller_flags"]["overrides"])
+        plant.measurements[6] = 2930
+        plant.measurements[7] = 95
+        plant.command({"op": "mv", "id": "XMV(5)", "value": 100})
+        with patch.object(plant.sim, "advance", wraps=plant.sim.advance) as advance:
+            plant.tick()
+            self.assertLess(advance.call_args_list[0].args[0][4], 100)
+        self.assertTrue(any(e["tag"] == "XMEAS(7)" and e.get("active") for e in plant.events))
+        self.assertTrue(any(e["tag"] == "XMEAS(8)" and e.get("active") for e in plant.events))
+
+
+class ExperimentsTest(unittest.TestCase):
+    def test_mode_configuration_round_trips_and_exports_all_formats(self):
+        with tempfile.TemporaryDirectory() as directory:
+            client = create_experiments(Path(directory)).server.test_client()
+            config = {"name": "regression", "mode": "mode3", "seed": 42, "horizon": 0.15,
+                      "disturbances": [{"idv": "idv_04", "start_time": 0.03}]}
+            result = client.post("/experiments/api/run", json=config)
+            self.assertEqual(result.status_code, 201, result.get_data(as_text=True))
+            run = result.json["run_id"]
+            saved = client.get(f"/experiments/api/scenario/{run}").json
+            for key, value in config.items():
+                if key == "disturbances":
+                    self.assertEqual(saved[key][0]["start_time"], value[0]["start_time"])
+                else:
+                    self.assertEqual(saved[key], value)
+            replay = client.post("/experiments/api/run", json=saved)
+            self.assertEqual(replay.json["minimum_constraint_margins"], result.json["minimum_constraint_margins"])
+            for fmt in ("csv", "json", "parquet"):
+                payload = client.get(f"/experiments/api/dataset?run_id={run}&format={fmt}")
+                self.assertEqual(payload.status_code, 200)
+                self.assertTrue(payload.data)
+            self.assertTrue(client.get(f"/experiments/api/dataset?run_id={run}&format=parquet").data.startswith(b"PAR1"))
+
+    def test_zoro_and_fallback_route_to_real_experiments_and_write_logs(self):
+        tools = TepToolset()
+        with tempfile.TemporaryDirectory() as directory:
+            log = Path(directory) / "trace.jsonl"
+            replies = [{"answers": {"tool": {"choice": "run_scenario", "confidence": 0.92}}},
+                       {"choices": [{"message": {"content": '{"config":{"horizon":0.15}}'}}]}]
+            with patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}):
+                with patch("server.assistant._request", side_effect=replies) as request:
+                    zoro = respond("0.15시간 실행", [], tools, log)
+                    self.assertTrue(request.call_args_list[0].args[0].endswith("/v1/systemone"))
+                    self.assertFalse(request.call_args_list[0].args[1]["reasoning"])
+            with patch.dict("os.environ", {"ZORO_BASE_URL": ""}):
+                fallback = respond("IDV4를 0.05시간 후 적용하고 0.2시간 실행을 정상 상태와 비교해줘", [], tools, log)
+            self.assertEqual(len(zoro.run_ids), 1)
+            self.assertEqual(len(fallback.run_ids), 2)
+            self.assertAlmostEqual(tools.store.get(fallback.run_ids[-1]).scenario.horizon, 0.2)
+            traces = [json.loads(line) for line in log.read_text().splitlines()]
+            self.assertEqual([r["fallback"] for r in traces], [False, True])
+            self.assertEqual([r["result"] for r in traces], ["ok", "ok"])
+
+
+if __name__ == "__main__":
+    unittest.main()

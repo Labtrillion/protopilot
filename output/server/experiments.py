@@ -2,6 +2,8 @@
 
 import base64
 import json
+from dataclasses import replace
+from hashlib import sha256
 from threading import RLock
 
 from dash import Dash, Input, Output, State, dcc, html, no_update
@@ -16,10 +18,11 @@ from tep_studio.ui.layout import build_layout
 from tep_studio.ui.store import RunStore
 
 from .assistant import respond
-from .scenario import DEFAULT_SEED
+from .scenario import DEFAULT_SEED, KERNEL_REVISION
 
 EXPERIMENTS_PATH = "/experiments/"
 TEXTAREA_STYLE = {"width": "100%", "minHeight": "8rem", "fontFamily": "monospace"}
+DATASET_MIME = {"csv": "text/csv", "json": "application/json", "parquet": "application/vnd.apache.parquet"}
 
 
 class ExperimentStore(RunStore):
@@ -28,8 +31,13 @@ class ExperimentStore(RunStore):
         self.lock = RLock()
 
     def put(self, result):
+        scenario = result.scenario.to_dict()
+        config_hash = sha256(json.dumps(scenario, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        record = {**(result.record or {}), "kernel_revision": KERNEL_REVISION, "run_id": result.run_id,
+                  "scenario_config": scenario, "scenario_config_hash": config_hash,
+                  "terminated": result.terminated, "metrics": result.metrics}
         with self.lock:
-            return super().put(result)
+            return super().put(replace(result, record=record))
 
     def get(self, run_id):
         with self.lock:
@@ -76,6 +84,14 @@ def _layout():
         if getattr(component, "id", None) == "tabs":
             component.children[-1].children = _assistant_tab()
             component.children.append(dcc.Tab(label="JSON 시나리오", value="json-scenario", children=_json_tab()))
+        children = getattr(component, "children", None)
+        if isinstance(children, list):
+            for index, child in enumerate(children):
+                if getattr(child, "id", None) == "scenario-upload":
+                    child.style = {"display": "none"}
+                    children.insert(index, html.Button("Load scenario in JSON", id="proto-open-json",
+                                                       className="tep-btn tep-btn--secondary"))
+                    break
     header = layout.children[4]
     header.children[0].children[0].children = "ProtoPilot · TEP 실험"
     header.children[1].children.insert(0, html.A("라이브 관제로 돌아가기", href="/"))
@@ -100,6 +116,10 @@ def create_experiments(root):
     store = ExperimentStore()
     tools = TepToolset(store=store)
     register_callbacks(app, store)
+
+    @app.callback(Output("tabs", "value"), Input("proto-open-json", "n_clicks"), prevent_initial_call=True)
+    def open_json(_clicked):
+        return "json-scenario"
 
     @app.callback(
         Output("proto-json-config", "value"), Output("proto-json-notice", "children"),
@@ -174,13 +194,13 @@ def create_experiments(root):
     def dataset():
         ids = request.args.getlist("run_id")
         fmt = request.args.get("format", "csv")
-        if not ids or fmt not in {"csv", "json", "parquet"}:
+        if not ids or fmt not in DATASET_MIME:
             return {"error": "실행 ID와 CSV·JSON·Parquet 중 하나를 지정하세요."}, 400
         runs = [store.get(run_id) for run_id in ids]
         if any(run is None for run in runs):
             return {"error": "실험 기록을 찾을 수 없습니다."}, 404
         body, filename = build_dataset(runs, fmt=fmt)
-        return Response(body, headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+        return Response(body, mimetype=DATASET_MIME[fmt], headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
     app.run_store = store
     return app

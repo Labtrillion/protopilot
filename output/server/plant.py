@@ -12,7 +12,7 @@ from tep_studio.control.metrics import MetricsAccumulator
 
 from .catalog import CHANNELS, CONTROL_FLAGS, DISTURBANCES, GROUPS, OPERATING_LIMITS, PROTECTIONS, SETPOINTS, TRIPS
 from .recording import Recording, timestamp
-from .scenario import ADJUSTMENTS, DEFAULT_FLAGS, DEFAULT_SEED, LIVE_FORMAT, SPEEDS, STEP_HOURS, adjustment, live_scenario
+from .scenario import ADJUSTMENTS, DEFAULT_FLAGS, DEFAULT_SEED, KERNEL_REVISION, LIVE_FORMAT, SPEEDS, STEP_HOURS, adjustment, live_scenario
 
 TICK_SECONDS = 0.6
 REACTION_FEED_VALVES = frozenset((0, 1, 2, 3))
@@ -216,7 +216,7 @@ class Plant:
         }
 
     def scenario(self):
-        return {"format": LIVE_FORMAT, "step_hours": STEP_HOURS, "seed": self.seed,
+        return {"format": LIVE_FORMAT, "kernel_revision": KERNEL_REVISION, "step_hours": STEP_HOURS, "seed": self.seed,
                 "controller": self.initial_flags, "initial_speed": self.initial_speed,
                 "through_step": max(self.step, self.replay_end or 0),
                 "timeline": [*self.timeline, *self.pending]}

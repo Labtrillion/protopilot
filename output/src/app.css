@@ -376,6 +376,9 @@ dialog::backdrop { background: var(--surface); }
 .controller-panel { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); color: var(--subtext); font-size: 0.8rem; }
 .header-link { display: inline-flex; align-items: center; flex: none; padding: 0.4rem 0.62rem; border: 1px solid var(--line); border-radius: 4px; color: var(--text); text-decoration: none; font-size: 0.85rem; }
 .header-link:hover, .header-link:focus-visible { border-color: var(--plot-sp); }
+@media (max-width: 480px) {
+  .top-actions { flex-wrap: wrap; gap: 0.35rem; }
+}
 .controller-panel summary { cursor: pointer; }
 #protection-state { margin-inline-start: 0.35rem; color: var(--muted); }
 #protection-state.protection-active { color: var(--warning); font-weight: 700; }

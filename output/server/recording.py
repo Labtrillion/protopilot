@@ -105,4 +105,4 @@ class ArchivedRecording:
                 if index % stride == 0 or index == latest["sample"] - 1:
                     row = json.loads(line)
                     points.append([row["time_hours"], row.get("values", {}).get(tag)])
-        return points
+        return {"sample_count": latest["sample"], "points": points}

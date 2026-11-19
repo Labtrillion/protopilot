@@ -82,7 +82,7 @@ export function mountArchive(request, replay) {
       slider.max = Math.max(0, points.length - 1);
       slider.value = slider.max;
       preview.hidden = !points.length;
-      status.textContent = `${meta.sample.toLocaleString('ko-KR')} 샘플 · 미리보기 ${points.length}점`;
+      status.textContent = `${result.sample_count.toLocaleString('ko-KR')} 샘플 · 미리보기 ${points.length}점`;
       render();
     } catch (error) {
       if (token === generation) status.textContent = error.message;

@@ -119,7 +119,7 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
                 if tag not in CHANNELS:
                     self.respond({"error": "계측 태그를 확인하세요."}, 400)
                     return
-                self.respond({"tag": tag, "points": recording.series(tag)})
+                self.respond({"tag": tag, **recording.series(tag)})
                 return
             if part not in {"csv", "json"}:
                 raise FileNotFoundError(path)

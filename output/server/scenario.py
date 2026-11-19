@@ -1,10 +1,14 @@
 """Portable live scenarios. Commands are scheduled on the simulator's control steps."""
 
+import json
 import math
+from importlib.metadata import distribution
 
 from .catalog import CHANNELS, CONTROL_FLAGS, METADATA, SETPOINTS
 
 LIVE_FORMAT = "protopilot-live-1"
+PACKAGE = distribution("tep-studio")
+KERNEL_REVISION = json.loads(PACKAGE.read_text("direct_url.json") or "{}").get("vcs_info", {}).get("commit_id")
 STEP_HOURS = 0.0005
 DEFAULT_SEED = 1431655765
 SPEEDS = {15: 5, 60: 20, 240: 80, 960: 320}
@@ -60,6 +64,8 @@ def live_scenario(document):
         raise ValueError("ProtoPilot 라이브 시나리오 JSON을 선택하세요.")
     if document.get("step_hours") != STEP_HOURS:
         raise ValueError("이 시나리오의 제어 주기는 지원하지 않습니다.")
+    if document.get("kernel_revision") not in (None, KERNEL_REVISION):
+        raise ValueError("현재 TEP 계산 커널과 시나리오의 리비전이 다릅니다.")
     through = document.get("through_step")
     if type(through) is not int or not 0 <= through <= 2**53 - 1:
         raise ValueError("시나리오 종료 스텝을 확인하세요.")
