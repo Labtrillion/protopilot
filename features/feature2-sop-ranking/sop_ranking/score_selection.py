@@ -42,11 +42,15 @@ def select_candidates(handoff, state, *, timeout, request_id):
     selection = {"scores": {}, "selected": [], "coverage": 0.0, "reason": None}
     if not candidates:
         return {**selection, "reason": "no_alternatives"}
+    procedures = state["operating_procedures"]
+    alarm_rag = next((procedure["rag"] for procedure in procedures if "rag" in procedure), None)
     context = {
         "plant": state["plant"], "setpoints": state["setpoints"],
-        "operating_procedures": state["operating_procedures"],
+        "operating_procedures": [procedure for procedure in procedures if "rag" not in procedure],
         "baseline_changes": handoff["baseline_changes"], "evaluation_evidence": handoff["evaluation_policy"]["evidence"],
     }
+    if alarm_rag is not None:
+        context["alarm_rag"] = alarm_rag
     descriptions = {
         name: ", ".join(f"{change['setpoint']} from {change['from']} to {change['to']} {change['unit']}"
                         for change in candidate["changes"])
@@ -57,8 +61,8 @@ def select_candidates(handoff, state, *, timeout, request_id):
             "type": "score",
             "instructions": (
                 f"With the baseline changes fixed, assess these two simultaneous setpoint changes: {description}. "
-                "Consider SOP evidence and "
-                "potential for better cost, tracking accuracy or production without breaching operating limits."
+                "Use the alarm_rag evidence and SOP plans when provided, along with the operating procedures. "
+                "Consider potential improvements to cost, tracking accuracy or production within operating limits."
             ),
             "criteria": ["Unsupported", "Some support", "Strong support"],
         }
@@ -93,7 +97,7 @@ def select_candidates(handoff, state, *, timeout, request_id):
     if len(selected) > 1:
         first_question = {"first": {
             "type": "choice",
-            "instructions": "Choose which already shortlisted alternative to simulate first.",
+            "instructions": "Choose which shortlisted alternative to simulate first using the available alarm RAG and SOP evidence.",
             "criteria": {name: descriptions[name] for name in selected},
         }}
         try:

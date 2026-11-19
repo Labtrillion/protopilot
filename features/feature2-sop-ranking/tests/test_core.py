@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+from importlib.resources import files
 from pathlib import Path
 
 import pytest
@@ -426,7 +427,7 @@ from sop_ranking.alarm_adapter import adapt_alarm_event  # noqa: E402
 from sop_ranking.benchmark import (  # noqa: E402
     RunScore, TrackedVariable, beats, closeness, evaluation_spec, read_studio_csv, score_timeseries, select_case)
 
-RAG_DIR = Path(__file__).resolve().parents[2] / "feature1-setpoint-gate" / "rag_jiyeon" / "legacy"
+RAG_DIR = files("setpoint_rag") / "legacy"
 
 
 def rs(rid, acc, upm, ok=True, vol=100.0):

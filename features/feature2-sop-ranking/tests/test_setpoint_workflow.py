@@ -89,6 +89,7 @@ def test_zero_scores_select_no_candidates(monkeypatch):
     }
 
     def reply(context, questions, **kwargs):
+        assert "alarm_rag" not in context
         return {name: {"type": "score", "score": 0} for name in questions}
 
     monkeypatch.setattr("sop_ranking.score_selection.zoro_decide", reply)
@@ -132,3 +133,36 @@ def test_six_setpoints_produce_sixty_directional_pairs():
         assert first["setpoint"] != second["setpoint"]
         directions[(first["setpoint"], second["setpoint"], first["move"], second["move"])] += 1
     assert len(candidates) == len(directions) == 60
+
+
+def test_feature1_alarm_rag_reaches_every_model_request(monkeypatch):
+    expected_alarm_rag = {
+        "event_id": "alarm-rag-test",
+        "evidence": [{
+            "evidence_id": "PRESSURE", "statement": "Check reactor pressure.",
+            "source_document": "TEP SOP", "reranker_score": 0.95,
+        }],
+        "sop_plans": [{"evidence_id": "PRESSURE", "status": "review_required", "parameter": "reactor_pressure"}],
+    }
+    rule = {"id": "static-sop", "text": "Observe the operating envelope."}
+    handoff = {"baseline_changes": [], "evaluation_policy": {"evidence": []}}
+    state = {
+        "plant": {},
+        "operating_procedures": [rule, {"id": "alarm-rag-test", "title": "Alarm RAG evidence", "rag": expected_alarm_rag}],
+        "setpoints": {f"setpoint_{i}": {"setpoint": 50, "limits": [0, 100], "unit": "%"} for i in range(6)},
+    }
+    requests = []
+
+    def reply(context, questions, **kwargs):
+        assert context["alarm_rag"] == expected_alarm_rag
+        assert context["operating_procedures"] == [rule]
+        if "first" in questions:
+            requests.append("choice")
+            return {"first": {"type": "choice", "choice": next(iter(questions["first"]["criteria"]))}}
+        requests.append("score")
+        return {name: {"type": "score", "score": 1} for name in questions}
+
+    monkeypatch.setattr("sop_ranking.score_selection.zoro_decide", reply)
+    result = select_candidates(handoff, state, timeout=5, request_id="test")
+    assert requests == ["score"] * 5 + ["choice"]
+    assert len(result["selected"]) == 54
