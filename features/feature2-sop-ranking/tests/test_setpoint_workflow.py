@@ -1,5 +1,5 @@
 import json
-from collections import Counter
+from itertools import product
 from math import isclose
 from threading import RLock
 from types import SimpleNamespace
@@ -10,10 +10,10 @@ from server.alarm_studies import AlarmStudies
 from server.app import ConsoleHandler, analyze_alarm_setpoints
 from server.plant import MEASUREMENT_TAGS, Plant
 from server.scenario import STEP_HOURS
-from sop_ranking.score_selection import build_candidates, select_candidates
+from sop_ranking.score_selection import select_candidates
 
 
-def test_console_evaluates_only_candidates_covering_ninety_percent(tmp_path, monkeypatch):
+def test_console_evaluates_four_combinations_of_the_top_two_setpoints(tmp_path, monkeypatch):
     plant = Plant(tmp_path)
     plant.command({"op": "speed", "value": 960})
     while len(plant.history) < 2:
@@ -25,59 +25,90 @@ def test_console_evaluates_only_candidates_covering_ninety_percent(tmp_path, mon
     score_questions = []
     score_batches = []
     locked = {"production_rate", "reactor_pressure"}
+    top = ["reactor_temperature", "separator_level"]
+    first_choice = None
+    tested_branches = []
 
     def reply(url, payload, *, timeout, request_id=None):
+        nonlocal first_choice
         assert url.endswith("/v1/systemone")
         questions = payload["questions"]
         qtype = next(iter(questions.values()))["type"]
         if qtype == "noul":
             scores = {"production_rate": 0.98, "reactor_pressure": 0.95, "reactor_temperature": 0.90}
             answers = {name: {"type": "noul", "noul": scores.get(name, 0.1)} for name in questions}
+        elif qtype == "score" and "feature1" in questions:
+            assert len(questions) == 5
+            assert request_id.endswith("-plans-score-1")
+            for name, question in questions.items():
+                assert all(key in question["instructions"] for key in locked)
+                if name != "feature1":
+                    assert all(key in question["instructions"] for key in top)
+            answers = {name: {"type": "score", "score": 0.8 if name == "feature1" else 1.2} for name in questions}
         elif qtype == "score":
             score_batches.append(len(questions))
             score_questions.extend(sorted(questions))
             for name, question in questions.items():
-                moves = [part.split(":") for part in name.split("+")]
-                setpoints = {setpoint for setpoint, _ in moves}
-                assert len(moves) == len(setpoints) == 2
-                assert locked.isdisjoint(setpoints)
-                assert all(direction in {"decrease_10pct", "increase_10pct"} for _, direction in moves)
-                assert all(setpoint in question["instructions"] for setpoint in setpoints)
-            ratings = dict(zip(score_questions, [1.8, 1.2, 0.6, 0.4]))
-            answers = {name: {"type": "score", "score": ratings.get(name, 0)} for name in questions}
+                assert name not in locked
+                assert name in question["instructions"]
+                assert all(metric in question["instructions"] for metric in
+                           ("cost per unit produced", "tracking accuracy", "production loss"))
+                assert [level.split(":", 1)[0] for level in question["criteria"]] == [
+                    "Poor trial", "Reasonable trial", "Promising trial",
+                ]
+            ratings = dict(zip(top, [1.8, 1.2]))
+            answers = {name: {"type": "score", "score": ratings.get(name, 0.5)} for name in questions}
         elif "first" in questions:
-            assert set(questions["first"]["criteria"]) == set(score_questions[:3])
-            answers = {"first": {"type": "choice", "choice": score_questions[2]}}
+            criteria = questions["first"]["criteria"]
+            assert len(criteria) == 4
+            assert "feature1" not in criteria
+            first_choice = next(iter(criteria))
+            answers = {"first": {"type": "choice", "choice": first_choice}}
         else:
             assert set(questions) == locked
             answers = {name: {"type": "choice", "choice": "decrease_small"} for name in questions}
         return {"answers": answers}
 
+    from sop_ranking import evaluate
+
+    run_branch = evaluate.run_branch
+
+    def capture_branch(runner, snapshot, case_id, changes, policy):
+        tested_branches.append(case_id)
+        return run_branch(runner, snapshot, case_id, changes, policy)
+
+    monkeypatch.setattr(evaluate, "run_branch", capture_branch)
     monkeypatch.setattr("zoro.client._request", reply)
     ConsoleHandler.setpoint_decision(handler, {"run": plant.recording.id})
     assert handler.respond.call_count == 1
     data = handler.respond.call_args.args[0]
     assert {item["setpoint"] for item in data["handoff"]["baseline_changes"]} == locked
     feature2 = data["feature2"]
-    assert score_batches == [12] * 5
-    assert feature2["selection"]["coverage"] == 0.9
-    assert [case["id"] for case in feature2["evaluated"]] == [score_questions[i] for i in (2, 0, 1)]
-    for case in feature2["evaluated"]:
+    selection = feature2["selection"]
+    assert score_batches == [6]
+    assert len(set(score_questions)) == len(selection["scores"]) == 6
+    assert selection["selected_setpoints"] == top
+    assert selection["first_choice"] == feature2["evaluated"][0]["id"] == first_choice
+    assert len(tested_branches) == len(set(tested_branches)) == 5
+    assert tested_branches[0] == "feature1"
+    cases = feature2["evaluated"]
+    assert len(cases) == 4
+    assert feature2["response_scores"] == {"feature1": 0.8, **{case["id"]: 1.2 for case in cases}}
+    assert feature2["response_score_reason"] is None
+    assert {tuple(change["move"] for change in case["moves"]) for case in cases} == set(product((-0.1, 0.1), repeat=2))
+    for case in cases:
+        assert [move["setpoint"] for move in case["moves"]] == top
         assert {change["setpoint"] for change in case["changes"][:2]} == locked
-        additions = case["changes"][2:]
-        assert len(additions) == 2
-        assert len({change["setpoint"] for change in additions}) == 2
-        for change in additions:
-            assert change["setpoint"] not in locked
-            assert abs(change["move"]) == 0.10
-            assert isclose(change["to"], change["from"] * (1 + change["move"]), abs_tol=1e-6)
+        assert case["changes"][2:] == case["moves"]
+        for move in case["moves"]:
+            assert isclose(move["to"], move["from"] * (1 + move["move"]), abs_tol=1e-6)
         assert {"cost_per_m3", "tracking_accuracy", "production_loss_m3"} <= case.keys()
     assert plant.sim.snapshot().model_bytes == before
     trace = json.loads((tmp_path / "agent-trace.jsonl").read_text())
     assert trace["feature2"]["selection"] == feature2["selection"]
 
 
-def test_zero_scores_select_no_candidates(monkeypatch):
+def test_equal_zero_scores_still_select_two_setpoints(monkeypatch):
     handoff = {
         "baseline_changes": [],
         "evaluation_policy": {"evidence": []},
@@ -92,15 +123,17 @@ def test_zero_scores_select_no_candidates(monkeypatch):
 
     def reply(context, questions, **kwargs):
         assert "alarm_rag" not in context
+        if "first" in questions:
+            return {"first": {"choice": next(iter(questions["first"]["criteria"]))}}
         return {name: {"type": "score", "score": 0} for name in questions}
 
     monkeypatch.setattr("sop_ranking.score_selection.zoro_decide", reply)
     result = select_candidates(handoff, state, timeout=5, request_id="test")
-    assert result["selected"] == []
-    assert result["reason"] == "zero_scores"
+    assert result["selected_setpoints"] == ["level", "pressure"]
+    assert len(result["selected"]) == 4
 
 
-def test_only_in_range_ten_percent_movements_are_scored(monkeypatch):
+def test_candidate_grid_omits_out_of_range_moves(monkeypatch):
     handoff = {
         "baseline_changes": [{"setpoint": "pressure"}],
         "evaluation_policy": {"evidence": []},
@@ -116,25 +149,16 @@ def test_only_in_range_ten_percent_movements_are_scored(monkeypatch):
     }
 
     def reply(context, questions, **kwargs):
-        candidate_id = "level:decrease_10pct+temperature:decrease_10pct"
-        assert list(questions) == [candidate_id]
-        return {candidate_id: {"type": "score", "score": 1}}
+        if "first" in questions:
+            return {"first": {"choice": next(iter(questions["first"]["criteria"]))}}
+        assert set(questions) == {"level", "temperature", "zero"}
+        return {key: {"type": "score", "score": 2 if key == "zero" else 1} for key in questions}
 
     monkeypatch.setattr("sop_ranking.score_selection.zoro_decide", reply)
     result = select_candidates(handoff, state, timeout=5, request_id="test")
-    assert [change["to"] for change in result["selected"][0]["changes"]] == [45, 90]
-    assert result["coverage"] == 1
-
-
-def test_six_setpoints_produce_sixty_directional_pairs():
-    setpoints = {f"setpoint_{i}": {"setpoint": 50, "limits": [0, 100], "unit": "%"} for i in range(6)}
-    candidates = build_candidates(setpoints, set())
-    directions = Counter()
-    for candidate in candidates.values():
-        first, second = candidate["changes"]
-        assert first["setpoint"] != second["setpoint"]
-        directions[(first["setpoint"], second["setpoint"], first["move"], second["move"])] += 1
-    assert len(candidates) == len(directions) == 60
+    assert result["scores"]["zero"]["score"] == 2
+    assert result["selected_setpoints"] == ["level", "temperature"]
+    assert {tuple(move["to"] for move in case["changes"]) for case in result["selected"]} == {(45, 90)}
 
 
 def test_feature1_alarm_rag_reaches_every_model_request(monkeypatch):
@@ -166,8 +190,10 @@ def test_feature1_alarm_rag_reaches_every_model_request(monkeypatch):
 
     monkeypatch.setattr("sop_ranking.score_selection.zoro_decide", reply)
     result = select_candidates(handoff, state, timeout=5, request_id="test")
-    assert requests == ["score"] * 5 + ["choice"]
-    assert len(result["selected"]) == 54
+    assert requests == ["score", "choice"]
+    assert len(result["scores"]) == 6
+    assert len(result["selected"]) == 4
+
 
 def test_alarm_endpoint_evaluates_the_checkpoint_even_after_live_changes(tmp_path, monkeypatch):
     plant = Plant(tmp_path)

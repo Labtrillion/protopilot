@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#eef0f2">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27%3E%3Cpath fill=%27%23242a30%27 d=%27M0 6l6-6h14v5H8L5 8v12H0z%27/%3E%3C/svg%3E">
   <title>ProtoPilot · TEP 시뮬레이터</title>
-  <link rel="stylesheet" href="/app.css?v=3">
+  <link rel="stylesheet" href="/app.css?v=11">
 </head>
 <body>
   <header class="topbar" id="dashboard-topbar">
@@ -273,9 +273,12 @@
         <p id="simulation-context"></p>
         <p id="simulation-sensor-note" class="simulation-note" hidden>센서 시험 전의 모델 측정값으로 비교했습니다.</p>
       </header>
+      <section class="feature1-comparison" id="feature1-comparison" aria-labelledby="feature1-comparison-title" hidden>
+        <h2 id="feature1-comparison-title">피처 1 · 설정값 변경 판단</h2>
+        <div id="feature1-comparison-content"></div>
+      </section>
       <section id="simulation-comparison" aria-labelledby="simulation-cards-title">
         <h2 id="simulation-cards-title">대응안 비교</h2>
-        <div id="simulation-zoro-summary" class="simulation-verdict" hidden></div>
         <div id="simulation-sweep" hidden>
           <div class="simulation-verdict" id="simulation-verdict"></div>
           <details class="simulation-baseline" id="simulation-baseline">
@@ -308,6 +311,6 @@
     </form>
   </dialog>
   <div id="notice" class="notice" role="status" hidden></div>
-  <script type="module" src="/app.js?v=3"></script>
+  <script type="module" src="/app.js?v=11"></script>
 </body>
 </html>

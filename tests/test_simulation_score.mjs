@@ -1,9 +1,28 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { bestImprovement, evaluateBranch, scoreBranch } from '../src/simulation-score.js';
+import { bestImprovement, evaluateBranch, formatZoroShare, scoreBranch, softmaxShares } from '../src/simulation-score.js';
 
 const start = { horizon_hours: 4, production_target: 20 };
 const baseline = { window_hours: 4, violation_minutes: 0, mean_production: 20, shutdown: null };
+
+test('Zoro response scores yield one softmax distribution including the baseline', () => {
+  const shares = softmaxShares({ base: 1, a: 2, b: 1, c: 1, d: 0, absent: null });
+  assert.ok(Math.abs(Object.values(shares).reduce((sum, share) => sum + share, 0) - 1) < 1e-12);
+  assert.equal(shares.base, shares.b);
+  assert.ok(shares.a > shares.base && shares.base > shares.d);
+  assert.equal(formatZoroShare(0.12345), '12.35%');
+  assert.equal(formatZoroShare(shares.absent), '—');
+  assert.deepEqual(softmaxShares({}), {});
+});
+
+test('lower temperature widens the five-plan spread while preserving ties and order', () => {
+  const scores = { base: 1, a: 1.2, b: 1, c: 0.98, d: 0.96 };
+  const original = softmaxShares(scores, 0.5);
+  const tuned = softmaxShares(scores, 0.15);
+  assert.ok(tuned.a - tuned.d > original.a - original.d);
+  assert.ok(tuned.a > tuned.base && tuned.base === tuned.b && tuned.b > tuned.c && tuned.c > tuned.d);
+  assert.ok(Math.abs(Object.values(tuned).reduce((sum, share) => sum + share, 0) - 1) < 1e-12);
+});
 
 test('a full run inside the operating range reaching the production target earns 100 points', () => {
   assert.deepEqual(scoreBranch(baseline, start), { score: 100, safeMinutes: 240, volume: 80, completed: true });

@@ -1,5 +1,19 @@
 export const SCORE_WEIGHTS = { completion: 60, operatingRange: 30, production: 10 };
 
+const shareFormat = new Intl.NumberFormat('ko-KR', { style: 'percent', maximumFractionDigits: 2 });
+
+export function softmaxShares(scores = {}, temperature = 1) {
+  const entries = Object.entries(scores).filter(([, score]) => Number.isFinite(score));
+  const max = Math.max(...entries.map(([, score]) => score));
+  const weights = entries.map(([id, score]) => [id, Math.exp((score - max) / temperature)]);
+  const total = weights.reduce((sum, [, weight]) => sum + weight, 0);
+  return Object.fromEntries(weights.map(([id, weight]) => [id, weight / total]));
+}
+
+export function formatZoroShare(share) {
+  return Number.isFinite(share) ? shareFormat.format(share) : '—';
+}
+
 export function scoreBranch(branch, start) {
   const { window_hours: window, violation_minutes: violations, mean_production: flow } = branch;
   const { horizon_hours: horizon, production_target: target } = start;
