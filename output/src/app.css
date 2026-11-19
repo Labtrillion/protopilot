@@ -413,7 +413,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 @media (min-width: 960px) and (min-height: 540px) {
   body { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100dvh; overflow: hidden; }
   .console {
-    grid-template-columns: clamp(22rem, 27vw, 33rem) minmax(0, 1fr) clamp(14.3rem, 17vw, 19.4rem);
+    grid-template-columns: clamp(20rem, 24vw, 30rem) minmax(0, 1fr) clamp(14.3rem, 17vw, 19.4rem);
     grid-template-rows: minmax(0, 1fr);
     grid-template-areas: "telemetry plant sidebar";
   }
