@@ -1,0 +1,31 @@
+{
+  "format": "protopilot-scenario-1",
+  "id": "s2-false-high-temp",
+  "title": "시나리오 2. 고온 오경보에서 불필요한 감산 방지",
+  "duration_min": 300,
+  "initial_speed": 240,
+  "events": [
+    {
+      "at_min": 120,
+      "op": "offset",
+      "id": "XMEAS(9)",
+      "value": 32,
+      "duration_min": 2,
+      "note": "반응기 온도 센서 순간 스파이크 (+32 °C, 2분)"
+    }
+  ],
+  "context": {},
+  "agent": {
+    "trigger": {
+      "on": "first_alarm"
+    },
+    "candidates": [
+      "hold_and_watch",
+      "reduce_production"
+    ]
+  },
+  "assumptions": [
+    "스파이크 = 센서 오프셋 +32 °C, 2분 (120.4 -> 152.4 > 상한 150)"
+  ],
+  "alarm_limits": {}
+}

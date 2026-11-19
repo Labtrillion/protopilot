@@ -217,7 +217,7 @@ def run_zoro_agent(plant, lock, run_id, alarm_id, trace_path, client=None, horiz
         raise LookupError("알람 발생 시점의 상태를 찾을 수 없습니다.")
     sop = find_sop(checkpoint.alarm)
     if not sop or not sop.get("candidates"):
-        raise ValueError("이 알람에는 비교할 SOP 후보가 없습니다.")
+        return {"status": "unsupported", "reason": "no_sop_candidates"}
     event = event_from_checkpoint(run_id, alarm_id, checkpoint)
     alarm_tags = [checkpoint.alarm["tag"]]
     setpoints = {key: float(value) for key, value in asdict(checkpoint.controller.setpoints).items()}

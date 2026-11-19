@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#eef0f2">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27%3E%3Cpath fill=%27%23242a30%27 d=%27M0 6l6-6h14v5H8L5 8v12H0z%27/%3E%3C/svg%3E">
   <title>ProtoPilot · TEP 시뮬레이터</title>
-  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/app.css?v=2">
 </head>
 <body>
   <header class="topbar" id="dashboard-topbar">
@@ -224,15 +224,19 @@
         <button id="close-scenario" type="button" class="icon-button" data-icon="close" aria-label="시나리오 닫기"></button>
       </div>
       <div class="dialog-fields">
+        <label>데모 시나리오
+          <select id="demo-scenario" required autofocus disabled>
+            <option value="" selected disabled>시나리오를 선택하세요</option>
+          </select>
+        </label>
+        <p class="adjust-info">불러오면 시간 0에서 일시정지합니다. 관제 화면에서 실행을 누르세요.</p>
+        <p id="scenario-error" role="alert" hidden></p>
         <a href="/api/scenario">현재 시나리오 JSON 저장</a>
-        <p class="adjust-info">시작 조건과 조작 이력을 저장합니다. 불러오면 초기 상태에서 일시정지된 새 실행이 생성됩니다.</p>
         <details class="controller-panel">
           <summary>제어 옵션 <span id="protection-state"></span></summary>
           <div id="controller-options"></div>
           <p id="controller-detail"></p>
         </details>
-        <label>저장한 시나리오<input id="scenario-file" type="file" accept=".json,application/json" required></label>
-        <p id="scenario-error" role="alert" hidden></p>
         <details id="recording-archive" class="recording-archive">
           <summary>이전 로컬 기록</summary>
           <label>기록<select id="archived-run" disabled></select></label>
@@ -250,7 +254,7 @@
           </div>
         </details>
       </div>
-      <div class="dialog-actions"><button type="submit" id="load-scenario" class="solid">불러와 재실행 준비</button></div>
+      <div class="dialog-actions"><button type="submit" id="load-scenario" class="solid" disabled>불러와 재실행 준비</button></div>
     </form>
   </dialog>
   <main class="simulation-results" id="simulation-results" aria-labelledby="simulation-title" hidden>
@@ -296,6 +300,6 @@
     </form>
   </dialog>
   <div id="notice" class="notice" role="status" hidden></div>
-  <script type="module" src="/app.js"></script>
+  <script type="module" src="/app.js?v=2"></script>
 </body>
 </html>

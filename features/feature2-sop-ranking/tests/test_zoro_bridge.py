@@ -70,6 +70,18 @@ class ZoroBridgeTest(unittest.TestCase):
         self.assertEqual(outcome.alarm_minutes, reference["alarm_minutes"])
         self.assertEqual(outcome.observed_alarm_minutes, reference["observed_alarm_minutes"])
 
+    def test_missing_sop_candidates_returns_unsupported_without_calling_model(self):
+        log = self.root / "agent-trace.jsonl"
+        for sop in (None, {"candidates": []}):
+            with (
+                self.subTest(sop=sop),
+                patch("sop_ranking.zoro_bridge.find_sop", return_value=sop),
+                patch("sop_ranking.zoro_bridge.agent_client") as model,
+            ):
+                result = run_zoro_agent(self.plant, RLock(), self.run_id, self.alarm["id"], log)
+                self.assertEqual(result, {"status": "unsupported", "reason": "no_sop_candidates"})
+                model.assert_not_called()
+
     def test_agent_requests_branches_and_decides_from_their_results(self):
         state_before = self.plant.sim.snapshot().model_bytes
         log = self.root / "agent-trace.jsonl"
