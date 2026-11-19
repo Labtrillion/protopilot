@@ -248,8 +248,20 @@ tr.alarm-row :is(.numeric > span, .channel-state) { color: var(--warning); }
 .footer > span:first-child { display: flex; align-items: center; gap: 0.46rem; }
 .footer span:last-child { text-align: right; }
 
-dialog { width: min(510px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; color: var(--text); border: 1px solid var(--control-line); background: var(--surface); border-radius: 8px; padding: 0; }
-dialog::backdrop { background: var(--surface); }
+dialog {
+  --dialog-gutter: clamp(1rem, 4vmin, 2rem);
+  width: min(var(--dialog-width, 510px), calc(100% - 2 * var(--dialog-gutter)));
+  max-height: calc(100dvh - 2 * var(--dialog-gutter));
+  overflow: auto;
+  overscroll-behavior: contain;
+  color: var(--text);
+  border: 1px solid var(--control-line);
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: 0 0.75rem 2.5rem rgb(0 0 0 / 20%);
+  padding: 0;
+}
+dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent); }
 .dialog-head, .dialog-actions { padding: 0.94rem 1.2rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; border-bottom: 1px solid var(--line); }
 .dialog-head h2 { margin-top: 0.3rem; font-size: 1.40rem; }
 .dialog-fields { display: grid; gap: 0.8rem; padding: 1.0rem 1.2rem; }
@@ -260,7 +272,7 @@ dialog::backdrop { background: var(--surface); }
 .value-fields { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.61rem; }
 .dialog-actions { justify-content: flex-end; border-bottom: 0; border-top: 1px solid var(--line); }
 #adjust-error { color: var(--danger); }
-#alarm-response-dialog { width: min(56rem, calc(100vw - 24px)); }
+#alarm-response-dialog { --dialog-width: 56rem; }
 #alarm-response-dialog p { margin: 0; }
 #alarm-response-status { color: var(--subtext); font-size: 0.89rem; line-height: 1.5; }
 #alarm-response-status[data-error] { color: var(--danger); }
@@ -415,7 +427,6 @@ dialog::backdrop { background: var(--surface); }
 #controller-detail:empty { display: none; }
 #scenario-dialog a { text-decoration: underline; text-underline-offset: 0.2em; }
 #scenario-error { margin: 0; color: var(--warning); }
-#scenario-dialog { max-height: calc(100dvh - 2rem); overflow: auto; }
 .recording-archive { border-top: 1px solid var(--line); padding-top: 0.45rem; }
 .recording-archive summary { cursor: pointer; }
 .recording-archive label { display: grid; gap: 0.2rem; padding-top: 0.45rem; }
