@@ -18,6 +18,8 @@ from .scenario import ADJUSTMENTS, DEFAULT_FLAGS, DEFAULT_SEED, KERNEL_REVISION,
 TICK_SECONDS = 0.6
 REACTION_FEED_VALVES = frozenset((0, 1, 2, 3))
 COOLING_TAGS = ("XMEAS(9)", "XMEASADD(5)", "XMEASADD(6)", "XMV(10)")
+# [ADDED] Observation history kept for SOP alignment (server/sop_align.py evaluates SOP predicates over it).
+HISTORY_HOURS = 2.0
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,8 @@ class AlarmCheckpoint:
     observed: dict
     cooling_trend: tuple
     related_alarms: tuple
+    # [ADDED] (time_hours, observed) samples up to the alarm, newest last; empty for older callers.
+    history: tuple = ()
 
 
 def control_action(controller, measurements, time, manual):
@@ -94,6 +98,7 @@ class Plant:
         self.events = deque(maxlen=80)
         self.alarm_checkpoints = {}
         self.cooling_trend = deque(maxlen=8)
+        self.history = deque()  # [ADDED] see HISTORY_HOURS
         self.samples = 0
         self.running = running
         self.error = None
@@ -166,7 +171,14 @@ class Plant:
         for tag, offset in self.offsets.items():
             if native[tag] is not None:
                 values[tag] += offset
-        observed = {**values, "XMV(10):actual": float(self.sim.state[47])}
+        # [CHANGED] actual positions of all 12 valves (state[38:50]); XMV(10):actual is unchanged.
+        observed = {**values, **{f"XMV({i + 1}):actual": float(v) for i, v in enumerate(self.sim.state[38:50])}}
+        now = round(self.sim.time, 8)
+        if self.history and self.history[-1][0] == now:
+            self.history.pop()
+        self.history.append((now, observed))
+        while self.history and now - self.history[0][0] > HISTORY_HOURS:
+            self.history.popleft()
         cooling = {"time_hours": round(self.sim.time, 8),
                    **{tag: observed[tag] for tag in (*COOLING_TAGS, "XMV(10):actual")}}
         if self.cooling_trend and self.cooling_trend[-1]["time_hours"] == cooling["time_hours"]:
@@ -255,7 +267,7 @@ class Plant:
             self.alarm_checkpoints[alarm["id"]] = AlarmCheckpoint(
                 self.recording.id, self.step, self.seed, dict(alarm), snapshot, controller,
                 self.measurements.copy(), self.manual.copy(), self.idv.copy(), self.limits.copy(),
-                observed, tuple(self.cooling_trend), related,
+                observed, tuple(self.cooling_trend), related, tuple(self.history),
             )
         while len(self.alarm_checkpoints) > self.events.maxlen:
             active_ids = {alarm["id"] for alarm in self.active.values()}

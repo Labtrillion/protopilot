@@ -1,0 +1,5934 @@
+{
+ "onset_h": 1.0,
+ "end_h": 9.0,
+ "seeds": [
+  1431655765,
+  20261119
+ ],
+ "summary_by_seed": {
+  "1431655765": {
+   "probe_0.5h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 4,
+    "selected_wrong": 7,
+    "abstained": 17,
+    "top3": 9,
+    "truth_in_tie": 0
+   },
+   "probe_1.0h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 12,
+    "selected_wrong": 2,
+    "abstained": 14,
+    "top3": 12,
+    "truth_in_tie": 0
+   },
+   "probe_2.0h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 13,
+    "selected_wrong": 5,
+    "abstained": 10,
+    "top3": 16,
+    "truth_in_tie": 0
+   },
+   "probe_4.0h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 9,
+    "selected_wrong": 9,
+    "abstained": 10,
+    "top3": 13,
+    "truth_in_tie": 0
+   },
+   "probe_8.0h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 12,
+    "selected_wrong": 5,
+    "abstained": 11,
+    "top3": 14,
+    "truth_in_tie": 0
+   },
+   "alarm": {
+    "n_fault": 60,
+    "selected_correct": 50,
+    "selected_wrong": 10,
+    "abstained": 0,
+    "top3": 60,
+    "truth_in_tie": 0,
+    "bm25_top1": 0,
+    "bm25_top3": 0,
+    "sensor_gap": 0
+   }
+  },
+  "20261119": {
+   "probe_0.5h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 5,
+    "selected_wrong": 7,
+    "abstained": 16,
+    "top3": 10,
+    "truth_in_tie": 0
+   },
+   "probe_1.0h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 10,
+    "selected_wrong": 4,
+    "abstained": 14,
+    "top3": 10,
+    "truth_in_tie": 0
+   },
+   "probe_2.0h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 11,
+    "selected_wrong": 4,
+    "abstained": 13,
+    "top3": 13,
+    "truth_in_tie": 0
+   },
+   "probe_4.0h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 11,
+    "selected_wrong": 4,
+    "abstained": 13,
+    "top3": 13,
+    "truth_in_tie": 0
+   },
+   "probe_8.0h": {
+    "n_nofault": 1,
+    "nofault_selected": 0,
+    "n_fault": 28,
+    "selected_correct": 10,
+    "selected_wrong": 7,
+    "abstained": 11,
+    "top3": 13,
+    "truth_in_tie": 0
+   },
+   "alarm": {
+    "n_fault": 61,
+    "selected_correct": 46,
+    "selected_wrong": 15,
+    "abstained": 0,
+    "top3": 58,
+    "truth_in_tie": 0,
+    "bm25_top1": 8,
+    "bm25_top3": 8,
+    "sensor_gap": 0
+   }
+  }
+ },
+ "rows": [
+  {
+   "seed": 1431655765,
+   "idv": 0,
+   "truth": null,
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 1,
+   "truth": "IDV-01",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [
+    {
+     "t": 3.18,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.23,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.27,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.32,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.34,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.41,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.51,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.54,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.6,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.68,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-20",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    }
+   ],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-08",
+     "top3": [
+      "IDV-08",
+      "IDV-20",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-01",
+     "top3": [
+      "IDV-01",
+      "IDV-20",
+      "IDV-08"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-16",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-01",
+     "top3": [
+      "IDV-01",
+      "IDV-07",
+      "IDV-20"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 2,
+   "truth": "IDV-02",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [
+    {
+     "t": 5.02,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.05,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.13,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.16,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.21,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.25,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.3,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.33,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.38,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.47,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.49,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.53,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.55,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.61,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.64,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.69,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.74,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.77,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.83,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.99,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.06,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.09,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.19,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.41,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.6,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.64,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.71,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.74,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.77,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.83,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.86,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.88,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.91,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.95,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.05,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.08,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.15,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.18,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.2,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.22,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.26,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.29,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    }
+   ],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-02",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-20",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-19"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-01",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 3,
+   "truth": "IDV-03",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-03",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-03",
+     "top3": [
+      "IDV-03",
+      "IDV-09",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-03",
+     "top3": [
+      "IDV-03",
+      "IDV-09",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-03",
+     "top3": [
+      "IDV-03",
+      "IDV-09",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-03",
+     "top3": [
+      "IDV-03",
+      "IDV-09",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 4,
+   "truth": "IDV-04",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-11",
+     "top3": [
+      "IDV-11",
+      "IDV-04",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-04",
+     "top3": [
+      "IDV-04",
+      "IDV-11",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-04",
+     "top3": [
+      "IDV-04",
+      "IDV-11",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-04",
+     "top3": [
+      "IDV-04",
+      "IDV-11",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-04",
+     "top3": [
+      "IDV-04",
+      "IDV-11",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 5,
+   "truth": "IDV-05",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-12",
+     "top3": [
+      "IDV-12",
+      "IDV-05",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-05",
+     "top3": [
+      "IDV-05",
+      "IDV-12",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-05",
+     "top3": [
+      "IDV-05",
+      "IDV-12",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-05",
+     "top3": [
+      "IDV-05",
+      "IDV-12",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-05",
+     "top3": [
+      "IDV-05",
+      "IDV-12",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 6,
+   "truth": "IDV-06",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [
+    {
+     "t": 3.52,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.59,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.65,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.69,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.74,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 8.78,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-13",
+      "IDV-16"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 8.8,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-13",
+      "IDV-16"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 8.88,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-13",
+      "IDV-16"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    }
+   ],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-20",
+      "IDV-23"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-20",
+      "IDV-23"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-16",
+      "IDV-23"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-20",
+      "IDV-23"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 7,
+   "truth": "IDV-07",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 8,
+   "truth": "IDV-08",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-01",
+     "top3": [
+      "IDV-01",
+      "IDV-20",
+      "IDV-08"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-08",
+     "top3": [
+      "IDV-08",
+      "IDV-20",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-01",
+     "top3": [
+      "IDV-01",
+      "IDV-07",
+      "IDV-20"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 9,
+   "truth": "IDV-09",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-03",
+     "top3": [
+      "IDV-03",
+      "IDV-09",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 10,
+   "truth": "IDV-10",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-10",
+     "top3": [
+      "IDV-10",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-10",
+     "top3": [
+      "IDV-10",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-10",
+     "top3": [
+      "IDV-10",
+      "IDV-16",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-10",
+     "top3": [
+      "IDV-10",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 11,
+   "truth": "IDV-11",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-11",
+     "top3": [
+      "IDV-11",
+      "IDV-14",
+      "IDV-17"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-11",
+     "top3": [
+      "IDV-11",
+      "IDV-14",
+      "IDV-17"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-11",
+     "top3": [
+      "IDV-11",
+      "IDV-14",
+      "IDV-17"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-20"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-11",
+     "top3": [
+      "IDV-11",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 12,
+   "truth": "IDV-12",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-12",
+     "top3": [
+      "IDV-12",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-12",
+     "top3": [
+      "IDV-12",
+      "IDV-05",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-12",
+     "top3": [
+      "IDV-12",
+      "IDV-05",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-12",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-12",
+      "IDV-15"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 13,
+   "truth": "IDV-13",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-17",
+     "top3": [
+      "IDV-17",
+      "IDV-14",
+      "IDV-20"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 14,
+   "truth": "IDV-14",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 15,
+   "truth": "IDV-15",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 16,
+   "truth": "IDV-16",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-16",
+     "top3": [
+      "IDV-16",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-16",
+     "top3": [
+      "IDV-16",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 17,
+   "truth": "IDV-17",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 18,
+   "truth": "IDV-18",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-14",
+      "IDV-17"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 19,
+   "truth": "IDV-19",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 20,
+   "truth": "IDV-20",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-18",
+      "IDV-19"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-18",
+      "IDV-15"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 21,
+   "truth": "IDV-21",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 22,
+   "truth": "IDV-22",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-22",
+     "top3": [
+      "IDV-22",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-22",
+     "top3": [
+      "IDV-22",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 23,
+   "truth": "IDV-23",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 24,
+   "truth": "IDV-24",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-20"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 25,
+   "truth": "IDV-25",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 26,
+   "truth": "IDV-26",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 27,
+   "truth": "IDV-27",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-20"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 1431655765,
+   "idv": 28,
+   "truth": "IDV-28",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 0,
+   "truth": null,
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 1,
+   "truth": "IDV-01",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [
+    {
+     "t": 3.2,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.24,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.26,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.33,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.41,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.46,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.48,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.51,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.57,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-01",
+      "IDV-08"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.62,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-01",
+     "top3": [
+      "IDV-01",
+      "IDV-07",
+      "IDV-14"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.68,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-01",
+     "top3": [
+      "IDV-01",
+      "IDV-07",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.73,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    }
+   ],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-08",
+     "top3": [
+      "IDV-08",
+      "IDV-20",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-01",
+     "top3": [
+      "IDV-01",
+      "IDV-20",
+      "IDV-08"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-07"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-07",
+     "top3": [
+      "IDV-07",
+      "IDV-13",
+      "IDV-16"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-01",
+     "top3": [
+      "IDV-01",
+      "IDV-07",
+      "IDV-20"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 2,
+   "truth": "IDV-02",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [
+    {
+     "t": 5.09,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.11,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.17,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.23,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.26,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.32,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.4,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.45,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.48,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.54,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.63,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-13",
+     "top3": [
+      "IDV-13",
+      "IDV-02",
+      "IDV-19"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.65,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-13",
+     "top3": [
+      "IDV-13",
+      "IDV-02",
+      "IDV-19"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.95,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.06,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.12,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.15,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.29,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.33,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.41,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.44,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.46,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.5,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.57,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.62,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.68,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.7,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.72,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.77,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.81,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.84,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.9,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.93,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 6.98,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-07"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.03,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-19",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    }
+   ],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-02",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-20",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-16"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-15",
+      "IDV-19"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-02",
+     "top3": [
+      "IDV-02",
+      "IDV-01",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 3,
+   "truth": "IDV-03",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-03",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-03",
+     "top3": [
+      "IDV-03",
+      "IDV-09",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-03",
+     "top3": [
+      "IDV-03",
+      "IDV-09",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-03",
+     "top3": [
+      "IDV-03",
+      "IDV-09",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-03",
+     "top3": [
+      "IDV-03",
+      "IDV-09",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 4,
+   "truth": "IDV-04",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-11",
+     "top3": [
+      "IDV-11",
+      "IDV-04",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-04",
+     "top3": [
+      "IDV-04",
+      "IDV-11",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-04",
+     "top3": [
+      "IDV-04",
+      "IDV-11",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-04",
+     "top3": [
+      "IDV-04",
+      "IDV-11",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-04",
+     "top3": [
+      "IDV-04",
+      "IDV-11",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 5,
+   "truth": "IDV-05",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-12",
+     "top3": [
+      "IDV-12",
+      "IDV-05",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-05",
+     "top3": [
+      "IDV-05",
+      "IDV-12",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-05",
+     "top3": [
+      "IDV-05",
+      "IDV-12",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-05",
+     "top3": [
+      "IDV-05",
+      "IDV-12",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-05",
+     "top3": [
+      "IDV-05",
+      "IDV-12",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 6,
+   "truth": "IDV-06",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [
+    {
+     "t": 3.53,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.6,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 3.71,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 8.76,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-13",
+      "IDV-16"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 8.81,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-13",
+      "IDV-16"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 8.86,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-13",
+      "IDV-16"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 8.92,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-13",
+      "IDV-16"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    }
+   ],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-20",
+      "IDV-23"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-20",
+      "IDV-23"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-23",
+      "IDV-20"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-13",
+      "IDV-16"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-06",
+     "top3": [
+      "IDV-06",
+      "IDV-20",
+      "IDV-23"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 7,
+   "truth": "IDV-07",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 8,
+   "truth": "IDV-08",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [
+    {
+     "t": 5.77,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-08",
+     "top3": [
+      "IDV-08",
+      "IDV-13",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.88,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-08",
+     "top3": [
+      "IDV-08",
+      "IDV-20",
+      "IDV-13"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.91,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-08",
+     "top3": [
+      "IDV-08",
+      "IDV-20",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 5.95,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-08",
+     "top3": [
+      "IDV-08",
+      "IDV-20",
+      "IDV-01"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.09,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-08",
+     "top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-20"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.15,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-16",
+     "top3": [
+      "IDV-16",
+      "IDV-20",
+      "IDV-19"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.25,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-16",
+     "top3": [
+      "IDV-16",
+      "IDV-19",
+      "IDV-15"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    },
+    {
+     "t": 7.27,
+     "tag": "XMEAS(15)",
+     "side": "low",
+     "selected": "IDV-16",
+     "top3": [
+      "IDV-16",
+      "IDV-19",
+      "IDV-15"
+     ],
+     "tied": [],
+     "sensor_sop": "TEP-SENSOR-LIR110-L",
+     "sensor_gap": null,
+     "bm25_top3": [
+      "IDV-08",
+      "IDV-16",
+      "IDV-10"
+     ]
+    }
+   ],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-01",
+     "top3": [
+      "IDV-01",
+      "IDV-06",
+      "IDV-20"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-08",
+     "top3": [
+      "IDV-08",
+      "IDV-20",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-19"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 9,
+   "truth": "IDV-09",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-03",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-09",
+     "top3": [
+      "IDV-09",
+      "IDV-03",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 10,
+   "truth": "IDV-10",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-10",
+     "top3": [
+      "IDV-10",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-10",
+     "top3": [
+      "IDV-10",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-10",
+     "top3": [
+      "IDV-10",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-16",
+     "top3": [
+      "IDV-16",
+      "IDV-10",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 11,
+   "truth": "IDV-11",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-11",
+     "top3": [
+      "IDV-11",
+      "IDV-14",
+      "IDV-17"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-04",
+      "IDV-17"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-11",
+     "top3": [
+      "IDV-11",
+      "IDV-14",
+      "IDV-17"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-11",
+     "top3": [
+      "IDV-11",
+      "IDV-14",
+      "IDV-17"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-04",
+     "top3": [
+      "IDV-04",
+      "IDV-11",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 12,
+   "truth": "IDV-12",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-12",
+     "top3": [
+      "IDV-12",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-12",
+     "top3": [
+      "IDV-12",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-12",
+     "top3": [
+      "IDV-12",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-12",
+      "IDV-05"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-12",
+     "top3": [
+      "IDV-12",
+      "IDV-05",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 13,
+   "truth": "IDV-13",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-19",
+      "IDV-15"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 14,
+   "truth": "IDV-14",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 15,
+   "truth": "IDV-15",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 16,
+   "truth": "IDV-16",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 17,
+   "truth": "IDV-17",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-20"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 18,
+   "truth": "IDV-18",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 19,
+   "truth": "IDV-19",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 20,
+   "truth": "IDV-20",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-18",
+      "IDV-15"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-15",
+      "IDV-18"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 21,
+   "truth": "IDV-21",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 22,
+   "truth": "IDV-22",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 23,
+   "truth": "IDV-23",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 24,
+   "truth": "IDV-24",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-14",
+      "IDV-17"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-20",
+     "top3": [
+      "IDV-20",
+      "IDV-01",
+      "IDV-02"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 25,
+   "truth": "IDV-25",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 26,
+   "truth": "IDV-26",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 27,
+   "truth": "IDV-27",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": "IDV-14",
+     "top3": [
+      "IDV-14",
+      "IDV-17",
+      "IDV-01"
+     ],
+     "tied": []
+    }
+   ]
+  },
+  {
+   "seed": 20261119,
+   "idv": 28,
+   "truth": "IDV-28",
+   "end_h": 9.0,
+   "shutdown": false,
+   "alarms": [],
+   "probes": [
+    {
+     "after_onset_h": 0.5,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 1.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 2.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 4.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    },
+    {
+     "after_onset_h": 8.0,
+     "selected": null,
+     "top3": [
+      "IDV-01",
+      "IDV-02",
+      "IDV-03"
+     ],
+     "tied": []
+    }
+   ]
+  }
+ ],
+ "wall_seconds": 166.9,
+ "aligner": {
+  "PERSIST_HOURS": 0.25,
+  "WINDOW_HOURS": 1.0,
+  "HOLD_FRACTION": 0.5,
+  "SPECIFIC_WEIGHT": 2.0,
+  "LIMIT_WEIGHT": 1.0,
+  "TYPE_WEIGHT": 1.0,
+  "MECHANISM_WEIGHT": 1.0
+ }
+}

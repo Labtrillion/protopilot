@@ -18,6 +18,7 @@ from .catalog import CHANNELS, OPERATING_LIMITS
 from .plant import COOLING_TAGS, control_action, finite_metrics
 from .recording import timestamp
 from .scenario import KERNEL_REVISION, STEP_HOURS, adjustment
+from .sop_align import align, compact_for
 
 SOPS = json.loads(Path(__file__).with_name("demo-sops.json").read_text(encoding="utf-8"))
 HORIZON_HOURS = 3.75
@@ -36,19 +37,38 @@ COOLING_LABELS = {
 
 
 def find_sop(alarm):
+    """Curated demo SOP for the alarm tag (fallback when tep-sops has no aligned SOP)."""
     if alarm["kind"] == "trip":
         return next(sop for sop in SOPS if sop.get("kind") == "trip")
     return next((sop for sop in SOPS if alarm["tag"] in sop.get("tags", ())
                  and ("side" not in sop or sop["side"] == alarm.get("side"))), None)
 
 
-def evidence(checkpoint, sop):
+def select_sop(checkpoint):
+    """[ADDED] Align the alarm with tep-sops from the checkpoint's observed history.
+    Order: confident IDV SOP -> sensor-alarm SOP for the tag/side/severity -> curated demo SOP."""
+    alarm = checkpoint.alarm
+    if alarm["kind"] == "trip":
+        return find_sop(alarm), None
+    alignment = align(alarm, list(checkpoint.history))
+    sop = compact_for(alignment) or find_sop(alarm)
+    alignment["selected_sop"] = sop["id"] if sop else None
+    return sop, alignment
+
+
+def evidence(checkpoint, sop, alignment=None):
     alarm_tag = checkpoint.alarm["tag"]
     tags = (*COOLING_TAGS, "XMV(10):actual") if sop["id"] == "TEP-COOL-01" else (
         "XMEAS(7)", "XMEAS(9)", "XMEAS(12)", "XMEAS(17)",
     )
+    # [ADDED] readings for the conditions that made the aligned IDV SOP hold
+    if alignment and alignment.get("idv_selected"):
+        held = [c["tag"] for r in alignment["top_detail"] if r["holds"] for c in r["conditions"]]
+        tags = (*held, *tags)
     entries = []
     for tag in dict.fromkeys((alarm_tag, *tags)):
+        if tag not in checkpoint.observed:
+            continue
         channel = CHANNELS[tag.split(":")[0]]
         entries.append({
             "tag": tag, "label": COOLING_LABELS.get(tag, channel["label"]),
@@ -57,7 +77,7 @@ def evidence(checkpoint, sop):
     return entries
 
 
-def choose_response(checkpoint, sop, readings):
+def choose_response(checkpoint, sop, readings, alignment=None):
     started = perf_counter()
     choices = {key: CANDIDATES[key][0] for key in sop["candidates"]}
     state = {
@@ -67,6 +87,14 @@ def choose_response(checkpoint, sop, readings):
         "sop": {key: sop[key] for key in ("id", "revision", "title", "checks")},
         "current_production_target": checkpoint.controller.setpoints.production_rate,
     }
+    if alignment and alignment.get("idv_selected"):
+        # [ADDED] why this SOP was aligned: held SOP predicates with their latest values
+        state["alignment"] = {
+            "held_rules": alignment["ranking"][0]["held_rules"],
+            "conditions": [{k: c.get(k) for k in ("tag", "operator", "latest", "fraction")}
+                           for r in alignment["top_detail"] if r["holds"] for c in r["conditions"]],
+            "runner_up": [r["protocol_id"] for r in alignment["ranking"][1:3]],
+        }
     if sop["id"] == "TEP-COOL-01":
         state["trend"] = checkpoint.cooling_trend
     questions = {
@@ -163,8 +191,8 @@ def run_branch(checkpoint, candidate):
 
 def analyze_alarm(checkpoint, trace_path):
     alarm = checkpoint.alarm
-    sop = find_sop(alarm)
-    readings = evidence(checkpoint, sop) if sop else []
+    sop, alignment = select_sop(checkpoint)  # [CHANGED] was find_sop(alarm): tag-only lookup
+    readings = evidence(checkpoint, sop, alignment) if sop else []
     digest = sha256(checkpoint.native.model_bytes).hexdigest()[:12]
     sop_summary = {key: sop[key] for key in ("id", "revision", "title", "checks")} if sop else None
     source_url = sop.get("source_url") if sop else None
@@ -173,13 +201,13 @@ def analyze_alarm(checkpoint, trace_path):
     result = {
         "decision_id": uuid4().hex, "alarm": alarm, "related_alarms": checkpoint.related_alarms,
         "sop": sop_summary,
-        "readings": readings, "decision": None, "branches": [],
+        "readings": readings, "decision": None, "branches": [], "alignment": alignment,
         "start": {"checkpoint": digest, "run_id": checkpoint.run_id, "step": checkpoint.step,
                   "time_hours": round(checkpoint.native.time, 8), "horizon_hours": HORIZON_HOURS,
                   "production_target": checkpoint.controller.setpoints.production_rate},
     }
     if sop and sop.get("candidates"):
-        result["decision"] = choose_response(checkpoint, sop, readings)
+        result["decision"] = choose_response(checkpoint, sop, readings, alignment)
         result["branches"] = [run_branch(checkpoint, key) for key in sop["candidates"]]
     trace = {
         **result, "time_utc": timestamp(), "flow": "live_alarm_response", "kernel_revision": KERNEL_REVISION,
