@@ -1,9 +1,10 @@
-"""Mount the pinned TEP experiment workspace alongside the live console."""
+"""Standalone development workspace for exploring the pinned TEP simulator."""
 
 import base64
 import json
 from dataclasses import replace
 from hashlib import sha256
+from pathlib import Path
 from threading import RLock
 from types import SimpleNamespace
 
@@ -113,7 +114,6 @@ def _layout():
     header = layout.children[4]
     header.children[0].children[0].children = "ProtoPilot · TEP 실험"
     header.children[0].children[1].children = "독립 시뮬레이션 · 실행 비교 · 실험 기록"
-    header.children[1].children.insert(0, html.A("라이브 관제로 돌아가기", href="/"))
     return layout, dataset_ids
 
 
@@ -248,3 +248,7 @@ def create_experiments(root):
 
     app.run_store = store
     return app
+
+
+if __name__ == "__main__":
+    create_experiments(Path(__file__).resolve().parents[1] / "data").run(host="127.0.0.1", port=8050)

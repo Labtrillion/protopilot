@@ -3,17 +3,14 @@
 import argparse
 import json
 import logging
-import sys
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import BoundedSemaphore, Event, RLock, Thread
 from urllib.parse import parse_qs, urlsplit
-from wsgiref.simple_server import ServerHandler, WSGIRequestHandler, WSGIServer
 
 from .alarm_response import analyze_alarm
 from .catalog import CHANNELS, METADATA
-from .experiments import EXPERIMENTS_PATH, create_experiments
 from .plant import Plant, TICK_SECONDS
 from .recording import ArchivedRecording, encode
 
@@ -21,28 +18,15 @@ ROOT = Path(__file__).resolve().parents[1]
 ALARM_STUDY = BoundedSemaphore()
 
 
-class ConsoleServer(ThreadingHTTPServer):
-    def server_bind(self):
-        super().server_bind()
-        WSGIServer.setup_environ(self)
-
-
 class ConsoleHandler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, plant, lock, experiments, **kwargs):
+    def __init__(self, *args, plant, lock, **kwargs):
         self.plant = plant
         self.lock = lock
-        self.experiments = experiments
         super().__init__(*args, directory=str(ROOT / "dist"), **kwargs)
 
     def log_message(self, format, *args):
         if args[1] not in ("200", "304"):
             super().log_message(format, *args)
-
-    def serve_experiments(self):
-        environ = WSGIRequestHandler.get_environ(self)
-        handler = ServerHandler(self.rfile, self.wfile, sys.stderr, environ, multithread=True)
-        handler.request_handler = self
-        handler.run(self.experiments)
 
     def respond(self, body, status=200, *, attachment=None):
         payload = encode(body).encode()
@@ -58,9 +42,7 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         url = urlsplit(self.path)
         path = url.path
-        if path.startswith(EXPERIMENTS_PATH):
-            self.serve_experiments()
-        elif path == "/api/schema":
+        if path == "/api/schema":
             self.respond(METADATA)
         elif path == "/api/live":
             with self.lock:
@@ -77,17 +59,16 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
         else:
             super().do_GET()
 
-    def do_HEAD(self):
-        if urlsplit(self.path).path.startswith(EXPERIMENTS_PATH):
-            self.serve_experiments()
-        else:
-            super().do_HEAD()
+    def send_head(self):
+        if urlsplit(self.path).path in {"/experiments", "/experiments/"}:
+            self.send_response(302)
+            self.send_header("Location", "/")
+            self.end_headers()
+            return None
+        return super().send_head()
 
     def do_POST(self):
         path = urlsplit(self.path).path
-        if path.startswith(EXPERIMENTS_PATH):
-            self.serve_experiments()
-            return
         if path not in {"/api/command", "/api/alarm-response"}:
             self.send_error(404)
             return
@@ -208,9 +189,8 @@ def main():
         parser.error("먼저 npm run build를 실행하세요.")
     lock, stop = RLock(), Event()
     plant = Plant(args.data)
-    experiments = create_experiments(args.data)
-    handler = partial(ConsoleHandler, plant=plant, lock=lock, experiments=experiments.server)
-    with ConsoleServer(("127.0.0.1", args.port), handler) as server:
+    handler = partial(ConsoleHandler, plant=plant, lock=lock)
+    with ThreadingHTTPServer(("127.0.0.1", args.port), handler) as server:
         thread = Thread(target=advance_forever, args=(plant, lock, stop), daemon=True)
         thread.start()
         print(f"ProtoPilot  http://127.0.0.1:{args.port}  |  {args.data.resolve()}", flush=True)
