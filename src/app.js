@@ -5,6 +5,7 @@ import { mountSetpointControls, setupControls } from './controls.js';
 import { mountScenario } from './scenario.js';
 import { mountEventMonitor } from './event-monitor.js';
 import { mountAlarmResponse } from './alarm-response.js';
+import { mountSimulationResults } from './simulation-results.js';
 import {
   byId, elapsed, icon, initIcons, option, renderPipeDetails, renderRows,
 } from './ui.js';
@@ -29,7 +30,7 @@ let focusedArea = 'plant', selection, connected = false;
 let visibleChannels = [], channelScope = 'primary', explicitTag = '';
 
 const response = mountResponse(trackSetpoint);
-const alarmResponse = mountAlarmResponse(request);
+const alarmResponse = mountAlarmResponse(request, mountSimulationResults());
 const eventMonitor = mountEventMonitor((event) => {
   if (status?.alarms.some(({ id }) => id === event.id)) locateAlarm(event);
   else focus(event.area, channels.has(event.tag) ? event.tag : '');

@@ -21,12 +21,20 @@ from .scenario import KERNEL_REVISION, STEP_HOURS, adjustment
 
 SOPS = json.loads(Path(__file__).with_name("demo-sops.json").read_text(encoding="utf-8"))
 HORIZON_HOURS = 3.75
-CANDIDATES = {
-    "hold": ("현재 생산 목표 유지", None),
-    "reduce_now": ("즉시 5% 감량", 0),
-    "reduce_30": ("30분 후 5% 감량", 0.5),
-    "reduce_60": ("60분 후 5% 감량", 1.0),
-}
+SWEEP_DELAY_MINUTES = (0, 15, 30, 45, 60)
+SWEEP_REDUCTION_PCT = (1, 2.5, 5, 7.5, 10)
+FINAL_WINDOW_HOURS = 1
+
+
+def reduction_candidate(rate, delay):
+    sop_id = {0: "reduce_now", 30: "reduce_30", 60: "reduce_60"}.get(delay) if rate == 5 else None
+    timing = f"{delay}분 후" if delay else "즉시"
+    return sop_id or f"reduce_{rate:g}_{delay}", (f"{timing} {rate:g}% 감량", rate, delay)
+
+
+SWEEP_CANDIDATES = dict(reduction_candidate(rate, delay)
+                        for delay in SWEEP_DELAY_MINUTES for rate in SWEEP_REDUCTION_PCT)
+CANDIDATES = {"hold": ("현재 생산 목표 유지", 0, None), **SWEEP_CANDIDATES}
 COOLING_LABELS = {
     "XMEASADD(5)": "반응기 냉각수 입구 온도",
     "XMEASADD(6)": "반응기 냉각수 유량",
@@ -109,20 +117,30 @@ def choose_response(checkpoint, sop, readings):
 
 
 def run_branch(checkpoint, candidate):
-    label, delay_hours = CANDIDATES[candidate]
-    sim = TennesseeEastmanProcess()
-    sim.restore(checkpoint.native)
+    label, reduction, delay = CANDIDATES[candidate]
+    identity = {"id": candidate, "label": label, "reduction_pct": reduction, "delay_minutes": delay}
     controller = deepcopy(checkpoint.controller)
     measurements = checkpoint.measurements.copy()
     target = controller.setpoints.production_rate
-    delay_steps = None if delay_hours is None else round(delay_hours / STEP_HOURS)
+    delay_steps = None if delay is None else round(delay / 60 / STEP_HOURS)
     rows = [measurements]
+    alarm_tag = checkpoint.alarm["tag"]
+    signal_index = int(alarm_tag.split("(")[1].rstrip(")")) - 1
+    group = CHANNELS[alarm_tag]["group"]
     protected_steps = 0
     shutdown = None
     applied = False
+    sim = TennesseeEastmanProcess()
     try:
+        sim.restore(checkpoint.native)
+        if group == "measurements":
+            alarm_samples = [measurements[signal_index]]
+        elif group == "manipulated_variables":
+            alarm_samples = [checkpoint.observed[alarm_tag]]
+        else:
+            alarm_samples = [sim.kernel.outputs(sim.time, sim.state)[group][signal_index]]
         if delay_steps is not None:
-            target = adjustment({"op": "setpoint", "id": "production_rate", "value": target * 0.95})["value"]
+            target = adjustment({"op": "setpoint", "id": "production_rate", "value": target * (1 - reduction / 100)})["value"]
         for step in range(round(HORIZON_HOURS / STEP_HOURS)):
             if step == delay_steps:
                 controller.setpoints = replace(controller.setpoints, production_rate=target)
@@ -131,26 +149,42 @@ def run_branch(checkpoint, candidate):
             result = sim.advance(action, control_interval=STEP_HOURS, disturbances=checkpoint.idv)
             measurements = result.measurements
             rows.append(measurements)
+            alarm_signal = result.implemented_action if group == "manipulated_variables" else getattr(result, group)
+            alarm_samples.append(alarm_signal[signal_index])
             protected_steps += int(any(control.overrides_active.values()))
             if result.shutdown_status["terminated"]:
                 shutdown = result.shutdown_status
                 break
     except (RuntimeError, ValueError):
-        return {"id": candidate, "label": label, "error": "이 조건에서 분기를 계산할 수 없습니다."}
+        return {**identity, "error": "이 조건에서 분기를 계산할 수 없습니다."}
     finally:
         sim.kernel.close()
     matrix = np.asarray(rows)
     violations = np.zeros(len(rows) - 1, dtype=bool)
     for tag, (low, high) in OPERATING_LIMITS.items():
         series = matrix[1:, int(tag[6:-1]) - 1]
+        violations |= ~np.isfinite(series)
         if low is not None:
             violations |= series < low
         if high is not None:
             violations |= series > high
+    final_steps = min(len(violations), round(FINAL_WINDOW_HOURS / STEP_HOURS))
+    alarm_series = np.asarray(alarm_samples, dtype=float)
+    low, high = checkpoint.limits[alarm_tag]
+    outside = ~np.isfinite(alarm_series)
+    if low is not None:
+        outside |= alarm_series < low
+    if high is not None:
+        outside |= alarm_series > high
+    outside_steps = np.flatnonzero(outside)
+    recovery_step = int(outside_steps[-1]) + 1 if outside_steps.size else 0
     return finite_metrics({
-        "id": candidate, "label": label, "shutdown": shutdown,
+        **identity, "shutdown": shutdown,
         "window_hours": round((len(rows) - 1) * STEP_HOURS, 6),
         "violation_minutes": float(violations.sum() * STEP_HOURS * 60),
+        "final_window_inside": not bool(np.any(violations[-final_steps:])),
+        "alarm_final_window_inside": not bool(np.any(outside[-final_steps:])),
+        "alarm_recovery_minutes": None if outside[-1] else recovery_step * STEP_HOURS * 60,
         "protection_minutes": protected_steps * STEP_HOURS * 60,
         "peak_pressure": float(np.max(matrix[:, 6])),
         "peak_temperature": float(np.max(matrix[:, 8])),
@@ -161,7 +195,7 @@ def run_branch(checkpoint, candidate):
     })
 
 
-def analyze_alarm(checkpoint, trace_path):
+def evaluate_alarm(checkpoint):
     alarm = checkpoint.alarm
     sop = find_sop(alarm)
     readings = evidence(checkpoint, sop) if sop else []
@@ -180,7 +214,14 @@ def analyze_alarm(checkpoint, trace_path):
     }
     if sop and sop.get("candidates"):
         result["decision"] = choose_response(checkpoint, sop, readings)
-        result["branches"] = [run_branch(checkpoint, key) for key in sop["candidates"]]
+        baseline = run_branch(checkpoint, "hold")
+        variants = {key: run_branch(checkpoint, key) for key in SWEEP_CANDIDATES}
+        evaluated = {"hold": baseline, **variants}
+        result["branches"] = [evaluated[key] for key in sop["candidates"]]
+        result["sweep"] = {
+            "baseline": baseline, "delay_minutes": SWEEP_DELAY_MINUTES, "reduction_pct": SWEEP_REDUCTION_PCT,
+            "final_window_hours": min(HORIZON_HOURS, FINAL_WINDOW_HOURS), "branches": list(variants.values()),
+        }
     trace = {
         **result, "time_utc": timestamp(), "flow": "live_alarm_response", "kernel_revision": KERNEL_REVISION,
         "simulation_context": {
@@ -193,5 +234,10 @@ def analyze_alarm(checkpoint, trace_path):
             "evaluation_faults": [f"IDV({i + 1})" for i in np.flatnonzero(checkpoint.idv)],
         },
     }
+    return result, trace
+
+
+def analyze_alarm(checkpoint, trace_path):
+    result, trace = evaluate_alarm(checkpoint)
     result["logged"] = append_trace(trace_path, trace)
     return result

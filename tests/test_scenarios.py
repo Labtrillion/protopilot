@@ -146,6 +146,14 @@ class LiveScenarioTest(unittest.TestCase):
         self.assertEqual(result["decision"]["response"]["choice"], "reduce_30")
         self.assertEqual(result["start"]["step"], checkpoint.step)
         self.assertEqual([branch["action_applied"] for branch in result["branches"]], [False, True, True, True])
+        sweep = result["sweep"]
+        self.assertEqual(sweep["baseline"], result["branches"][0])
+        self.assertEqual(sweep["delay_minutes"], (0, 15, 30, 45, 60))
+        self.assertEqual(sweep["reduction_pct"], (1, 2.5, 5, 7.5, 10))
+        self.assertEqual([(branch["delay_minutes"], branch["reduction_pct"]) for branch in sweep["branches"]],
+                         [(delay, rate) for delay in sweep["delay_minutes"] for rate in sweep["reduction_pct"]])
+        self.assertTrue(all(branch["action_applied"] for branch in sweep["branches"]))
+        self.assertTrue(all("alarm_recovery_minutes" in branch for branch in sweep["branches"]))
         self.assertIn("/v1/systemone", request.call_args.args[0])
         self.assertNotIn("IDV", encode(request.call_args.args[1]))
         trace = json.loads(log.read_text())

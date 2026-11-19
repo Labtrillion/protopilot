@@ -6,26 +6,26 @@ import logging
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from threading import BoundedSemaphore, Event, RLock, Thread
+from threading import Event, RLock, Thread
 from urllib.parse import parse_qs, urlsplit
 
-from .alarm_response import analyze_alarm
+from .alarm_studies import AlarmStudies
 from .catalog import CHANNELS, METADATA
 from .plant import Plant, TICK_SECONDS
 from .recording import ArchivedRecording, encode
 
 ROOT = Path(__file__).resolve().parents[1]
-ALARM_STUDY = BoundedSemaphore()
 
 
 class ConsoleHandler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, plant, lock, **kwargs):
+    def __init__(self, *args, plant, lock, alarm_studies, **kwargs):
         self.plant = plant
         self.lock = lock
+        self.alarm_studies = alarm_studies
         super().__init__(*args, directory=str(ROOT / "dist"), **kwargs)
 
     def log_message(self, format, *args):
-        if args[1] not in ("200", "304"):
+        if args[1] not in ("200", "202", "304"):
             super().log_message(format, *args)
 
     def respond(self, body, status=200, *, attachment=None):
@@ -54,6 +54,9 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             self.respond(ArchivedRecording.list(self.plant.root))
         elif path.startswith("/api/recordings/"):
             self.archive(path, parse_qs(url.query))
+        elif path.startswith("/api/alarm-response/"):
+            job_id = path.removeprefix("/api/alarm-response/")
+            self.alarm_study_status(job_id, self.alarm_studies.get(job_id))
         elif path in ("/api/export/csv", "/api/export/json"):
             self.download(path.rsplit("/", 1)[1])
         else:
@@ -103,13 +106,24 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
         if checkpoint is None:
             self.respond({"error": "알람 발생 시점의 상태를 찾을 수 없습니다. 현재 기록에서 알람을 다시 선택하세요."}, 404)
             return
-        if not ALARM_STUDY.acquire(blocking=False):
-            self.respond({"error": "다른 알람을 비교 중입니다. 잠시 후 다시 시도하세요."}, 409)
+        job_id, job = self.alarm_studies.submit(checkpoint)
+        self.alarm_study_status(job_id, job, wait=body.get("wait") is not False)
+
+    def alarm_study_status(self, job_id, job, *, wait=False):
+        if job is None:
+            self.respond({"error": "비교 작업을 찾을 수 없습니다. 다시 비교를 눌러 주세요."}, 404)
+            return
+        status = "running" if job.running() else "queued"
+        if not wait and not job.done():
+            self.respond({"job_id": job_id, "status": status}, 202)
             return
         try:
-            self.respond(analyze_alarm(checkpoint, self.plant.root / "agent-trace.jsonl"))
-        finally:
-            ALARM_STUDY.release()
+            result = job.result()
+        except Exception:
+            logging.exception("Alarm comparison %s failed", job_id)
+            self.respond({"error": "대응 방안 계산에 실패했습니다. 다시 비교를 눌러 주세요."}, 500)
+            return
+        self.respond(result)
 
     def archive(self, path, query):
         try:
@@ -189,7 +203,8 @@ def main():
         parser.error("먼저 npm run build를 실행하세요.")
     lock, stop = RLock(), Event()
     plant = Plant(args.data)
-    handler = partial(ConsoleHandler, plant=plant, lock=lock)
+    alarm_studies = AlarmStudies(plant.root / "agent-trace.jsonl")
+    handler = partial(ConsoleHandler, plant=plant, lock=lock, alarm_studies=alarm_studies)
     with ThreadingHTTPServer(("127.0.0.1", args.port), handler) as server:
         thread = Thread(target=advance_forever, args=(plant, lock, stop), daemon=True)
         thread.start()
@@ -201,6 +216,7 @@ def main():
         finally:
             stop.set()
             thread.join()
+            alarm_studies.close()
 
 
 if __name__ == "__main__":

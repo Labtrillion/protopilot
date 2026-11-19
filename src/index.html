@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar" id="dashboard-topbar">
     <a class="brand" href="/" aria-label="ProtoPilot 홈"><span class="brand-mark" aria-hidden="true"></span>PROTOPILOT</a>
     <div class="site-label">Tennessee Eastman <span> / </span> 공정 시뮬레이터</div>
     <div class="global-status"><span id="connection" class="status"><i></i> 연결 중</span><span id="clock" class="clock" title="시뮬레이션 시간">00:00:00</span></div>
@@ -22,7 +22,7 @@
     </div>
   </header>
 
-  <main class="console" id="console" data-pane="plant">
+  <main class="console" id="console" data-pane="plant" tabindex="-1">
     <div class="segments console-switch" role="group" aria-label="관제 화면">
       <button type="button" data-pane-target="plant" aria-controls="plant-panel" aria-pressed="true">공정도</button>
       <button type="button" data-pane-target="pipes" aria-controls="pipe-details" aria-pressed="false">배관</button>
@@ -246,6 +246,33 @@
       <div class="dialog-actions"><button type="submit" id="load-scenario" class="solid">불러와 재실행 준비</button></div>
     </form>
   </dialog>
+  <main class="simulation-results" id="simulation-results" aria-labelledby="simulation-title" hidden>
+    <div class="simulation-layout">
+      <button type="button" id="simulation-back"><span aria-hidden="true">←</span> 대시보드</button>
+      <header class="simulation-heading">
+        <p class="context-label" id="simulation-kind">알람 대응 시뮬레이션</p>
+        <h1 id="simulation-title" tabindex="-1"></h1>
+        <p id="simulation-context"></p>
+        <p id="simulation-sensor-note" class="simulation-note" hidden>센서 시험 전의 모델 측정값으로 비교했습니다.</p>
+      </header>
+      <section aria-labelledby="simulation-cards-title">
+        <h2 id="simulation-cards-title">대응안 비교</h2>
+        <div id="simulation-sweep" hidden>
+          <div class="simulation-verdict" id="simulation-verdict"></div>
+          <details class="simulation-baseline" id="simulation-baseline">
+            <summary>SOP 기준안 상세</summary>
+            <div class="simulation-card" id="simulation-baseline-card"></div>
+          </details>
+          <div class="simulation-sweep-rows" id="simulation-sweep-cards"></div>
+        </div>
+        <ul class="simulation-grid" id="simulation-cards" role="list"></ul>
+      </section>
+      <details class="simulation-scoring" id="simulation-scoring">
+        <summary>점수 산정 기준</summary>
+        <ul id="simulation-rubric"></ul>
+      </details>
+    </div>
+  </main>
   <dialog id="alarm-response-dialog" aria-labelledby="alarm-response-title">
     <div class="dialog-head">
       <div><p class="context-label">알람 대응</p><h2 id="alarm-response-title"></h2><p id="alarm-response-context"></p></div>
@@ -258,6 +285,7 @@
     <form method="dialog" class="dialog-actions">
       <button type="submit">닫기</button>
       <button id="retry-alarm-response" type="button" class="solid" hidden>다시 비교</button>
+      <button id="open-simulation-results" type="button" class="solid" data-icon="arrow" hidden>시뮬레이션 결과 보기</button>
     </form>
   </dialog>
   <div id="notice" class="notice" role="status" hidden></div>

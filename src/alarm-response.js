@@ -56,11 +56,11 @@ function renderDetailTable(branches) {
   </div>`;
 }
 
-function renderComparison({ branches, start, decision, alarm }) {
+function renderComparison({ branches, start, decision, alarm, sweep }) {
   const sensorTest = alarm.source === '센서 시험';
   const unavailable = branches.filter((branch) => branch.error);
   return `<section class="study-section">
-    <div class="study-heading"><h3>대응별 시뮬레이션 결과</h3><span>비교 시간 최대 ${elapsed(start.horizon_hours)}</span></div>
+    <div class="study-heading"><h3>SOP 대응안 비교</h3><span>${sweep ? `대안 ${sweep.branches.length}개 계산 · ` : ''}비교 시간 최대 ${elapsed(start.horizon_hours)}</span></div>
     ${renderSummary(branches, decision.response.choice)}
     <p class="study-note">알람이 발생한 상태에서 시작하며, 이탈 시간은 TEP 모델의 운전 범위를 기준으로 계산합니다.</p>
     ${sensorTest ? '<p class="study-note">센서 시험 전의 모델 측정값으로 비교했습니다.</p>' : ''}
@@ -98,33 +98,45 @@ function renderResult(data) {
   ${data.logged ? '' : '<p class="study-note" role="status">실행 로그를 저장하지 못했습니다.</p>'}`;
 }
 
-export function mountAlarmResponse(request) {
+export function mountAlarmResponse(request, openSimulationResults) {
   const dialog = byId('alarm-response-dialog');
   const status = byId('alarm-response-status');
   const result = byId('alarm-response-result');
   const retry = byId('retry-alarm-response');
-  let selection;
+  const simulations = byId('open-simulation-results');
+  let selection, study;
   let requestNumber = 0;
 
   async function compare() {
     const number = ++requestNumber;
-    status.textContent = '알람 기록을 불러와 대응을 확인하는 중입니다.';
+    const isCurrent = () => number === requestNumber && dialog.open;
+    status.textContent = '대응 방안 비교를 요청하고 있습니다.';
     status.removeAttribute('data-error');
     result.hidden = true;
-    retry.hidden = true;
+    retry.hidden = simulations.hidden = true;
+    study = undefined;
     try {
-      const data = await request('/api/alarm-response', {
+      let data = await request('/api/alarm-response', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ run: selection.run, alarm_id: selection.alarm.id }),
-        signal: AbortSignal.timeout(60000),
+        body: JSON.stringify({ run: selection.run, alarm_id: selection.alarm.id, wait: false }),
       });
-      if (number !== requestNumber || !dialog.open) return;
+      while (isCurrent() && data.job_id) {
+        const message = data.status === 'queued' ? '비교 대기 중입니다. 실행 중인 작업이 끝나면 자동으로 시작합니다.'
+          : '알람 시점의 공정 상태에서 SOP와 대안을 계산하고 있습니다.';
+        if (status.textContent !== message) status.textContent = message;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (!isCurrent()) return;
+        data = await request(`/api/alarm-response/${encodeURIComponent(data.job_id)}`);
+      }
+      if (!isCurrent()) return;
       result.innerHTML = renderResult(data);
       result.hidden = false;
+      study = data;
+      simulations.hidden = !study.branches.length;
       status.textContent = '';
     } catch (error) {
-      if (number !== requestNumber || !dialog.open) return;
+      if (!isCurrent()) return;
       status.textContent = error.name === 'TimeoutError' ? '비교 요청 시간이 초과됐습니다.'
         : error instanceof TypeError ? '서버에 연결할 수 없습니다. 연결을 확인하고 다시 시도하세요.' : error.message;
       status.dataset.error = 'true';
@@ -134,6 +146,11 @@ export function mountAlarmResponse(request) {
 
   byId('close-alarm-response').addEventListener('click', () => dialog.close());
   retry.addEventListener('click', compare);
+  simulations.addEventListener('click', () => {
+    if (!study?.branches.length) return;
+    dialog.close();
+    openSimulationResults(study);
+  });
   return {
     open(run, alarm) {
       if (dialog.open) return;
