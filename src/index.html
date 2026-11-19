@@ -135,13 +135,54 @@
           </table>
         </div>
       </div>
-      <div id="response-view" class="response-view" hidden>
+      <div id="response-view" class="response-view" role="region" aria-label="SP 응답" tabindex="0" hidden>
         <div class="response-controls">
           <label><span class="sr-only">추적할 설정값</span><select id="response-select" disabled></select></label>
-          <div class="response-legend"><span><i></i>PV 실측</span><span><i></i>SP 목표</span></div>
         </div>
         <div id="response-values" class="response-values"></div>
-        <div class="response-chart-wrap"><canvas id="response-chart" aria-label="시간에 따른 설정값과 계측값"></canvas></div>
+        <div class="response-chart-head">
+          <div class="response-legend"><span><i></i>PV 실측</span><span><i class="response-command"></i>SP 목표</span>
+            <span id="response-change-marker" hidden><i class="response-change"></i>SP 변경</span></div>
+          <span id="response-window" title="시뮬레이션 시간 기준">최근 30분</span>
+        </div>
+        <canvas id="response-chart" class="response-chart" role="img" aria-label="시간에 따른 설정값과 계측값"></canvas>
+        <section id="response-valve" class="response-section" aria-labelledby="response-valve-title" hidden>
+          <div class="response-chart-head">
+            <h3 id="response-valve-title">밸브 응답</h3><code id="response-valve-tag"></code>
+          </div>
+          <div class="response-legend response-valve-legend">
+            <span><i class="response-command"></i>명령 <b id="response-valve-command">—</b></span>
+            <span><i></i>실제 개도 <b id="response-valve-position">—</b></span>
+          </div>
+          <canvas id="response-valve-chart" class="response-chart valve-chart" role="img" aria-label="시간에 따른 밸브 명령과 실제 개도"></canvas>
+        </section>
+        <section class="response-section response-adjustment" aria-labelledby="response-adjustment-title">
+          <h3 id="response-adjustment-title">조정 요약</h3>
+          <p id="response-adjustment">이 실행에서 SP 변경 기록이 없습니다.</p>
+          <p id="response-adjustment-time" hidden></p>
+          <p>현재 편차 (PV − SP) <b id="response-deviation">—</b></p>
+        </section>
+        <section id="response-connected" class="response-section response-connected" aria-labelledby="response-connected-title" hidden>
+          <div class="response-chart-head">
+            <h3 id="response-connected-title">연결 설비 반응</h3><code>R-101 → E-101 → V-101</code>
+          </div>
+          <div class="response-connected-signal">
+            <div class="response-chart-head"><h4>분리기 압력</h4><code>XMEAS(13)</code></div>
+            <div class="response-legend">
+              <span>현재 <b id="response-separator-pressure-value">—</b></span>
+              <span>SP 변경 대비 <b id="response-separator-pressure-delta">—</b></span>
+            </div>
+            <canvas id="response-separator-pressure-chart" class="response-chart compact-chart" role="img" aria-label="분리기 압력 추세"></canvas>
+          </div>
+          <div class="response-connected-signal">
+            <div class="response-chart-head"><h4>분리기 액위</h4><code>XMEAS(12)</code></div>
+            <div class="response-legend">
+              <span>현재 <b id="response-separator-level-value">—</b></span>
+              <span>SP 변경 대비 <b id="response-separator-level-delta">—</b></span>
+            </div>
+            <canvas id="response-separator-level-chart" class="response-chart compact-chart with-time" role="img" aria-label="분리기 액위 추세"></canvas>
+          </div>
+        </section>
       </div>
     </section>
   </main>

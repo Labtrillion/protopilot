@@ -364,10 +364,18 @@ class Plant:
             self.event("change", entry["label"] + (" · 자동" if value is None else " · 수동"), entry["area"], tag=tag, value=value)
         elif op == "setpoint" and tag in SETPOINTS:
             label, _, area, _, _ = SETPOINTS[tag]
+            previous = getattr(self.controller.setpoints, tag)
             target = getattr(self.base_setpoints, tag) if value is None else value
             self.controller.setpoints = replace(self.controller.setpoints, **{tag: target})
             self.metrics.setpoints = self.controller.setpoints
-            self.event("change", label + " 설정값 변경", area, tag=tag, value=target)
+            fields = {"tag": tag, "value": target, "previous_value": previous}
+            if tag == "reactor_pressure" and target != previous:
+                # Preserve the native readings at this step even if a dashboard poll skips it.
+                fields["separator_readings"] = finite_metrics({
+                    "XMEAS(13)": float(self.measurements[12]),
+                    "XMEAS(12)": float(self.measurements[11]),
+                })
+            self.event("change", label + " 설정값 변경", area, **fields)
             self.capture()
         elif op == "disturbance":
             i = int(tag[4:-1]) - 1

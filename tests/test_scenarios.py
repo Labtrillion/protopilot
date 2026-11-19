@@ -37,6 +37,10 @@ class LiveScenarioTest(unittest.TestCase):
         plant.command({"op": "pressure_test"})
         plant.tick()
         expected = plant.latest
+        original_adjustments = [
+            (e["tag"], e["time_hours"], e["previous_value"], e["value"])
+            for e in plant.events if e.get("tag") in expected["setpoints"]
+        ]
         original = ArchivedRecording.open(self.root, plant.recording.id)
         scenario = json.loads(encode(original.scenario()))
         self.assertEqual(original.series("XMEAS(7)")["points"][-1][1], expected["values"]["XMEAS(7)"])
@@ -49,8 +53,38 @@ class LiveScenarioTest(unittest.TestCase):
         for key in ("step", "time_hours", "values", "native_values", "actuators", "control",
                     "hours_since_onset", "setpoints", "derived", "metrics", "shutdown"):
             self.assertEqual(expected[key], plant.latest[key], key)
+        replayed_adjustments = [
+            (e["tag"], e["time_hours"], e["previous_value"], e["value"])
+            for e in plant.events if e.get("tag") in expected["setpoints"]
+        ]
+        self.assertEqual(len(original_adjustments), 2)
+        self.assertEqual(original_adjustments, replayed_adjustments)
         self.assertFalse(any(plant.protection.values()))
         self.assertTrue(any(alarm["source"] == "센서 시험" for alarm in plant.active.values()))
+
+    def test_pressure_adjustment_records_native_separator_readings_at_its_step(self):
+        plant = self.plant
+        plant.tick()
+        plant.command({"op": "offset", "id": "XMEAS(13)", "value": 50})
+        baseline = {
+            "XMEAS(13)": plant.latest["native_values"]["XMEAS(13)"],
+            "XMEAS(12)": plant.latest["values"]["XMEAS(12)"],
+        }
+        change_time = plant.latest["time_hours"]
+        plant.command({"op": "setpoint", "id": "reactor_pressure", "value": 2645})
+        change = next(event for event in plant.events if event.get("tag") == "reactor_pressure")
+        self.assertEqual(change["time_hours"], change_time)
+        self.assertEqual(change["separator_readings"], baseline)
+
+        plant.tick()
+        scenario = plant.scenario()
+        plant.command({"op": "replay_scenario", "scenario": scenario})
+        plant.command({"op": "run", "enabled": True})
+        while plant.running:
+            plant.tick()
+        replayed = next(event for event in plant.events if event.get("tag") == "reactor_pressure")
+        self.assertEqual(replayed["time_hours"], change_time)
+        self.assertEqual(replayed["separator_readings"], baseline)
 
     def test_invalid_upload_leaves_the_active_run_untouched(self):
         plant = self.plant
