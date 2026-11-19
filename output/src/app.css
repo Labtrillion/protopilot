@@ -80,6 +80,38 @@ select {
   background-repeat: no-repeat;
   text-overflow: ellipsis;
 }
+@supports (appearance: base-select) and selector(select::picker(select)) {
+  select, select::picker(select) { appearance: base-select; }
+  select::picker-icon, select option::checkmark { display: none; }
+  select::picker(select) {
+    position-area: block-end span-inline-end;
+    position-try-fallbacks: flip-block;
+    min-inline-size: anchor-size(self-inline);
+    max-inline-size: 100%;
+    max-block-size: min(18rem, calc(50dvh - var(--control-size)));
+    margin: 0.2rem 0;
+    padding: 0.2rem 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 0;
+    outline: none;
+    box-shadow: none;
+    background: var(--surface);
+    color: var(--text);
+  }
+  select option {
+    display: block;
+    padding: 0.42rem 0.56rem;
+    border: 0;
+    outline: none;
+    color: inherit;
+    background: transparent;
+    font-weight: inherit;
+    overflow-wrap: anywhere;
+  }
+  select option:disabled { color: var(--disabled-text); }
+  :root:not([data-pointer-focus]) select option:focus-visible { text-decoration: underline; }
+}
 @media (forced-colors: active) {
   select { appearance: auto; padding-right: 0.56rem; background-image: none; }
 }

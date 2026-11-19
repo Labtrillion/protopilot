@@ -244,7 +244,10 @@ function attachEvents() {
   const root = document.documentElement;
   document.addEventListener('pointerdown', () => root.setAttribute('data-pointer-focus', ''), true);
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Tab') root.removeAttribute('data-pointer-focus');
+    const selectNavigation = ['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key) && event.target.closest?.('select');
+    if (event.key === 'Tab' || selectNavigation) {
+      root.removeAttribute('data-pointer-focus');
+    }
   }, true);
 
   run.addEventListener('click', () => doCommand({ op: 'run', enabled: !status.running }));
