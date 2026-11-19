@@ -226,8 +226,8 @@ tr.alarm-row :is(.numeric > span, .channel-state, .channel-id code) { color: var
 .alarm-footer button { font-size: 0.82rem; }
 .alarm-footer button:first-child svg { color: var(--warning); }
 .event { --event-color: var(--subtext); border: 1px solid var(--line); border-radius: 5px; background: var(--raised); margin-bottom: 0.47rem; }
-.event.warning { --event-color: var(--warning); border-color: var(--warning-line); background: var(--warning-bg); }
-.event.trip { --event-color: var(--danger); border-color: var(--danger-line); background: var(--danger-bg); }
+.event.warning { --event-color: var(--warning); background: var(--warning-bg); }
+.event.trip { --event-color: var(--danger); background: var(--danger-bg); }
 .event.clear { --event-color: var(--ok); }
 .event-head { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font: 0.72rem var(--mono); }
 .event-kind { color: var(--event-color); font: 700 0.78rem sans-serif; }
@@ -416,12 +416,12 @@ dialog::backdrop { background: var(--scrim); }
 
 .stage-signal {
   display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.15rem 0.56rem; min-width: 0;
-  align-items: baseline; padding: 0.18rem 0.38rem; border: 1px solid var(--tracked-line);
+  align-items: baseline; padding: 0.18rem 0.38rem; border: 1px solid var(--line);
   border-radius: 3px; background: var(--inset); color: var(--tracked); text-align: right;
 }
 .stage-signal code { font: 0.75rem var(--mono); }
 .stage-signal b { font: 650 0.85rem var(--mono); color: var(--text); white-space: nowrap; }
-.stage-signal.alarming { border-color: var(--warning-line); background: var(--warning-bg); color: var(--warning); }
+.stage-signal.alarming { background: var(--warning-bg); color: var(--warning); }
 .stage-signal.alarming b { color: var(--warning); }
 .signal-panel { flex: none; border-top: 1px solid var(--line); background: var(--panel); }
 .signal-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.45rem 1rem; padding: 0.46rem 0.72rem; border-bottom: 1px solid var(--line-soft); }
@@ -529,13 +529,11 @@ dialog::backdrop { background: var(--scrim); }
 .channel-scope button { padding: 0.2rem 0.55rem; font-size: 0.78rem; }
 .kpi-state { display: block; min-height: 0.9rem; margin-top: 0.12rem; font: normal 600 0.68rem var(--mono); color: var(--tracked); position: relative; z-index: 1; overflow-wrap: anywhere; }
 .kpis button.alarming .kpi-state { color: var(--warning); }
-.kpis button.tested { box-shadow: inset 0 0 0 1px var(--warning-line); }
 .kpis button.tested .kpi-state { color: var(--warning); }
 .kpis button.tested:not(.alarming) b, .inspect-value.tested:not(.alarming) b, tr.tested-row:not(.alarm-row) .numeric > span, .pressure-overview button.tested:not(.alarming) small { color: var(--warning); }
 tr.tested-row .channel-state { color: var(--warning); }
 tr.selected-row:not(.alarm-row, .tested-row) .channel-state { color: var(--tracked); }
-.stage-signal.tested:not(.alarming) { border-style: dashed; border-color: var(--warning-line); }
-.response-values .response-test { grid-column: 1 / -1; border-style: dashed; border-color: var(--warning-line); background: var(--warning-bg); }
+.response-values .response-test { grid-column: 1 / -1; background: var(--warning-bg); }
 .response-values .response-test b { color: var(--warning); }
 .response-values .response-test span:last-child { margin-top: 0.12rem; color: var(--warning); font: 0.72rem var(--mono); }
 .stage-meta { flex-wrap: wrap; }
