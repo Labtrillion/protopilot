@@ -1,133 +1,50 @@
-import { Vector3 } from 'three';
-import { ANALYZER_TAPS, AREAS, CORE_PRESSURES, MEDIA, PIPE_JUNCTIONS, STREAMS, codeFor, streamMatchesTag } from './topology.js';
-import { OVERVIEW, VESSELS, pipePath, sampleRoute, valvePosition } from './layout.js';
+import { AREAS, CORE_PRESSURES, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
+import { ANCHORS, BODIES, JUNCTIONS, ROUTES, SAMPLES, VALVES, VIEWBOX } from './schematic.js';
 import { reading } from './ui.js';
 
-// Use the same orthographic axes and framing as the default 3D overview.
-const UNITS = 25;
-const WIDTH = 2 * OVERVIEW.halfWidth * UNITS;
-const HEIGHT = 2 * OVERVIEW.halfHeight * UNITS;
-const origin = new Vector3(...OVERVIEW.target);
-const eye = new Vector3(...OVERVIEW.offset).normalize();
-const right = new Vector3(0, 1, 0).cross(eye).normalize();
-const up = eye.clone().cross(right);
-const streamPaths = new Map(STREAMS.map(({ id, points }) => [id, pipePath(points)]));
-
-function project(point) {
-  return [WIDTH / 2 + UNITS * (right.dot(point) - right.dot(origin)),
-    HEIGHT / 2 - UNITS * (up.dot(point) - up.dot(origin))];
-}
-
-function atArea(area, elevation) {
-  const [x, y, z] = AREAS[area].position;
-  return project(new Vector3(x, y + elevation, z));
-}
-
-function svgPath(path) {
-  const point = (vector) => project(vector).map((n) => n.toFixed(2)).join(' ');
-  return `M${point(path.getPoint(0))}` + path.curves.map((curve) =>
-    curve.type === 'LineCurve3' ? `L${point(curve.v2)}` : `Q${point(curve.v1)} ${point(curve.v2)}`).join('');
-}
-
-const rect = (x, y, w, h, r = 4) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/>`;
-const path = (d) => `<path d="${d}"/>`;
+// Orthogonal routing reads left-to-right. Only solid dots indicate a pipe junction.
+const routePath = (points) => 'M' + points.map(([x, y]) => `${x} ${y}`).join('L');
+const METERS = [
+  ['05', 554, 112], ['06', 222, 300], ['07', 357, 128], ['08', 693, 67],
+  ['09', 819, 131], ['10', 824, 266], ['11', 983, 407], ['12', 371, 384], ['13', 517, 316],
+];
+const LEVELS = {
+  reactor: { tag: 8, body: BODIES.reactor, datum: 354, range: 65 },
+  separator: { tag: 12, body: BODIES.separator, datum: 278, range: 42 },
+  stripper: { tag: 15, body: BODIES.stripper, datum: 379, range: 41 },
+};
+const FLOW_READOUTS = {
+  '06': [205, 326], '08R': [510, 63], '10': [747, 310], '11': [971, 400],
+};
 const symbol = (area, shape) => `<g class="pfd-symbol" data-symbol="${area}">${shape}</g>`;
-
-const vesselBodies = Object.fromEntries(Object.entries(VESSELS).map(([area, spec]) => {
-  const [cx, bottom] = atArea(area, spec.bottom - spec.radius * 0.37);
-  const [, top] = atArea(area, spec.top + spec.radius * 0.42);
-  const r = spec.radius * UNITS;
-  return [area, [cx - r, top, 2 * r, bottom - top, r * 0.74]];
-}));
-
-function vesselSymbol(area, [x, y, width, height, radius]) {
-  const rows = area === 'stripper' ? [0.22, 0.30, 0.38, 0.46] : area === 'reboiler' ? [0.34, 0.43, 0.52, 0.61] : [];
-  const details = rows.map((row) => `M${x + 3} ${y + height * row}h${width - 6}`).join('');
-  const agitator = area === 'reactor'
-    ? `M${x + width / 2} ${y}v${height * 0.70}m-16 0h32m-16-12h-14m14 0h14`
-    : '';
-  return symbol(area, rect(x, y, width, height, radius) + (details || agitator ? path(details + agitator) : ''));
-}
-
-function rotarySymbol(area, elevation, from, to, radius) {
-  const [x, y] = atArea(area, elevation);
-  const [x1, y1] = project(from), [x2, y2] = project(to);
-  const rotation = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-  return symbol(area, `<g transform="translate(${x} ${y}) rotate(${rotation})">
-    <circle r="${radius}"/>${path(`M${-radius * 0.35} ${-radius * 0.5}L${radius * 0.6} 0 ${-radius * 0.35} ${radius * 0.5}Z`)}</g>`);
-}
+const rect = (x,y,w,h,r = 4) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/>`;
+const path = (d) => `<path d="${d}"/>`;
+const vessel = (x,y,w,h) => rect(x,y,w,h,w / 2.3);
+const pump = (x,y) => `<circle cx="${x}" cy="${y}" r="15"/><path d="M${x-15} ${y}h-6m36 0h6m-29-6 11 6-11 6z"/>`;
+const ports = [
+  [36,170,'A'], [36,214,'D'], [36,258,'E'], [36,414,'A/C'],
+  [268,389,'CWS'],[268,447,'CWR'],[1040,139,'PURGE'],[1040,295,'STM'],
+  [1040,355,'COND'],[1040,414,'PRODUCT'],
+];
+const anchors = Object.entries(ANCHORS);
 
 function equipment() {
-  const [cx, cy] = atArea('condenser', 3.43);
-  const yaw = Math.atan2(-up.x, right.x) * 180 / Math.PI;
-  const condenser = `<g transform="translate(${cx} ${cy}) rotate(${yaw})">
-    ${rect(-48, -17, 96, 34, 14)}${path('M-34-17v34M34-17v34M-27-4h54m-54 8h54')}</g>`;
   return [
-    ...Object.entries(vesselBodies).map(([area, body]) => vesselSymbol(area, body)),
-    symbol('condenser', condenser),
-    rotarySymbol('compressor', 1.13, streamPaths.get('08I').getPoint(1), streamPaths.get('08R').getPoint(0), 27),
-    rotarySymbol('pump_sep', 0.70, streamPaths.get('10S').getPoint(1), streamPaths.get('10').getPoint(0), 11),
-    rotarySymbol('pump_prod', 0.70, streamPaths.get('11S').getPoint(1), streamPaths.get('11').getPoint(0), 11),
-    ...Object.keys(ANALYZER_TAPS).map((area) => {
-      const [x, y] = atArea(area, 0.87);
-      return symbol(area, rect(x - 10, y - 14, 20, 28, 3) + path(`M${x - 6} ${y - 7}h12v7h-12Z`));
-    }),
+    symbol('reactor', vessel(...BODIES.reactor) + path('M294 231v100m-17-15h34m-31 16h28M334 285h-29q-13 0-13 9t13 8h14q9 0 9 8v9h10')),
+    symbol('condenser', rect(...BODIES.condenser,15) + path('M423 146v38m98-38v38m-91-24h82m-82 9h82')),
+    symbol('separator', vessel(...BODIES.separator) + path('M701 254h56m-55 3h54M697 234h27v13')),
+    symbol('compressor', pump(604,76) + path('M562 76h21m42 0h20m-28-15 12-7v44l-12-7')),
+    symbol('stripper', vessel(...BODIES.stripper) + path('M859 285h62m0 10h-62m0 10h62m0 10h-62m3 39h56')),
+    symbol('reboiler', vessel(...BODIES.reboiler) + path('M960 302h26m-26 6h26m-26 6h26m-26 6h26m-26 6h26m-26 6h26')),
+    symbol('pump_sep', pump(771,327)), symbol('pump_prod', pump(945,414)),
+    symbol('gc_feed', rect(...BODIES.gc_feed)), symbol('gc_purge', rect(...BODIES.gc_purge)),
+    symbol('gc_product', rect(...BODIES.gc_product)),
   ].join('');
-}
-
-// Keep labels beside the projected equipment, and offset text from the lines it annotates.
-const anchors = Object.entries({
-  feeds: [1.6, 0, -62], reactor: [6.66, 0, -7], condenser: [4.19, 0, -8],
-  separator: [5.13, 26, -4], compressor: [1.13, -1, 47], stripper: [7.66, -26, -6],
-  reboiler: [2.93, 10, -12], purge: [1.2, 0, -17], product: [0.70, 0, 34],
-  pump_sep: [0.70, -25, 21], pump_prod: [0.70, -28, 20],
-  gc_feed: [0.87, -27, 9], gc_purge: [0.87, 25, -1], gc_product: [0.87, -36, 4],
-}).map(([area, [height, dx, dy]]) => {
-  const [x, y] = atArea(area, height);
-  return [area, [x + dx, y + dy]];
-});
-const anchorsByArea = new Map(anchors);
-
-const valves = STREAMS.filter((stream) => stream.valve).map(({ id, valve: [number, distance] }) => {
-  const { point, tangent } = valvePosition(streamPaths.get(id), distance);
-  const [x, y] = project(point);
-  const degrees = Math.atan2(-up.dot(tangent), right.dot(tangent)) * 180 / Math.PI;
-  // Keep the actuator handle above a near-horizontal pipe in either flow direction.
-  const rotation = ((degrees + 270) % 180) - 90;
-  return [number, x, y, rotation];
-});
-const LEVELS = Object.fromEntries(Object.entries(VESSELS).filter(([, spec]) => spec.levelTag).map(([area, spec]) => {
-  const body = vesselBodies[area];
-  const [, , , height] = body;
-  return [area, { tag: spec.levelTag, body, datum: body[1] + height - 4, range: height * 0.51 }];
-}));
-
-const portEnds = [
-  ['01', 'A', 'start', 'left'], ['02', 'D', 'start', 'left'],
-  ['03', 'E', 'start', 'left'], ['04', 'A/C', 'start', 'left'],
-  ['CWS', 'CWS', 'start', 'left'], ['CWR', 'CWR', 'end', 'left'],
-  ['09', 'PURGE', 'end', 'right'],
-  ['CD', 'COND', 'end', 'right', 39, -14], ['11', 'PRODUCT', 'end', 'right', 39, 0],
-  ['ST', 'STM', 'start', 'right', 53, 18],
-];
-
-const meters = [
-  ['05', 0.40, 2, -8], ['06', 0.20, 0, -8], ['07', 0.41, 0, -6], ['08', 0.27, -10, -7],
-  ['09', 0.77, 0, -7], ['10', 0.57, -23, -5], ['11', 0.76, 0, -7],
-  ['12', 0.26, -22, -4], ['13', 0.48, 0, -7],
-];
-const flowReadouts = [
-  ['06', 0.02, 7, 17], ['08R', 0.51, -34, -7], ['10', 0.10, 17, 17], ['11', 0.02, 24, -10],
-];
-
-function annotation([id, fraction, dx, dy]) {
-  const [x, y] = project(streamPaths.get(id).getPointAt(fraction));
-  return [id, x + dx, y + dy];
 }
 
 export function mountDiagram(host, selectArea, selectCircuit, openValve) {
   const lines = STREAMS.map((stream) => {
-    const d = svgPath(streamPaths.get(stream.id));
+    const d = routePath(ROUTES[stream.id]);
     const { colorToken } = MEDIA[stream.media];
     const hit = stream.circuit ? `<path class="pipe-hit" d="${d}" vector-effect="non-scaling-stroke"/>` : '';
     return `<g class="pfd-stream" data-stream="${stream.id}" data-circuit="${stream.circuit ?? ''}" style="--pipe:var(${colorToken})">
@@ -137,45 +54,36 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
   }).join('');
   const arrows = Object.entries({ ...MEDIA, tracked: { colorToken: '--tracked' }, muted: { colorToken: '--pipe-muted' } }).map(([id, { colorToken }]) =>
     `<marker id="arrow-${id}" viewBox="0 0 9 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 9 4 0 8 2 4Z" fill="var(${colorToken})"/></marker>`).join('');
-  const portsMarkup = portEnds.map(([id, name, end, side, dx = 0, dy = 0]) => {
-    const [x, y] = project(streamPaths.get(id).getPoint(end === 'start' ? 0 : 1));
-    const width = name.length > 4 ? 59 : 33;
-    const left = x + dx - (side === 'left' ? width : 0);
-    const baseline = y + dy;
-    const leader = dx || dy ? `<path d="M${x} ${y}L${x + dx - 12} ${baseline}H${x + dx}"/>` : '';
-    return `<g class="pfd-port">${leader}${rect(left, baseline - 8, width, 16, 3)}
-      <text x="${left + width / 2}" y="${baseline + 4}">${name}</text></g>`;
-  }).join('');
-  const meterMarkup = meters.map(annotation).map(([id, x, y]) => `<text class="pfd-id" x="${x}" y="${y}">#${id}</text>`).join('');
+  const portsMarkup = ports.map(([x,y,name]) =>
+    `<g class="pfd-port" transform="translate(${x} ${y})"><rect x="0" y="-10" width="${x === 1040 ? 78 : 47}" height="20" rx="3"/>
+      <text x="${x === 1040 ? 39 : 23}" y="4">${name}</text></g>`).join('');
+  const meterMarkup = METERS.map(([id,x,y]) => `<text class="pfd-id" x="${x}" y="${y}">#${id}</text>`).join('');
   const target = '<rect class="pfd-hit" aria-hidden="true" rx="3"/>';
-  const valveMarkup = valves.map(([id, x, y, r]) => `<g class="pfd-valve" data-valve="XMV(${id})" tabindex="0" role="button" aria-label="XMV(${id}) 밸브 조정" transform="translate(${x} ${y}) rotate(${r})">
+  const valves = VALVES.map(([id,x,y,r = 0]) => `<g class="pfd-valve" data-valve="XMV(${id})" tabindex="0" role="button" aria-label="XMV(${id}) 밸브 조정" transform="translate(${x} ${y}) rotate(${r})">
     ${target}<path d="M-8-5 8 5V-5L-8 5ZM0 0v-8m-4 0h8"/></g>`).join('');
   const labels = anchors.map(([id, [x, y]]) => {
     const { code, name } = AREAS[id];
     return `<g class="pfd-unit" role="button" tabindex="0" data-area="${id}" aria-label="${code} ${name}" transform="translate(${x} ${y})">
       <title>${name}</title>${target}<rect class="pfd-chip" x="-22" y="-12" width="44" height="17" rx="3"/><text y="0">${code}</text></g>`;
   }).join('');
-  const levelClips = Object.entries(LEVELS).map(([id, { body }]) => `<clipPath id="level-clip-${id}">${rect(...body)}</clipPath>`).join('');
+  const levelClips = Object.entries(LEVELS).map(([id, { body }]) => `<clipPath id="level-clip-${id}">${vessel(...body)}</clipPath>`).join('');
   const levelLayers = Object.entries(LEVELS).map(([id, { body, datum }]) => {
     const [x, , w] = body;
     return `<g class="pfd-level" data-level="${id}" clip-path="url(#level-clip-${id})" aria-hidden="true">
       <rect x="${x}" y="${datum}" width="${w}" height="0"/><line x1="${x + 4}" x2="${x + w - 4}" y1="${datum}" y2="${datum}"/></g>`;
   }).join('');
   const readouts = anchors.filter(([id]) => id in CORE_PRESSURES).map(([id, [x, y]]) =>
-    `<text class="pfd-pressure" data-pressure="${id}" x="${x + 28}" y="${y + (id === 'reactor' ? 12 : 0)}"></text>`
+    `<text class="pfd-pressure" data-pressure="${id}" x="${x + 32}" y="${y - 8}"></text>`
   ).join('');
-  const flowMarkup = flowReadouts.map(annotation).map(([id, x, y]) =>
+  const flowReadouts = Object.entries(FLOW_READOUTS).map(([id, [x, y]]) =>
     `<text class="pfd-flow-reading" data-flow-reading="${id}" x="${x}" y="${y}"></text>`
   ).join('');
-  const samples = Object.keys(ANALYZER_TAPS).map((area) => path(svgPath(pipePath(sampleRoute(area))))).join('');
-  const junctions = PIPE_JUNCTIONS.map((point) => {
-    const [x, y] = project(new Vector3(...point));
-    return `<circle cx="${x}" cy="${y}" r="3"/>`;
-  }).join('');
-  host.innerHTML = `<svg role="group" aria-label="Tennessee Eastman 공정 흐름도" class="pfd-svg" viewBox="0 0 ${WIDTH} ${HEIGHT}">
+  const samples = Object.values(SAMPLES).flatMap(([, from, to]) => routePath([from, to])).join('');
+  host.innerHTML = `<svg role="group" aria-label="Downs와 Vogel Fig. 1 공정 흐름도" class="pfd-svg" viewBox="0 0 ${VIEWBOX.join(' ')}">
     <defs>${arrows}${levelClips}</defs>${lines}
-    <g class="pfd-samples">${samples}</g><g class="pfd-junctions">${junctions}</g>
-    ${equipment()}${levelLayers}${valveMarkup}${portsMarkup}${meterMarkup}${labels}${readouts}${flowMarkup}</svg>`;
+    <g class="pfd-samples">${path(samples)}</g>
+    <g class="pfd-junctions">${JUNCTIONS.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3"/>`).join('')}</g>
+    ${equipment()}${levelLayers}${valves}${portsMarkup}${meterMarkup}${labels}${readouts}${flowReadouts}</svg>`;
   const svg = host.firstElementChild;
   const targets = [...svg.querySelectorAll('.pfd-hit')];
   const largerTargets = matchMedia('(max-width: 600px), (pointer: coarse)');
@@ -232,11 +140,9 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     focus(area, reset, tag) {
       for (const unit of svg.querySelectorAll('[data-area],[data-symbol]')) unit.classList.toggle('selected', (unit.dataset.area || unit.dataset.symbol) === area);
       if (reset) host.scrollLeft = 0;
-      else if (anchorsByArea.has(area) && !host.hidden) {
-        const valve = valves.find(([id]) => `XMV(${id})` === tag);
-        const x = valve?.[1] ?? anchorsByArea.get(area)[0];
-        const scale = Math.min(svg.clientWidth / WIDTH, svg.clientHeight / HEIGHT);
-        const center = svg.clientWidth / 2 + (x - WIDTH / 2) * scale;
+      else if (area !== 'plant' && ANCHORS[area] && !host.hidden) {
+        const valve = VALVES.find(([id]) => `XMV(${id})` === tag);
+        const center = (valve?.[1] ?? ANCHORS[area][0]) / VIEWBOX[0] * svg.clientWidth;
         host.scrollLeft = Math.max(0, center - host.clientWidth / 2);
       }
     },
