@@ -85,8 +85,8 @@ function draw(canvas, points, unit) {
   }
 }
 
-export function mountResponse(onSetpoint, onSelect) {
-  const select = byId('response-select'), adjust = byId('response-adjust');
+export function mountResponse(onSelect) {
+  const select = byId('response-select');
   const label = byId('response-values'), canvas = byId('response-chart');
   const histories = new Map();
   let definitions = [], latest = null, selected = 'reactor_pressure', visible = false;
@@ -115,7 +115,6 @@ export function mountResponse(onSetpoint, onSelect) {
     draw(canvas, points, spec?.unit);
   };
   select.addEventListener('change', () => { selected = select.value; onSelect(selected); });
-  adjust.addEventListener('click', () => onSetpoint(selected));
   new ResizeObserver(render).observe(canvas.parentElement);
   return {
     init(items) {
@@ -124,7 +123,7 @@ export function mountResponse(onSetpoint, onSelect) {
       select.value = selected;
     },
     selected: () => selected,
-    enable(connected) { select.disabled = !connected; adjust.disabled = !connected; },
+    enable(connected) { select.disabled = !connected; },
     show(enabled, id) {
       if (id && definitions.some((item) => item.id === id)) selected = id;
       select.value = selected;

@@ -1,6 +1,73 @@
 import { AREAS } from './topology.js';
 import { byId, option, reading } from './ui.js';
 
+export function mountSetpointSlider(apply) {
+  const slider = byId('setpoint-slider');
+  const label = byId('setpoint-label');
+  const output = byId('setpoint-value');
+  let loop, run, current;
+  let available = false, editing = false, pending = null;
+
+  function showValue(value) {
+    const text = Number.isFinite(value) ? `${reading(value, loop.unit)} ${loop.unit}` : '—';
+    output.value = text;
+    slider.setAttribute('aria-valuetext', text);
+  }
+
+  function render() {
+    slider.disabled = !available || pending !== null;
+    if (editing) return;
+    const value = pending && pending.loop === loop && pending.run === run ? pending.value : current;
+    if (Number.isFinite(value)) slider.value = value;
+    showValue(value);
+  }
+
+  slider.addEventListener('input', () => {
+    editing = true;
+    showValue(slider.valueAsNumber);
+  });
+  slider.addEventListener('change', async () => {
+    if (!editing || slider.disabled) return;
+    editing = false;
+    const value = slider.valueAsNumber;
+    if (value === current) return;
+    const hadFocus = document.activeElement === slider;
+    pending = { loop, run, value };
+    render();
+    try {
+      await apply(loop.id, value);
+    } finally {
+      pending = null;
+      render();
+      if (hadFocus && !slider.disabled && document.activeElement === document.body) {
+        slider.focus({ preventScroll: true });
+      }
+    }
+  });
+  slider.addEventListener('pointercancel', () => {
+    editing = false;
+    render();
+  });
+
+  return function update(nextLoop, status, connected) {
+    if (nextLoop !== loop) {
+      loop = nextLoop;
+      label.textContent = loop ? `${loop.label} SP` : 'SP 목표';
+      if (loop) {
+        slider.min = loop.min;
+        slider.max = loop.max;
+        slider.step = loop.unit === 'kPa(g)' ? 1 : 0.1;
+      }
+      editing = false;
+    }
+    if (!connected || status?.run !== run) editing = false;
+    run = status?.run;
+    current = status?.setpoints[loop?.id];
+    available = connected && Number.isFinite(current);
+    render();
+  };
+}
+
 export function setupControls(schema, current, command, onAdjustment) {
   const dialog = byId('adjust-dialog');
   const type = byId('adjust-kind');

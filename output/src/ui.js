@@ -105,7 +105,6 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
     if (setting.dataset.setpoint !== setpoint.id) {
       setting.dataset.setpoint = setpoint.id;
       byId('inspector-sp-label').textContent = `${setpoint.label} · SP 응답`;
-      byId('inspector-adjust').setAttribute('aria-label', `${setpoint.label} SP 변경`);
     }
     byId('inspector-sp-value').textContent = `${reading(status?.setpoints?.[setpoint.id], setpoint.unit)} ${setpoint.unit}`;
   }

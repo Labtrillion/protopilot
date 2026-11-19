@@ -154,7 +154,7 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .inspector { display: flex; flex-direction: column; max-height: 28rem; background: var(--surface); }
 .inspector-controls { padding: 0 0.65rem; flex: none; }
 .unit-select select { width: 100%; font-weight: 650; }
-.inspector-setpoint { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.35rem; margin-top: 0.42rem; }
+.inspector-setpoint { display: grid; margin-top: 0.42rem; }
 #inspector-response {
   display: grid; justify-content: stretch; gap: 0.12rem; min-width: 0; padding: 0.32rem 0.43rem;
   color: var(--subtext); white-space: normal; text-align: left; font-size: 0.78rem;
@@ -213,6 +213,11 @@ tr.alarm-row :is(.numeric > span, .channel-state) { color: var(--warning); }
 .empty-cell { padding-block: 1.5rem; color: var(--muted); text-align: center; }
 
 .alarms-panel { display: flex; flex-direction: column; }
+.setpoint-control { flex: none; padding: 0.4rem 0.62rem 0.2rem; border-top: 1px solid var(--line); }
+.setpoint-readout { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.16rem 0.45rem; }
+.setpoint-readout label { font-size: 0.82rem; font-weight: 650; }
+.setpoint-readout output { font: 650 0.8rem var(--mono); white-space: nowrap; }
+#setpoint-slider { display: block; width: 100%; height: 1.85rem; margin: 0; border: 0; background: transparent; accent-color: var(--tracked); }
 .alarm-toolbar { padding: 0.32rem 0.62rem; border-block: 1px solid var(--line); flex: none; }
 .alarm-toolbar .segments { display: inline-flex; }
 .alarm-items { height: clamp(142px, 24vh, 360px); padding: 0.48rem 0.62rem; }
@@ -384,8 +389,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .response-controls, .response-legend { display: flex; align-items: center; gap: 0.55rem; }
 .response-controls { flex-wrap: wrap; }
 .response-controls label { flex: 1 1 12rem; min-width: 0; }
-.response-controls select, .response-controls button { font-size: 0.80rem; }
-.response-controls select { width: 100%; }
+.response-controls select { width: 100%; font-size: 0.80rem; }
 .response-legend { color: var(--subtext); font-size: 0.76rem; }
 .response-legend i { display: inline-block; width: 0.9rem; margin-right: 0.28rem; border-top: 2px solid var(--plot-pv); vertical-align: 0.2em; }
 .response-legend span:nth-child(2) i { border-top: 2px dashed var(--response-target); }
@@ -470,6 +474,8 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .inspector { max-height: none; }
   .stage { flex: 1; min-height: 0; height: auto; }
   .pfd-svg { min-width: 0; min-height: 0; }
+  .alarms-panel { overflow-y: auto; }
+  .alarm-items { min-height: 4rem; }
   .table-scroll, .alarm-items { height: auto; flex: 1; }
   .inspector-content, .alarm-items, .table-scroll { overscroll-behavior: contain; }
   .response-chart-wrap { height: auto; flex: 1; min-height: 0; }
@@ -484,6 +490,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 @media (max-width: 600px), (pointer: coarse) {
   :root { --control-size: 3.39rem; --map-tag-size: 2.77rem; }
   .topbar { flex-wrap: wrap; }
+  #setpoint-slider { height: var(--control-size); }
   .dialog-fields select, .dialog-fields input { min-height: var(--control-size); }
 }
 

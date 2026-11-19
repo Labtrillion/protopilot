@@ -1,7 +1,7 @@
 import { AREAS, codeFor } from './topology.js';
 import { mountPlantView } from './plant-view.js';
 import { mountResponse } from './response.js';
-import { setupControls } from './controls.js';
+import { mountSetpointSlider, setupControls } from './controls.js';
 import { mountScenario } from './scenario.js';
 import { mountAlarmResponse } from './alarm-response.js';
 import {
@@ -26,7 +26,13 @@ let focusedArea = 'plant', selection, alarmTab = 'active', connected = false;
 let seenAlarms = new Set(), visibleChannels = [];
 let channelScope = 'primary', returnPoint = null, explicitTag = '';
 
-const response = mountResponse((id) => openControls?.(id), (id) => trackSetpoint(id));
+const response = mountResponse(trackSetpoint);
+const updateSetpointSlider = mountSetpointSlider((id, value) => {
+  const runId = status.run;
+  return doCommand({ op: 'setpoint', id, value }, () => {
+    if (status.run === runId && activeSetpoint()?.id === id) trackSetpoint(id);
+  });
+});
 const alarmResponse = mountAlarmResponse(request);
 const scenario = mountScenario(request, async (body) => {
   try {
@@ -59,6 +65,13 @@ function loopFor(area, tag = '') {
 const channelSelection = (channel) => ({ kind: channel.group === 'manipulated_variables' ? 'mv' : 'channel', item: channel });
 const tagForSelection = (target) => target?.item.pv ?? target?.item.id ?? '';
 
+function activeSetpoint() {
+  return selection?.kind === 'setpoint' ? selection.item
+    : loopForTag(tagForSelection(selection))
+      ?? (focusedArea === 'plant' ? setpoints.find((item) => item.id === 'reactor_pressure') : loopFor(focusedArea))
+      ?? setpoints.find((item) => item.id === response.selected()) ?? setpoints[0];
+}
+
 function showTelemetry(view, setpoint) {
   // Leaving the SP view keeps tracking the loop's measured PV instead of a stale SP selection.
   if (view === 'values' && selection?.kind === 'setpoint' && channels.has(selection.item.pv)) {
@@ -78,6 +91,7 @@ function inspector() {
   const tag = tagForSelection(selection);
   const configured = chosen?.kind === 'setpoint' ? chosen.item : loopFor(focusedArea, tag);
   renderInspector(focusedArea, status, channels, circuit, configured, chosen?.kind === 'mv' ? chosen.item : null, tag);
+  updateSetpointSlider(activeSetpoint(), status, connected);
 }
 
 function renderChannels() {
@@ -260,7 +274,6 @@ function renderConnection() {
   run.disabled = !connected || !!status?.error || !!status?.shutdown.terminated;
   reset.disabled = !connected;
   byId('open-controls').disabled = !connected;
-  byId('inspector-adjust').disabled = !connected;
   byId('pressure-test').disabled = !connected;
   byId('cooling-demo').disabled = !connected;
   byId('clear-test').disabled = !connected;
@@ -366,10 +379,7 @@ function attachEvents() {
   });
   // Direct SP tab entry uses the same path as every other SP shortcut, so unit, tag and loop match.
   byId('tab-response').addEventListener('click', () => {
-    const tag = tagForSelection(selection);
-    const loop = selection?.kind === 'setpoint' ? selection.item
-      : loopForTag(tag) ?? (focusedArea === 'plant' ? setpoints.find((item) => item.id === 'reactor_pressure') : loopFor(focusedArea))
-        ?? setpoints.find((item) => item.id === response.selected()) ?? setpoints[0];
+    const loop = activeSetpoint();
     if (loop) trackSetpoint(loop.id);
   });
   byId('scope-primary').addEventListener('click', () => {
@@ -379,7 +389,6 @@ function attachEvents() {
   byId('scope-all').addEventListener('click', () => setScope('all'));
   const inspectorSetpoint = byId('inspector-setpoint');
   byId('inspector-response').addEventListener('click', () => trackSetpoint(inspectorSetpoint.dataset.setpoint, true));
-  byId('inspector-adjust').addEventListener('click', () => openControls?.(inspectorSetpoint.dataset.setpoint));
   byId('inspector-content').addEventListener('click', (event) => {
     const channelButton = event.target.closest('button[data-tag]');
     if (channelButton) selectTag(channelButton.dataset.tag, true);
@@ -466,6 +475,7 @@ async function poll() {
   } catch {
     connected = false;
     renderConnection();
+    updateSetpointSlider(activeSetpoint(), status, connected);
   } finally {
     setTimeout(poll, connected ? 430 : 1400);
   }

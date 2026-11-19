@@ -76,7 +76,6 @@
           <label class="unit-select"><span class="sr-only">관측할 설비</span><select id="area-select"></select></label>
           <div id="inspector-setpoint" class="inspector-setpoint" hidden>
             <button id="inspector-response" type="button"><span id="inspector-sp-label"></span><b id="inspector-sp-value"></b></button>
-            <button id="inspector-adjust" type="button" class="solid" aria-haspopup="dialog" disabled>SP 변경</button>
           </div>
         </div>
         <div id="inspector-content" class="inspector-content" role="region" tabindex="0" aria-label="선택한 설비의 계측 태그와 배관"></div>
@@ -84,6 +83,13 @@
       <section class="panel alarms-panel" aria-labelledby="alarms-title">
         <div class="panel-head">
           <div class="heading-inline"><span data-icon="bell"></span><h2 id="alarms-title">알람 및 이벤트</h2><span id="alarm-count" class="subtle-count">0</span></div>
+        </div>
+        <div class="setpoint-control">
+          <div class="setpoint-readout">
+            <label id="setpoint-label" for="setpoint-slider">SP 목표</label>
+            <output id="setpoint-value" for="setpoint-slider" aria-live="off">—</output>
+          </div>
+          <input id="setpoint-slider" type="range" disabled>
         </div>
         <div class="alarm-toolbar">
           <div class="segments" role="group" aria-label="알람 보기">
@@ -137,7 +143,6 @@
       <div id="response-view" class="response-view" hidden>
         <div class="response-controls">
           <label><span class="sr-only">추적할 설정값</span><select id="response-select" disabled></select></label>
-          <button id="response-adjust" type="button" data-icon="sliders" disabled>SP 변경</button>
           <div class="response-legend"><span><i></i>PV 실측</span><span><i></i>SP 목표</span></div>
         </div>
         <div id="response-values" class="response-values"></div>
