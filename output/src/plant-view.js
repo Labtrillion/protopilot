@@ -55,7 +55,6 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
     twoButton.setAttribute('aria-pressed', !three);
     tags.disabled = internals.disabled = !three || !scene;
     byId('stage').dataset.view = next;
-    byId('stage-caption-text').textContent = three ? '공정 모델' : 'Fig. 1 · 공정도';
     byId('canvas-error').hidden = !three || Boolean(scene);
     scene?.display(three);
     diagram.focus(area, area === 'plant', focusedTag);

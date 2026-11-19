@@ -130,11 +130,7 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .canvas, .model-labels { position: absolute; inset: 0; }
 .canvas canvas { display: block; width: 100%; height: 100%; }
 .model-labels { pointer-events: none; }
-.stage-meta, .stage-footer { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 0.35rem 0.55rem; padding: 0.38rem 0.65rem; background: var(--surface); color: var(--subtext); }
-.stage-meta { min-height: 2.45rem; border-bottom: 1px solid var(--line-soft); }
-.stage-caption { color: var(--subtext); font: 600 0.74rem var(--mono); white-space: nowrap; }
-.crosshair { color: var(--muted); font-size: 1.0rem; vertical-align: -0.06em; margin-right: 0.3rem; }
-.stage-footer { border-top: 1px solid var(--line-soft); }
+.stage-footer { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 0.35rem 0.55rem; padding: 0.38rem 0.65rem; border-top: 1px solid var(--line-soft); background: var(--surface); color: var(--subtext); }
 .legend { display: flex; align-items: center; flex-wrap: wrap; gap: 0.32rem 0.74rem; }
 .legend span { font-size: 0.76rem; white-space: nowrap; }
 .legend i, .inspect-stream i { display: inline-block; width: 1.06rem; height: 0.23rem; margin-right: 0.35rem; background: var(--medium); vertical-align: 0.19em; border-radius: 2px; }
@@ -490,7 +486,10 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 }
 
 /* Interior part tags, alarm return point, sensor test and channel scope. */
-.interior-parts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; min-width: 0; margin-right: auto; }
+.interior-parts {
+  display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 0.3rem; min-width: 0;
+  padding: 0.38rem 0.65rem; border-bottom: 1px solid var(--line-soft); background: var(--surface);
+}
 .interior-parts .toolbar-label { margin-right: 0.1rem; font-size: 0.74rem; }
 .interior-parts button { min-height: 2rem; padding: 0.16rem 0.48rem; gap: 0.32rem; font-size: 0.76rem; }
 .interior-parts code { color: var(--muted); font: 0.68rem var(--mono); }
@@ -511,5 +510,4 @@ tr.selected-row:not(.alarm-row, .tested-row) .channel-state { color: var(--track
 .response-values .response-test { grid-column: 1 / -1; }
 .response-values .response-test b { color: var(--warning); }
 .response-values .response-test span:last-child { margin-top: 0.12rem; color: var(--warning); font: 0.72rem var(--mono); }
-.stage-meta { flex-wrap: wrap; }
 button:disabled, button[aria-pressed]:disabled { cursor: default; color: var(--disabled-text); background: var(--surface); border-color: var(--line); }
