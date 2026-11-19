@@ -22,8 +22,8 @@ const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'st
 const annotationPositions = {
   equipment: { alignY: 1, lift: 4, range: 110 },
   part: { range: 82 },
-  port: { alignY: 0.65, range: 72 },
-  flow: { alignX: 1, alignY: 0.88, range: 72 },
+  port: { alignY: 0.65, range: 100 },
+  flow: { alignX: 1, alignY: 0.88, range: 100 },
 };
 
 function setupSite(scene, groups) {

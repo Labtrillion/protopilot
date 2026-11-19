@@ -28,13 +28,13 @@ export function placeAnnotation(x, y, width, height, viewportWidth, viewportHeig
     const dx = left - preferredLeft;
     if (left < inset || left > maxLeft || dx * dx >= best) continue;
     const right = left + width;
-    const row = nearby.filter((box) => left < box.right + gap && right > box.left - gap);
+    const column = nearby.filter((box) => left < box.right + gap && left > box.left - gap - width);
     for (const top of tops) {
       const dy = top - preferredTop;
       const distance = dx * dx + dy * dy;
       if (top < inset || top > maxTop || distance >= best) continue;
       const bottom = top + height;
-      if (row.some((box) => top < box.bottom + gap && bottom > box.top - gap)) continue;
+      if (column.some((box) => top < box.bottom + gap && top > box.top - gap - height)) continue;
       closest = { left, top, right, bottom };
       if (distance === 0) return closest;
       best = distance;
