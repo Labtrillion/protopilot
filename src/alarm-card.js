@@ -14,7 +14,7 @@ export function alarmMeta(alarm) {
 export function alarmActions(alarm, canRespond, active = true) {
   const id = escape(alarm.id), label = escape(alarm.label);
   const response = alarm.kind === 'trip' ? '대응 절차 보기' : '대응 비교';
-  const canReview = active && canRespond && alarm.kind === 'warning';
+  const canReview = canRespond && alarm.kind === 'warning';
   return `${active || canRespond ? `<button class="alarm-response" type="button" data-response-id="${id}"
     aria-label="${response} · ${label}" aria-haspopup="dialog"${canRespond ? '' : ' disabled title="비교할 발생 기록이 없습니다"'}>${response}</button>` : ''}
     ${canReview ? `<button type="button" data-zoro-id="${id}" aria-label="Zoro 대응 검토 · ${label}" aria-haspopup="dialog">Zoro 대응 검토</button>` : ''}
