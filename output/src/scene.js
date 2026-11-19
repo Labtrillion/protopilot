@@ -8,6 +8,7 @@ import { EQUIPMENT_LAYOUT, FEED_OFFSETS, FLOW_POINTS, LABEL_POINTS, OVERVIEW, PO
 import { flowReading, pressureReading } from './ui.js';
 import { readColor } from './palette.js';
 import { FEEDS } from './schematic.js';
+import { placeAnnotation } from './annotation-layout.js';
 import * as geo from './geometry.js';
 
 const initialOffset = geo.v3(OVERVIEW.offset);
@@ -18,6 +19,12 @@ const processFrameInterval = 24;
 const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
 const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'stripper']);
+const annotationPositions = {
+  equipment: { alignY: 1, lift: 4, range: 110 },
+  part: { range: 82 },
+  port: { alignY: 0.65, range: 72 },
+  flow: { alignX: 1, alignY: 0.88, range: 72 },
+};
 
 function setupSite(scene, groups) {
   const footprint = new T.Box3();
@@ -160,7 +167,7 @@ function buildStreams(scene, groups) {
 
 function createLabels(host, onSelect) {
   const labels = {};
-  for (const [key, position] of Object.entries(LABEL_POINTS)) {
+  for (const [key, point] of Object.entries(LABEL_POINTS)) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'model-tag';
@@ -178,7 +185,7 @@ function createLabels(host, onSelect) {
     button.addEventListener('click', () => onSelect(key));
     host.append(button);
     labels[key] = {
-      button, position, width: 70, height: 36,
+      el: button, point,
       value: button.querySelector('.model-pressure-value strong'), state: button.querySelector('.model-pressure-state'),
     };
   }
@@ -200,7 +207,7 @@ function makePortLabels(host, selectFeed) {
       el.addEventListener('click', () => selectFeed(feedTag));
     }
     host.append(el);
-    return { el, point, circuit, feedTag, width: Math.max(22, text.length * 6.5 + 10), height: 20 };
+    return { el, point, circuit, feedTag };
   });
 }
 
@@ -209,9 +216,8 @@ function makeFlowLabels(host) {
     const el = document.createElement('span');
     el.className = 'model-flow-reading';
     el.dataset.flowReading = def.id;
-    el.hidden = true;
     host.append(el);
-    return { el, def, point: FLOW_POINTS[def.id], width: 70, height: 13 };
+    return { el, def, point: FLOW_POINTS[def.id] };
   });
 }
 
@@ -221,17 +227,16 @@ function makePartLabels(host, parts, onPick) {
     button.type = 'button';
     button.className = 'model-part';
     button.dataset.tag = part.tag;
-    button.hidden = true;
     button.setAttribute('aria-pressed', 'false');
     button.setAttribute('aria-label', `${AREAS[part.area].code} 내부 ${part.name} · ${part.tag} 추적`);
     button.innerHTML = `<b>${part.name}</b><small>${part.tag}</small>`;
     button.addEventListener('click', () => onPick(part.tag, part.area));
     host.append(button);
-    return { ...part, button, width: 64, height: 30, point: new T.Vector3() };
+    return { ...part, el: button, point: new T.Vector3() };
   });
 }
 
-export function mountScene(container, host, select, pick, selectCircuit, selectFeed) {
+export function mountScene(container, host, interiorTools, select, pick, selectCircuit, selectFeed) {
   const scene = new T.Scene();
   scene.background = new T.Color(readColor('--stage'));
   const renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -290,7 +295,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     if (def.circuit || feedTag) pickable.push(tube);
     if (feedTag) pickable.push(...flanges);
   }
-  const valveTargets = streams.filter(({ valve }) => valve).map(({ valve }) => ({ valve, x: 0, y: 0, onScreen: false }));
+  const valveTargets = streams.filter(({ valve }) => valve).map(({ valve }) => ({ valve, x: 0, y: 0, bounds: null }));
   const largerTargets = matchMedia('(max-width: 600px), (pointer: coarse)');
   const overviewFrame = setupSite(scene, groups);
   const internal = buildInternals(models, sight);
@@ -300,18 +305,19 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   const parts = makePartLabels(host, internal.parts, pick);
   const ports = makePortLabels(host, selectFeed);
   const flowLabels = makeFlowLabels(host);
-  const sized = new Map([
-    ...labelEntries.map(([, label]) => [label.button, label]), ...parts.map((part) => [part.button, part]),
-    ...ports.map((port) => [port.el, port]), ...flowLabels.map((label) => [label.el, label]),
-  ]);
+  let annotationsDirty = true;
+  const sized = new Map([...Object.values(labels), ...parts, ...ports, ...flowLabels].map((item) => [item.el, item]));
   const labelSizes = new ResizeObserver((entries) => {
     for (const { target, borderBoxSize } of entries) {
       const { inlineSize, blockSize } = borderBoxSize[0];
-      if (!inlineSize || !blockSize) continue;
-      Object.assign(sized.get(target), { width: inlineSize, height: blockSize });
+      const item = sized.get(target);
+      if (!blockSize || (item.width === inlineSize && item.height === blockSize)) continue;
+      Object.assign(item, { width: inlineSize, height: blockSize });
+      annotationsDirty = true;
     }
   });
-  for (const button of sized.keys()) labelSizes.observe(button);
+  for (const el of sized.keys()) labelSizes.observe(el, { box: 'border-box' });
+  new ResizeObserver(() => { annotationsDirty = true; }).observe(interiorTools);
   const selectionColor = readColor('--focus');
   const warningColor = readColor('--warning');
   const trackedColor = new T.Color(readColor('--tracked'));
@@ -336,7 +342,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   let trackedFeed, focusedValve;
   let down = null, framing = false, valveRadius = 14;
   let panX = 0, cameraDirty = true, lastRender = 0, lastProcessFrame = -Infinity;
-  const alertAreas = new Set();
+  let alertAreas = new Set();
   const geometryBounds = {};
   scene.updateMatrixWorld(true);
   for (const [area, group] of Object.entries(groups)) {
@@ -370,6 +376,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     container.dataset.focus = area;
     const group = groups[area];
     focusedValve = streams.find((line) => line.valve?.userData.valve === tag && line.def.area === area)?.valve;
+    updateLabelSelection();
     if (showInternals) applyInternals();
     moveHighlight();
     desired.copy(group ? group.position : home);
@@ -396,6 +403,14 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     highlight.scale.setScalar(valve ? 0.44 : skid ? 1.25 : geometryBounds[focus]);
   }
 
+  function updateLabelSelection() {
+    for (const [area, { el }] of labelEntries) {
+      el.classList.toggle('selected', focus === area && !(area === 'feeds' && trackedFeed));
+      el.classList.toggle('tracked', trackedArea === area && !trackedFeed);
+    }
+    annotationsDirty = true;
+  }
+
   // A selected unit with an interior shows only its own section; otherwise every interior is shown.
   function applyInternals() {
     const shown = internal.show(showInternals, focus in sight ? focus : '');
@@ -403,51 +418,37 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
     renderer.shadowMap.needsUpdate = true;
   }
 
-  function projectParts(placed) {
-    for (const part of parts) {
-      const { button } = part;
-      const own = focus === part.area;
-      if (!showInternals || !internal.visible(part.area) || (!showLabels && !own)) {
-        button.hidden = true;
-        continue;
-      }
-      part.anchor.getWorldPosition(part.point);
-      projected.copy(part.point).project(camera);
-      const x = (projected.x + 1) * width / 2, y = (1 - projected.y) * height / 2;
-      const left = x - part.width / 2, right = x + part.width / 2, top = y - part.height / 2, bottom = y + part.height / 2;
-      const outside = Math.abs(projected.x) > 0.97 || Math.abs(projected.y) > 0.95 || projected.z > 1;
-      // Overlapping part tags hide; the selected unit keeps a stable button strip over the canvas.
-      const blocked = placed.some((other) => left < other.right + 2 && right > other.left - 2 && top < other.bottom + 2 && bottom > other.top - 2);
-      button.hidden = outside || blocked;
-      if (button.hidden) continue;
-      placed.push({ left, right, top, bottom });
-      button.style.left = `${x}px`;
-      button.style.top = `${y}px`;
-      const tracked = part.tag === trackedTag;
-      button.classList.toggle('tracked', tracked);
-      button.setAttribute('aria-pressed', tracked);
+  function projectAnnotation(item, placed, { alignX = 0.5, alignY = 0.5, lift = 0, range }) {
+    const { el } = item;
+    projected.copy(item.point).project(camera);
+    if (Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1 || Math.abs(projected.z) > 1) {
+      el.removeAttribute('data-placed');
+      return;
+    }
+    const x = (projected.x + 1) * width / 2;
+    const y = (1 - projected.y) * height / 2;
+    const box = placeAnnotation(x - item.width * alignX, y - item.height * alignY - lift,
+      item.width, item.height, width, height, placed, range);
+    el.toggleAttribute('data-placed', Boolean(box));
+    if (!box) return;
+    placed.push(box);
+    el.style.left = `${box.left}px`;
+    el.style.top = `${box.top}px`;
+
+    const startX = T.MathUtils.clamp(x, box.left, box.right);
+    const startY = T.MathUtils.clamp(y, box.top, box.bottom);
+    const dx = x - startX, dy = y - startY;
+    const length = Math.hypot(dx, dy);
+    el.toggleAttribute('data-leader', length >= 4);
+    if (length >= 4) {
+      el.style.setProperty('--leader-x', `${startX - box.left}px`);
+      el.style.setProperty('--leader-y', `${startY - box.top}px`);
+      el.style.setProperty('--leader-length', `${length}px`);
+      el.style.setProperty('--leader-angle', `${Math.atan2(dy, dx)}rad`);
     }
   }
 
-  function projectAnnotation(item, placed, alignEnd = false) {
-    projected.copy(item.point).project(camera);
-    const x = (projected.x + 1) * width / 2;
-    const y = (1 - projected.y) * height / 2;
-    const left = x - (alignEnd ? item.width : item.width / 2);
-    const right = left + item.width;
-    const top = y - item.height * (alignEnd ? 0.88 : 0.65);
-    const bottom = top + item.height;
-    item.el.hidden = left < 2 || right > width - 2 || top < 2 || bottom > height - 2 || projected.z > 1 ||
-      placed.some((other) => left < other.right + 1 && right > other.left - 1 && top < other.bottom + 1 && bottom > other.top - 1);
-    if (item.el.hidden) return;
-    placed.push({ left, right, top, bottom });
-    item.el.style.left = `${left}px`;
-    item.el.style.top = `${top}px`;
-  }
-
-  function projectLabels() {
-    const placed = [];
-    // Reserve the valve silhouettes for labels. The larger hit radius helps with aim on the canvas.
+  function projectValves() {
     const pixelsPerUnit = height * camera.zoom / (camera.top - camera.bottom);
     const clearance = Math.max(largerTargets.matches ? 12 : 5, 0.4 * pixelsPerUnit);
     valveRadius = Math.max(largerTargets.matches ? 18 : 14, clearance);
@@ -456,49 +457,42 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
       const x = (projected.x + 1) * width / 2, y = (1 - projected.y) * height / 2;
       const left = x - clearance, right = x + clearance, top = y - clearance, bottom = y + clearance;
       const onScreen = Math.abs(projected.z) <= 1 && right > 0 && left < width && bottom > 0 && top < height;
-      Object.assign(target, { x, y, onScreen });
-      if (onScreen) placed.push({ left, right, top, bottom });
+      Object.assign(target, { x, y, bounds: onScreen ? { left, right, top, bottom } : null });
+    }
+  }
+
+  function projectLabels() {
+    annotationsDirty = false;
+    if (!showLabels) return;
+    // Leave the valve controls and the interior toolbar clear of projected labels.
+    const placed = valveTargets.map(({ bounds }) => bounds).filter(Boolean);
+    if (!interiorTools.hidden) {
+      const { offsetLeft: left, offsetTop: top, offsetWidth, offsetHeight } = interiorTools;
+      placed.push({ left, top, right: left + offsetWidth, bottom: top + offsetHeight });
     }
     const priority = (area) => {
-      if (focus === area || trackedArea === area) return 3;
-      if (CORE_PRESSURES[area]) return 2;
-      if (alertAreas.has(area)) return 3;
+      if (focus === area || trackedArea === area || alertAreas.has(area)) return 3;
+      if (showPressure && CORE_PRESSURES[area]) return 2;
       return primaryLabels.has(area) ? 1 : 0;
     };
     const ordered = [...labelEntries].sort(([a], [b]) => priority(b) - priority(a));
-    for (const [area, label] of ordered) {
-      projected.copy(label.position).project(camera);
-      const offscreen = Math.abs(projected.x) > 0.96 || Math.abs(projected.y) > 0.95 || projected.z > 1;
-      const selected = area === focus || area === trackedArea;
-      if (offscreen || (!showLabels && !selected)) {
-        label.button.hidden = true;
-        continue;
+    for (const [, label] of ordered) projectAnnotation(label, placed, annotationPositions.equipment);
+    const orderedParts = [...parts].sort((a, b) => Number(b.tag === trackedTag) - Number(a.tag === trackedTag));
+    for (const part of orderedParts) {
+      if (showInternals && internal.visible(part.area)) {
+        part.anchor.getWorldPosition(part.point);
+        projectAnnotation(part, placed, annotationPositions.part);
+      } else {
+        part.el.removeAttribute('data-placed');
       }
-      const half = label.width / 2;
-      const x = T.MathUtils.clamp((projected.x + 1) * width / 2, half + 3, width - half - 3);
-      const anchor = (1 - projected.y) * height / 2;
-      const left = x - half, right = x + half;
-      let y = T.MathUtils.clamp(anchor, label.height + 3, height - 5);
-      // Reserve space for tracked units and pressure readings before placing nearby tags.
-      for (let overlap; (overlap = placed.find((other) => left < other.right + 3 && right > other.left - 3 &&
-        y > other.top - 3 && y - label.height < other.bottom + 3));) y = overlap.top - 3;
-      label.button.hidden = y < label.height + 3;
-      if (label.button.hidden) continue;
-      placed.push({ left, right, top: y - label.height, bottom: y });
-      label.button.style.left = `${x}px`;
-      label.button.style.top = `${y}px`;
-      label.button.style.setProperty('--tag-leader', `${Math.max(0, anchor - y)}px`);
-      label.button.classList.toggle('selected', focus === area && !(area === 'feeds' && trackedFeed));
-      label.button.classList.toggle('in-alarm', alertAreas.has(area));
     }
-    projectParts(placed);
     for (const port of ports) {
-      if (showLabels && (!activeCircuit || activeCircuit === port.circuit)) projectAnnotation(port, placed);
-      else port.el.hidden = true;
+      if (!activeCircuit || activeCircuit === port.circuit) projectAnnotation(port, placed, annotationPositions.port);
+      else port.el.removeAttribute('data-placed');
     }
     for (const label of flowLabels) {
-      if (showFlow && data && (!activeCircuit || activeCircuit === label.def.circuit)) projectAnnotation(label, placed, true);
-      else label.el.hidden = true;
+      if (showFlow && data && (!activeCircuit || activeCircuit === label.def.circuit)) projectAnnotation(label, placed, annotationPositions.flow);
+      else label.el.removeAttribute('data-placed');
     }
   }
 
@@ -525,7 +519,7 @@ export function mountScene(container, host, select, pick, selectCircuit, selectF
   function nearbyValve(x, y) {
     let closest, distance = valveRadius;
     for (const target of valveTargets) {
-      if (!target.onScreen) continue;
+      if (!target.bounds) continue;
       const gap = Math.hypot(x - target.x, y - target.y);
       if (gap > distance) continue;
       // Only extend the hit area of a valve whose center is visible from this angle.
