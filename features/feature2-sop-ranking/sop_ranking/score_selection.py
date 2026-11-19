@@ -6,11 +6,30 @@ from urllib.error import URLError
 from zoro.client import zoro_decide
 
 COVERAGE = 0.90
+SETPOINT_MOVES = (("decrease_10pct", -0.10), ("increase_10pct", 0.10))
+
+
+def build_candidates(setpoints, locked):
+    candidates = {}
+    for name, row in setpoints.items():
+        if name in locked:
+            continue
+        current = row["setpoint"]
+        low, high = row["limits"]
+        for direction, move in SETPOINT_MOVES:
+            target = round(current * (1 + move), 6)
+            if low <= target <= high and target != current:
+                candidate_id = f"{name}:{direction}"
+                candidates[candidate_id] = {
+                    "id": candidate_id, "setpoint": name, "from": current,
+                    "to": target, "move": move, "unit": row["unit"],
+                }
+    return candidates
 
 
 def select_candidates(handoff, state, *, timeout, request_id):
     locked = {change["setpoint"] for change in handoff["baseline_changes"]}
-    candidates = {item["id"]: item for item in handoff["alternatives"] if item["setpoint"] not in locked}
+    candidates = build_candidates(state["setpoints"], locked)
     selection = {"scores": {}, "selected": [], "coverage": 0.0, "reason": None}
     if not candidates:
         return {**selection, "reason": "no_alternatives"}
