@@ -1,3 +1,6 @@
 [submodule "vendor/trida-stack"]
 	path = vendor/trida-stack
 	url = https://github.com/trillion-labs/trida-stack.git
+[submodule "tep-sops"]
+	path = tep-sops
+	url = https://github.com/Labtrillion/tep-sops.git

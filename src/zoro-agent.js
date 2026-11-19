@@ -44,12 +44,12 @@ export function mountZoroAgent(request, openSimulationResults, getSetpoints) {
       study = {
         kind: 'zoro', run, alarm: selection.alarm, decision, feature2, start, branches, decision_id: decisionId,
         setpoints: Object.fromEntries(getSetpoints().map(({ id, label, unit }) => [id, { label, unit }])),
-        evidence: (handoff.rag_result?.evidence ?? []).map(({ source_document, statement }) => ({ source_document, statement })),
+        evidence: (handoff?.rag_result?.evidence ?? []).map(({ source_document, statement }) => ({ source_document, statement })),
       };
       result.innerHTML = renderZoroSummary(study);
       result.hidden = simulations.hidden = false;
-      retry.hidden = feature2.status !== 'human_review' && !feature2.selection?.reason?.startsWith('score_unavailable')
-        && !feature2.selection?.choice_error;
+      retry.hidden = feature2?.status !== 'human_review' && !feature2?.selection?.reason?.startsWith('score_unavailable')
+        && !feature2?.selection?.choice_error;
       status.textContent = '';
       latest = study;
       byId('latest-zoro-summary').textContent = `${study.alarm.label} · ${zoroVerdict(study)}`;

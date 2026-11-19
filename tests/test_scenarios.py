@@ -138,8 +138,16 @@ class LiveScenarioTest(unittest.TestCase):
             "diagnosis": {"choice": "combined", "confidence": 0.91},
             "response": {"choice": "reduce_30", "confidence": 0.85},
         }}
+
+        def respond(_url, payload, **_options):
+            questions = payload["questions"]
+            if "diagnosis" in questions:
+                return answers
+            self.assertTrue(all(question["type"] == "score" for question in questions.values()))
+            return {"answers": {name: {"type": "score", "score": 0.75} for name in questions}}
+
         with patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}):
-            with patch("zoro.client._request", return_value=answers) as request:
+            with patch("zoro.client._request", side_effect=respond) as request:
                 with patch("server.alarm_response.HORIZON_HOURS", 1.01):
                     result = analyze_alarm(checkpoint, log)
         self.assertEqual(result["sop"]["id"], "TEP-COOL-01")
@@ -154,8 +162,12 @@ class LiveScenarioTest(unittest.TestCase):
                          [(delay, rate) for delay in sweep["delay_minutes"] for rate in sweep["reduction_pct"]])
         self.assertTrue(all(branch["action_applied"] for branch in sweep["branches"]))
         self.assertTrue(all("alarm_recovery_minutes" in branch for branch in sweep["branches"]))
-        self.assertIn("/v1/systemone", request.call_args.args[0])
-        self.assertNotIn("IDV", encode(request.call_args.args[1]))
+        self.assertEqual(sweep["scores"], {"hold": 0.75, **{branch["id"]: 0.75 for branch in sweep["branches"]}})
+        self.assertIsNone(sweep["score_reason"])
+        self.assertEqual(request.call_count, 4)
+        for call in request.call_args_list:
+            self.assertIn("/v1/systemone", call.args[0])
+            self.assertNotIn("IDV", encode(call.args[1]))
         trace = json.loads(log.read_text())
         self.assertEqual(trace["simulation_context"]["evaluation_faults"], ["IDV(11)", "IDV(14)"])
 

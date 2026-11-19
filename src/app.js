@@ -174,7 +174,9 @@ function locateAlarm({ area, tag }) {
 }
 
 function openAlarmResponse(alarm) {
-  if (status?.response_events?.includes(alarm.id)) alarmResponse.open(status.run, alarm);
+  if (!status?.response_events?.includes(alarm.id)) return;
+  if (alarm.kind === 'warning') zoroAgent.open(status.run, alarm);
+  else alarmResponse.open(status.run, alarm);
 }
 
 function openZoroReview(alarm) {

@@ -1,7 +1,7 @@
-import { SCORE_WEIGHTS, bestImprovement, evaluateBranch, scoreBranch } from './simulation-score.js';
+import { bestImprovement, evaluateBranch, formatZoroShare, scoreBranch, softmaxShares } from './simulation-score.js';
 import { byId, elapsed, escape, reading } from './ui.js';
 
-import { renderZoroCards, renderZoroEvidence, renderZoroSummary } from './zoro-results.js';
+import { feature2Verdict, renderFeature1Comparison, renderZoroCards, renderZoroEvidence } from './zoro-results.js';
 
 const RESULTS_HASH = '#simulation-result';
 const LEGACY_HASH = '#simulation-results';
@@ -42,7 +42,6 @@ function comparison(entry, reference) {
   return `<div class="simulation-comparison">
     <p>${escape(reference.branch.label)} 대비</p>
     <ul>
-      ${relativeMetric('점수', rating.score - reference.rating.score, '점', '높음', '낮음')}
       ${tripDifference}
       ${recoveryDifference}
       ${relativeMetric('범위 내 운전', rating.safeMinutes - reference.rating.safeMinutes, '분', '더 김', '더 짧음')}
@@ -51,7 +50,7 @@ function comparison(entry, reference) {
   </div>`;
 }
 
-function resultDetails(entry, reference, { bestLabel = '', finalWindowHours, heading = 'h3' } = {}) {
+function resultDetails(entry, reference, { bestLabel = '', finalWindowHours, heading = 'h3', share } = {}) {
   const { rating, branch, issue } = entry;
   const state = branch.shutdown ? 'trip' : rating?.completed ? 'complete' : 'early';
   const outcome = branch.shutdown ? '보호 정지' : rating ? (rating.completed ? '완료' : '중도 종료') : '—';
@@ -67,8 +66,7 @@ function resultDetails(entry, reference, { bestLabel = '', finalWindowHours, hea
       <${heading}>${escape(branch.label)}</${heading}>
       ${bestLabel ? `<span class="simulation-best">${bestLabel}</span>` : ''}
     </div>
-    ${rating ? `<div class="simulation-score"><strong>${formatNumber.format(rating.score)}</strong><span>/ 100점</span></div>`
-      : '<p class="simulation-unavailable">점수 산정 불가</p>'}
+    <div class="simulation-score"><span>Zoro-1 상대 적합도</span><strong>${formatZoroShare(share)}</strong></div>
     ${branch.error ? `<p class="simulation-note">${escape(branch.error)}</p>` : `
       ${issue && rating ? `<p class="simulation-unavailable">${issue}</p>` : ''}
       <dl class="simulation-metrics">
@@ -102,13 +100,14 @@ function renderLegacyCards(data) {
   const bestCount = scored.filter(({ rating }) => rating.score === bestScore).length;
   byId('simulation-cards').innerHTML = ranked.map((entry) => {
     const reference = baseline && baseline !== entry ? baseline : scored.find((option) => option !== entry);
-    const bestLabel = bestCount && entry.rating?.score === bestScore ? (bestCount > 1 ? '공동 최고 점수' : '최고 점수') : '';
+    const bestLabel = bestCount && entry.rating?.score === bestScore ? (bestCount > 1 ? '시뮬레이션 공동 우수' : '시뮬레이션 우수') : '';
     return `<li class="simulation-card"${bestLabel ? ' data-best' : ''}>${resultDetails(entry, reference, { bestLabel })}</li>`;
   }).join('');
 }
 
 function renderSweep(data) {
   const { sweep, start } = data;
+  const shares = softmaxShares(sweep.scores);
   const baseline = evaluateBranch(sweep.baseline, start);
   const candidates = sweep.branches.map((branch) => evaluateBranch(branch, start));
   const improvement = bestImprovement(baseline, candidates);
@@ -117,18 +116,20 @@ function renderSweep(data) {
     .sort((a, b) => Number(Boolean(a.issue)) - Number(Boolean(b.issue)) || b.rating.score - a.rating.score)[0];
   const verdict = improvement ? '개선안 검토' : baseline.issue ? 'SOP 기준안과 대안 재검토' : 'SOP 기준안 유지';
   const reason = improvement ? `${improvement.branch.label} 조합이 ${baseline.issue ? '종료 구간 검토 조건을 충족했습니다.'
-    : `SOP 기준안보다 ${formatNumber.format(improvement.rating.score - baseline.rating.score)}점 높습니다.`}`
-    : !baseline.rating ? 'SOP 기준안의 점수를 계산하지 못했습니다.'
+    : '시뮬레이션 결과가 SOP 기준안을 개선했습니다.'}`
+    : !baseline.rating ? 'SOP 기준안의 시뮬레이션 지표를 계산하지 못했습니다.'
       : baseline.issue ? `SOP 기준안의 판정은 ‘${baseline.issue}’이며 기준안을 대체할 조합을 찾지 못했습니다.`
-        : '종료 구간 검토 조건을 충족하면서 SOP 기준안보다 높은 점수를 얻은 조합이 없습니다.';
+        : '종료 구간 검토 조건을 충족하면서 SOP 기준안을 개선한 조합이 없습니다.';
   const preferred = data.decision?.response?.label;
   byId('simulation-verdict').innerHTML = `<div><h3>${verdict}</h3><p>${escape(reason)}</p>
     ${preferred ? `<p class="simulation-note">사전 SOP 검토 · ${data.decision.fallback ? '로컬 규칙' : 'Zoro-1'} · ${escape(preferred)}</p>` : ''}</div>
-    <dl><div><dt>SOP 기준 점수</dt><dd>${baseline.rating ? `${formatNumber.format(baseline.rating.score)}점` : '산정 불가'}</dd></div>
-    <div><dt>검토 조건 충족</dt><dd>${eligible} / ${candidates.length}개</dd></div></dl>`;
+    ${sweep.score_reason ? '<p class="simulation-note">Zoro-1 후보 적합도 응답을 받지 못했습니다.</p>' : ''}
+    <dl><div><dt>검토 조건 충족</dt><dd>${eligible} / ${candidates.length}개</dd></div></dl>`;
 
   const { final_window_hours: finalWindowHours } = sweep;
-  byId('simulation-baseline-card').innerHTML = resultDetails(baseline, improvement ?? bestAlternative, { finalWindowHours });
+  byId('simulation-baseline-card').innerHTML = resultDetails(baseline, improvement ?? bestAlternative, {
+    finalWindowHours, share: shares[baseline.branch.id],
+  });
   byId('simulation-sweep-cards').innerHTML = sweep.delay_minutes.map((delay, index) => {
     const row = candidates.filter(({ branch }) => branch.delay_minutes === delay)
       .sort((a, b) => a.branch.reduction_pct - b.branch.reduction_pct);
@@ -137,7 +138,7 @@ function renderSweep(data) {
       <ul class="simulation-grid simulation-sweep-grid" role="list">${row.map((entry) => {
         const bestLabel = entry === improvement ? '개선 후보' : '';
         return `<li class="simulation-card"${bestLabel ? ' data-best' : ''}>
-          ${resultDetails(entry, baseline.rating ? baseline : null, { bestLabel, finalWindowHours, heading: 'h4' })}</li>`;
+          ${resultDetails(entry, baseline.rating ? baseline : null, { bestLabel, finalWindowHours, heading: 'h4', share: shares[entry.branch.id] })}</li>`;
       }).join('')}</ul></section>`;
   }).join('');
 }
@@ -149,9 +150,10 @@ function renderZoroResults(data) {
     `비교 시간 ${elapsed(data.start.horizon_hours)}`].filter(Boolean).join(' · ');
   byId('simulation-sensor-note').hidden = data.alarm.source !== '센서 시험';
   byId('simulation-sweep').hidden = true;
-  byId('simulation-cards').hidden = false;
-  byId('simulation-zoro-summary').innerHTML = renderZoroSummary(data);
-  byId('simulation-cards').innerHTML = renderZoroCards(data);
+  byId('feature1-comparison-content').innerHTML = renderFeature1Comparison(data);
+  const cards = renderZoroCards(data);
+  byId('simulation-cards').hidden = !cards;
+  byId('simulation-cards').innerHTML = cards;
   byId('simulation-rubric').innerHTML = renderZoroEvidence(data);
 }
 
@@ -165,11 +167,8 @@ function renderResults(data) {
   byId('simulation-cards').hidden = Boolean(data.sweep);
   if (data.sweep) renderSweep(data);
   else renderLegacyCards(data);
-  const { completion, operatingRange, production } = SCORE_WEIGHTS;
-  const gate = data.sweep ? `<li><b>개선안 검토 조건.</b> 보호 정지 없이 비교 시간을 완료하고 마지막 ${elapsed(data.sweep.final_window_hours)} 동안 정상 운전 범위와 해당 알람 기준을 모두 충족해야 합니다. 기준안과 대안이 모두 조건을 충족하면 점수가 더 높은 대안을 검토합니다.</li>` : '';
-  byId('simulation-rubric').innerHTML = `${gate}<li><b>비교 시간 완료 ${completion}점.</b> 보호 정지 없이 예정된 비교 시간을 모두 완료하면 받습니다.</li>
-    <li><b>운전 범위 ${operatingRange}점.</b> 예정된 비교 시간 중 TEP 모델의 정상 운전 범위에 있었던 시간의 비율로 계산합니다.</li>
-    <li><b>생산량 ${production}점.</b> 알람 당시 목표 유량으로 예정 시간 동안 생산했을 양과 실제 누적 생산량의 비율로 계산합니다. 목표량을 넘으면 만점입니다.</li>`;
+  const gate = data.sweep ? `<li><b>개선안 검토 조건.</b> 보호 정지 없이 비교 시간을 완료하고 마지막 ${elapsed(data.sweep.final_window_hours)} 동안 정상 운전 범위와 해당 알람 기준을 모두 충족해야 합니다. 개선 여부는 시뮬레이션 결과로 판정합니다.</li>` : '';
+  byId('simulation-rubric').innerHTML = `${gate}<li><b>Zoro-1 상대 적합도.</b> 채점된 대응안의 원점수에 softmax를 적용해 합계 100%가 되도록 표시합니다.</li>`;
 }
 
 export function mountSimulationResults() {
@@ -185,11 +184,11 @@ export function mountSimulationResults() {
     const wasOpen = !panel.hidden;
     if (isResults) {
       const isZoro = data?.kind === 'zoro';
+      byId('feature1-comparison').hidden = !isZoro;
       byId('simulation-comparison').hidden = !data;
       byId('simulation-scoring').hidden = !data;
-      byId('simulation-zoro-summary').hidden = !isZoro;
       byId('simulation-scoring').querySelector('summary').textContent = isZoro ? 'Zoro-1 판단 및 검색 근거' : '점수 산정 기준';
-      byId('simulation-cards-title').textContent = isZoro ? '설정값 분기 비교' : '대응안 비교';
+      byId('simulation-cards-title').textContent = isZoro ? `피처 2 · ${feature2Verdict(data.feature2)}` : '대응안 비교';
       if (isZoro) renderZoroResults(data);
       else if (data) renderResults(data);
       else {

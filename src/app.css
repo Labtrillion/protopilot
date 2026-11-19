@@ -434,6 +434,44 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 #simulation-title:focus { outline: none; }
 #simulation-context { color: var(--subtext); line-height: 1.55; }
 #simulation-cards-title { font-size: 1.12rem; }
+.feature1-comparison { margin-bottom: 1.75rem; }
+.feature1-comparison h2 { font-size: 1.12rem; }
+.feature1-verdict {
+  margin: 0.65rem 0; padding: 0.8rem 1rem; border-inline-start: 3px solid var(--tracked);
+  border-radius: 4px; background: var(--surface-raised);
+}
+.feature1-verdict h3 { font-size: 1.22rem; }
+.feature1-verdict p { margin-top: 0.25rem; color: var(--subtext); }
+.feature1-verdict .simulation-unavailable { color: var(--danger); }
+.zoro-feature1-summary { margin-bottom: 0.8rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--line-soft); }
+.feature1-scroll-hint { display: none; }
+@media (max-width: 550px) {
+  .feature1-scroll-hint { display: block; margin-bottom: 0.35rem; color: var(--subtext); font-size: 0.8rem; }
+}
+.feature1-table-wrap {
+  overflow-x: auto; border: 1px solid var(--line-soft); border-radius: 5px; background: var(--surface-raised);
+}
+.feature1-table { width: 100%; table-layout: auto; border-spacing: 0; font-size: 0.92rem; }
+.feature1-table :is(th, td) {
+  padding: 0.7rem clamp(0.55rem, 1.4vw, 1rem); border-bottom: 1px solid var(--line-soft);
+  text-align: start; vertical-align: middle; word-break: keep-all; overflow-wrap: anywhere;
+}
+.feature1-table thead th { min-width: 9.5rem; background: var(--surface); white-space: normal; }
+.feature1-table th:first-child {
+  position: sticky; inset-inline-start: 0; z-index: 1; width: 9rem; min-width: 7.5rem;
+  background: var(--surface); border-inline-end: 1px solid var(--line-soft);
+}
+.feature1-table tr:last-child td, .feature1-table tbody tr:last-child th { border-bottom: 0; }
+.feature1-table [data-selected] { background: color-mix(in srgb, var(--tracked) 9%, var(--surface-raised)); }
+.feature1-same-targets { color: var(--subtext); }
+.feature1-table [data-state="error"] { color: var(--danger); }
+.feature1-table [data-state="warning"] { color: var(--warning); }
+.feature1-table .simulation-best { display: table; margin-top: 0.25rem; }
+.feature1-table .zoro-changes strong, .feature1-metric td > strong { white-space: nowrap; }
+.feature1-table small { display: block; margin-top: 0.15rem; color: var(--subtext); font-size: 0.78rem; font-weight: 500; }
+.feature1-metric td { font-family: var(--numeric-font); font-variant-numeric: tabular-nums; }
+.feature1-metric td > strong { font-size: 1.03rem; }
+
 .simulation-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: 0.75rem; margin: 0.65rem 0 0; padding: 0; list-style: none;
@@ -855,6 +893,3 @@ button:disabled, button[aria-pressed]:disabled { cursor: default; color: var(--d
 }
 .zoro-changes li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.2rem 0.65rem; }
 .zoro-changes strong { font-variant-numeric: tabular-nums; }
-#simulation-zoro-summary { display: block; margin-bottom: 0.8rem; }
-#simulation-zoro-summary .zoro-summary { display: grid; gap: 0.35rem; }
-#simulation-zoro-summary .zoro-summary p { margin: 0; }

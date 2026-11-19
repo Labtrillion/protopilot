@@ -325,7 +325,7 @@ def decide(point, *, timeout, checkpoint, request_id):
             result["reason"] = "rag_error"
         else:
             questions, moves = move_questions(table, table)
-            changes = zoro_inference.decide_pair(
+            changes = zoro_inference.decide_changes(
                 state, gate_questions(table), questions, moves, threshold=NEED_THRESHOLD,
                 timeout=timeout, request_id=request_id, result=result,
             )
@@ -334,8 +334,9 @@ def decide(point, *, timeout, checkpoint, request_id):
             result["reason"] = f"rag_error:{type(error).__name__}"
         else:
             result["reason"] = type(error).__name__ if os.environ.get("ZORO_BASE_URL") else "not_configured"
+    ready = result["gate"] is not None and result["reason"] is None
     return {**result, "model": "Zoro-1", "fallback": False, "changes": changes,
-            "status": "ready" if changes else "human_review",
+            "status": "ready" if ready else "human_review",
             "decision_ms": round((perf_counter() - started) * 1000, 2)}, state, rag_result
 
 

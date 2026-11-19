@@ -1,6 +1,6 @@
 # Feature 1 · 설정값 변경 판단
 
-`POST /api/setpoint-decision`은 캡처한 계측 상태와 라이브 SOP를 사용합니다. 활성 알람이 있으면 [Zoro 추론 모듈](setpoint_gate/zoro_inference/__init__.py)이 같은 체크포인트의 RAG 근거와 후보 계획을 함께 전달합니다. Zoro-1의 `noul`로 변경 필요성을 판단하고, 임계값 0.5를 통과한 상위 두 설정값에 대해 `choice`로 허용 범위 내 변경 방향과 크기를 정합니다. 기준안은 정확히 두 변경으로 구성하며 두 항목을 확정할 수 없을 때는 `human_review`와 빈 변경 목록을 반환합니다.
+`POST /api/setpoint-decision`은 캡처한 계측 상태와 라이브 SOP를 사용합니다. 활성 알람이 있으면 [Zoro 추론 모듈](setpoint_gate/zoro_inference/__init__.py)이 같은 체크포인트의 RAG 근거와 후보 계획을 함께 전달합니다. Zoro-1의 `noul` 점수가 0.5 이상이며 허용 범위 안에서 변경할 수 있는 설정값 중 최대 두 개를 고릅니다. 선택된 항목의 변경 방향과 크기는 `choice`로 정합니다. 선택된 항목이 0개면 현재 설정값 유지, 1개면 해당 항목만 변경하는 기준안을 Feature 2에 전달합니다.
 
 - [설정값 판단 코드](setpoint_gate/setpoint_decision.py)는 `POST /api/setpoint-decision`으로 실행합니다.
 - [RAG](rag/README.md)는 독립 검색기, 라이브 센서 SOP 인덱스, 운전 지식, 기존 검증 자료와 [라이브 비교용 평가 기준](rag/evaluation-policy.json)을 관리합니다.

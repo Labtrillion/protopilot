@@ -1,4 +1,4 @@
-"""Retrieve alarm evidence and ask Zoro-1 to choose a pair of setpoint changes."""
+"""Retrieve alarm evidence and ask Zoro-1 to choose up to two setpoint changes."""
 
 import json
 import os
@@ -11,7 +11,7 @@ from server.catalog import CHANNELS
 from zoro.client import zoro_decide
 
 RAG_ROOT = Path(__file__).resolve().parents[2] / "rag"
-REQUIRED_CHANGES = 2
+MAX_CHANGES = 2
 
 
 def retrieve_alarm(point, checkpoint, *, timeout):
@@ -67,7 +67,7 @@ def evidence_for_zoro(result):
     }
 
 
-def decide_pair(state, gates, choices, move_by_choice, *, threshold, timeout, request_id, result):
+def decide_changes(state, gates, choices, move_by_choice, *, threshold, timeout, request_id, result):
     table = state["setpoints"]
     for name, options in move_by_choice.items():
         row = table[name]
@@ -80,9 +80,8 @@ def decide_pair(state, gates, choices, move_by_choice, *, threshold, timeout, re
     scores = {name: float(answers[name]["noul"]) for name in gates}
     result["gate"] = {name: round(score, 4) for name, score in scores.items()}
     eligible = [name for name in scores if scores[name] >= threshold and move_by_choice[name]]
-    selected = sorted(eligible, key=scores.__getitem__, reverse=True)[:REQUIRED_CHANGES]
-    if len(selected) < REQUIRED_CHANGES:
-        result["reason"] = "fewer_than_two_eligible_setpoints"
+    selected = sorted(eligible, key=scores.__getitem__, reverse=True)[:MAX_CHANGES]
+    if not selected:
         return []
 
     answers = zoro_decide(

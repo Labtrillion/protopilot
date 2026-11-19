@@ -20,11 +20,19 @@ from .plant import COOLING_TAGS, control_action
 from .recording import timestamp
 from .scenario import KERNEL_REVISION, STEP_HOURS, adjustment
 from setpoint_rag.sop_align import align, compact_for
+from sop_ranking.score_selection import score_trials
 from .sop_lookup import find_sop
 
 HORIZON_HOURS = CONFIG["alarm_branch_hours"]
 SWEEP_DELAY_MINUTES = (0, 15, 30, 45, 60)
 SWEEP_REDUCTION_PCT = (1, 2.5, 5, 7.5, 10)
+SWEEP_SCORE_CRITERIA = (
+    "Poor: likely to worsen the alarm, violate an operating limit, incur a substantial trade-off, or has no credible path to help.",
+    "Suitable: a credible, proportionate trial with limited expected downside. Preserving current cost and tracking "
+    "with a small, temporary production loss can fit when it creates operating margin.",
+    "Strong: clear observed or SOP evidence that the timing and reduction will improve alarm response, tracking or "
+    "unit cost, with limited downside on other metrics and operating limits respected.",
+)
 
 
 def reduction_candidate(rate, delay):
@@ -77,9 +85,7 @@ def evidence(checkpoint, sop, alignment=None):
     return entries
 
 
-def choose_response(checkpoint, sop, readings, alignment=None):
-    started = perf_counter()
-    choices = {key: CANDIDATES[key][0] for key in sop["candidates"]}
+def alarm_response_state(checkpoint, sop, readings, alignment):
     state = {
         "alarm": checkpoint.alarm,
         "related_alarms": checkpoint.related_alarms,
@@ -97,6 +103,13 @@ def choose_response(checkpoint, sop, readings, alignment=None):
         }
     if sop["id"] == "TEP-COOL-01":
         state["trend"] = checkpoint.cooling_trend
+    return state
+
+
+def choose_response(checkpoint, sop, readings, alignment=None):
+    started = perf_counter()
+    choices = {key: CANDIDATES[key][0] for key in sop["candidates"]}
+    state = alarm_response_state(checkpoint, sop, readings, alignment)
     questions = {
         "diagnosis": {
             "type": "choice", "criteria": sop["diagnoses"],
@@ -231,6 +244,24 @@ def evaluate_alarm(checkpoint):
     }
     if sop and sop.get("candidates"):
         result["decision"] = choose_response(checkpoint, sop, readings, alignment)
+        scores, score_reason = {}, None
+        try:
+            descriptions = {"hold": "Hold the current production target", **{
+                key: f"Reduce the production target by {rate:g}% after {delay:g} minutes"
+                for key, (_, rate, delay) in SWEEP_CANDIDATES.items()
+            }}
+            scores = score_trials(
+                alarm_response_state(checkpoint, sop, readings, alignment), descriptions,
+                comparison=(
+                    "Compare each scheduled production reduction with holding the current target. "
+                    "Judge the trade-off: a small cut can be suitable if it is likely to preserve tracking and unit cost "
+                    "while giving the process more operating margin. Count the production lost and penalize larger cuts "
+                    "or delays when the alarm evidence does not justify them."
+                ),
+                timeout=5, request_id=result["decision_id"], criteria=SWEEP_SCORE_CRITERIA,
+            )
+        except (AttributeError, KeyError, TypeError, ValueError, OSError) as error:
+            score_reason = type(error).__name__ if os.environ.get("ZORO_BASE_URL") else "not_configured"
         baseline = run_branch(checkpoint, "hold")
         variants = {key: run_branch(checkpoint, key) for key in SWEEP_CANDIDATES}
         evaluated = {"hold": baseline, **variants}
@@ -238,6 +269,7 @@ def evaluate_alarm(checkpoint):
         result["sweep"] = {
             "baseline": baseline, "delay_minutes": SWEEP_DELAY_MINUTES, "reduction_pct": SWEEP_REDUCTION_PCT,
             "final_window_hours": min(HORIZON_HOURS, FINAL_WINDOW_HOURS), "branches": list(variants.values()),
+            "scores": scores, "score_reason": score_reason,
         }
     trace = {
         **result, "time_utc": timestamp(), "flow": "live_alarm_response", "kernel_revision": KERNEL_REVISION,

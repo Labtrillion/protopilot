@@ -103,22 +103,34 @@ class SetpointDecisionTest(unittest.TestCase):
         self.assertEqual([b["id"] for b in result["branches"]], ["hold", "rule"])
         self.assertEqual(json.loads(log.read_text())["decision"]["status"], "human_review")
 
-    def test_one_passing_noul_does_not_propose_a_partial_pair(self):
+    def test_zero_or_one_passing_noul_produces_a_feature2_baseline(self):
         point = replace(capture_point(self.plant), alarms=())
 
-        def reply(_, payload, **kwargs):
-            return {"answers": {name: {"noul": 0.9 if name == "production_rate" else 0.49}
-                                for name in payload["questions"]}}
+        for expected in ([], ["production_rate"]):
+            with self.subTest(selected=expected):
+                def reply(_, payload, **kwargs):
+                    questions = payload["questions"]
+                    if next(iter(questions.values()))["type"] == "noul":
+                        return {"answers": {name: {"noul": 0.5 if name in expected else 0.49}
+                                            for name in questions}}
+                    self.assertEqual(list(questions), expected)
+                    return {"answers": {"production_rate": {"choice": "decrease_small"}}}
 
-        with (
-            patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}),
-            patch("zoro.client._request", side_effect=reply) as request,
-            patch("setpoint_gate.setpoint_decision.BRANCH_HOURS", 20 * STEP_HOURS),
-        ):
-            result = analyze_setpoints(point, self.root / "agent-trace.jsonl")
-        self.assertEqual(result["decision"]["reason"], "fewer_than_two_eligible_setpoints")
-        self.assertEqual(result["handoff"]["baseline_changes"], [])
-        self.assertEqual(request.call_count, 1)
+                def evaluate(_, handoff, state, *, timeout):
+                    self.assertEqual([change["setpoint"] for change in handoff["baseline_changes"]], expected)
+                    return {"status": "verified"}
+
+                with (
+                    patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}),
+                    patch("zoro.client._request", side_effect=reply) as request,
+                    patch("setpoint_gate.setpoint_decision.BRANCH_HOURS", 20 * STEP_HOURS),
+                ):
+                    result = analyze_setpoints(point, self.root / "agent-trace.jsonl", evaluate_alternatives=evaluate)
+                self.assertEqual(result["decision"]["status"], "ready")
+                self.assertIsNone(result["decision"]["reason"])
+                self.assertEqual(result["handoff"]["baseline_changes"], result["decision"]["changes"])
+                self.assertEqual(result["feature2"]["status"], "verified")
+                self.assertEqual(request.call_count, 1 + len(expected))
 
     def test_branch_cost_loss_and_alarm_minutes_match_the_live_plant(self):
         plant = self.plant

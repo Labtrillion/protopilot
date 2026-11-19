@@ -1,4 +1,5 @@
 import { byId, elapsed, escape, reading } from './ui.js';
+import { formatZoroShare, softmaxShares } from './simulation-score.js';
 
 const summaryMetrics = [
   { key: 'shutdown', label: '보호 정지', format: (branch) => branch.shutdown ? '발생' : '없음' },
@@ -30,15 +31,16 @@ function renderDecision(decision) {
   </section>`;
 }
 
-function renderSummary(branches, selected) {
+function renderSummary(branches, selected, shares) {
   return `<div class="study-table-frame">
     <table class="study-table" aria-label="주요 대응 비교 지표">
       <thead><tr><th scope="col">대응</th>${summaryMetrics.map(({ label, unit }) =>
-        `<th scope="col" class="right">${label}${unit ? `<span class="channel-unit">${unit}</span>` : ''}</th>`).join('')}</tr></thead>
+        `<th scope="col" class="right">${label}${unit ? `<span class="channel-unit">${unit}</span>` : ''}</th>`).join('')}${shares ? '<th scope="col" class="right">Zoro-1 상대 적합도</th>' : ''}</tr></thead>
       <tbody>${branches.map((branch) => `<tr${branch.id === selected ? ' class="study-selected"' : ''}>
         <th scope="row">${escape(branch.label)}${branch.id === selected ? '<small>우선 검토</small>' : ''}</th>
         ${summaryMetrics.map(({ key, unit, format }) => `<td class="right${unit ? ' numeric' : ''}">
-          ${branch.error ? '—' : format ? format(branch) : reading(branch[key])}</td>`).join('')}</tr>`).join('')}
+          ${branch.error ? '—' : format ? format(branch) : reading(branch[key])}</td>`).join('')}
+        ${shares ? `<td class="right numeric">${formatZoroShare(shares[branch.id])}</td>` : ''}</tr>`).join('')}
       </tbody>
     </table>
   </div>`;
@@ -59,9 +61,11 @@ function renderDetailTable(branches) {
 function renderComparison({ branches, start, decision, alarm, sweep }) {
   const sensorTest = alarm.source === '센서 시험';
   const unavailable = branches.filter((branch) => branch.error);
+  const shares = sweep ? softmaxShares(sweep.scores) : null;
   return `<section class="study-section">
     <div class="study-heading"><h3>SOP 대응안 비교</h3><span>${sweep ? `대안 ${sweep.branches.length}개 계산 · ` : ''}비교 시간 최대 ${elapsed(start.horizon_hours)}</span></div>
-    ${renderSummary(branches, decision.response.choice)}
+    ${renderSummary(branches, decision.response.choice, shares)}
+    ${Object.keys(shares ?? {}).length ? '<p class="study-note">상대 적합도는 전체 대응안 점수에 softmax를 적용한 비중입니다.</p>' : ''}
     <p class="study-note">알람이 발생한 상태에서 시작하며, 이탈 시간은 TEP 모델의 운전 범위를 기준으로 계산합니다.</p>
     ${sensorTest ? '<p class="study-note">센서 시험 전의 모델 측정값으로 비교했습니다.</p>' : ''}
     ${unavailable.map((branch) => `<p class="study-note" role="status">${escape(branch.label)} · ${escape(branch.error)}</p>`).join('')}
