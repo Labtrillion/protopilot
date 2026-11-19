@@ -16,12 +16,13 @@ const initialPolarAngle = new T.Spherical().setFromVector3(initialOffset).phi;
 const verticalOrbitLimit = T.MathUtils.degToRad(25);
 const clickSlop = 5;
 const processFrameInterval = 24;
+const interiorClearance = 8;
 const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
 const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'stripper']);
 const annotationPositions = {
   equipment: { alignY: 1, lift: 4, range: 110 },
-  part: { range: 82 },
+  part: { range: 180 },
   port: { alignY: 0.65, range: 100 },
   flow: { alignX: 1, alignY: 0.88, range: 100 },
 };
@@ -236,7 +237,7 @@ function makePartLabels(host, parts, onPick) {
   });
 }
 
-export function mountScene(container, host, interiorTools, select, pick, selectCircuit, selectFeed) {
+export function mountScene(container, host, select, pick, selectCircuit, selectFeed) {
   const scene = new T.Scene();
   scene.background = new T.Color(readColor('--stage'));
   const renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -317,7 +318,6 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
     }
   });
   for (const el of sized.keys()) labelSizes.observe(el, { box: 'border-box' });
-  new ResizeObserver(() => { annotationsDirty = true; }).observe(interiorTools);
   const selectionColor = readColor('--focus');
   const warningColor = readColor('--warning');
   const trackedColor = new T.Color(readColor('--tracked'));
@@ -337,8 +337,10 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
   const cameraOffset = new T.Vector3();
   const cameraOrbit = new T.Spherical(), destinationOrbit = new T.Spherical();
   const box = new T.Box3();
+  const viewProjection = new T.Matrix4();
   let width = 1, height = 1, focus = 'plant', activeCircuit = '', displayed = true, frame = null, data = null;
   let showFlow = true, showPressure = true, showLabels = true, showInternals = false;
+  let openInteriors = [];
   let trackedArea = '', trackedTag = '';
   let trackedFeed, focusedValve;
   let down = null, framing = false, valveRadius = 14;
@@ -354,6 +356,11 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
     box.setFromObject(models[area]);
     group.userData.top = box.max.y;
   }
+  const casingBounds = Object.fromEntries(Object.entries(sight).map(([area, { casing }]) => {
+    const bounds = new T.Box3();
+    for (const shell of casing) bounds.union(box.setFromObject(shell, true));
+    return [area, bounds];
+  }));
 
   function updateProjection() {
     camera.setViewOffset(width, height, -panX * width, 0, width, height);
@@ -415,8 +422,8 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
 
   // A selected unit with an interior shows only its own section; otherwise every interior is shown.
   function applyInternals() {
-    const shown = internal.show(showInternals, focus in sight ? focus : '');
-    container.dataset.internals = shown.join(',');
+    openInteriors = internal.show(showInternals, focus in sight ? focus : '');
+    container.dataset.internals = openInteriors.join(',');
     renderer.shadowMap.needsUpdate = true;
   }
 
@@ -463,22 +470,37 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
     }
   }
 
+  function reserveInteriors(occupied) {
+    if (!openInteriors.length) return;
+    viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    for (const area of openInteriors) {
+      box.copy(casingBounds[area]).applyMatrix4(viewProjection);
+      const { min, max } = box;
+      const left = (min.x + 1) * width / 2 - interiorClearance;
+      const right = (max.x + 1) * width / 2 + interiorClearance;
+      const top = (1 - max.y) * height / 2 - interiorClearance;
+      const bottom = (1 - min.y) * height / 2 + interiorClearance;
+      if (min.z <= 1 && max.z >= -1 && left < width && right > 0 && top < height && bottom > 0) {
+        occupied.push({ left, right, top, bottom });
+      }
+    }
+  }
+
   function projectLabels() {
     annotationsDirty = false;
     if (!showLabels) return;
-    // Leave the valve controls and the interior toolbar clear of projected labels.
+    // Keep the exposed sections and the valve controls clear of projected labels.
     const placed = valveTargets.map(({ bounds }) => bounds).filter(Boolean);
-    if (!interiorTools.hidden) {
-      const { offsetLeft: left, offsetTop: top, offsetWidth, offsetHeight } = interiorTools;
-      placed.push({ left, top, right: left + offsetWidth, bottom: top + offsetHeight });
-    }
+    reserveInteriors(placed);
     const priority = (area) => {
       if (focus === area || trackedArea === area || alertAreas.has(area)) return 3;
       if (showPressure && CORE_PRESSURES[area]) return 2;
       return primaryLabels.has(area) ? 1 : 0;
     };
     const ordered = [...labelEntries].sort(([a], [b]) => priority(b) - priority(a));
-    for (const [, label] of ordered) projectAnnotation(label, placed, annotationPositions.equipment);
+    for (const [area, label] of ordered) {
+      if (priority(area) >= 2) projectAnnotation(label, placed, annotationPositions.equipment);
+    }
     const orderedParts = [...parts].sort((a, b) => Number(b.tag === trackedTag) - Number(a.tag === trackedTag));
     for (const part of orderedParts) {
       if (showInternals && internal.visible(part.area)) {
@@ -488,6 +510,9 @@ export function mountScene(container, host, interiorTools, select, pick, selectC
       } else {
         part.el.removeAttribute('data-placed');
       }
+    }
+    for (const [area, label] of ordered) {
+      if (priority(area) < 2) projectAnnotation(label, placed, annotationPositions.equipment);
     }
     for (const port of ports) {
       if (!activeCircuit || activeCircuit === port.circuit) projectAnnotation(port, placed, annotationPositions.port);

@@ -607,9 +607,8 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 
 /* Interior part tags, sensor test and channel scope. */
 .interior-tools {
-  position: absolute; z-index: 5; inset: 0.45rem auto auto 0.45rem; max-width: calc(100% - 0.9rem);
-  display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.65rem;
-  padding: 0.3rem 0.48rem; border: 1px solid var(--line-soft); border-radius: 5px; background: var(--surface);
+  display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.65rem;
+  padding: 0.3rem 0.65rem; border-bottom: 1px solid var(--line-soft); background: var(--surface);
 }
 .interior-parts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; min-width: 0; }
 .interior-parts .toolbar-label { margin-right: 0.1rem; font-size: 0.74rem; }
