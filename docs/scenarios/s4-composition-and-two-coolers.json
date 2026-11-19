@@ -3,6 +3,7 @@
   "id": "s4-composition-and-two-coolers",
   "title": "시나리오 4. 원료 조성과 두 설비의 냉각 조건이 동시에 변할 때의 대응 우선순위",
   "duration_min": 480,
+  "initial_speed": 240,
   "events": [
     {
       "at_min": 60,
