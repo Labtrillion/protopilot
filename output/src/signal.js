@@ -33,10 +33,11 @@ function describe(signal, status, format) {
   if (kind === 'mv') {
     const position = status.actuators?.[tag];
     const mode = tag in status.manual ? '수동' : '자동';
+    const limited = status.limited_manual?.includes(tag);
     const location = routeNames ? `${routeNames} 밸브` : '반응기 교반기';
     const actual = Number.isFinite(position) ? `실제 ${format(position)}` : '실제 위치 데이터 없음';
     const pending = tag in status.manual && status.manual[tag] !== measured;
-    return [location, `${mode} 제어 · ${actual}${paused}`, pending ? '조작 명령 · 적용 대기' : '조작 명령'];
+    return [location, `${mode} 제어 · ${actual}${paused}`, limited ? '자동 보호 제어로 제한' : pending ? '조작 명령 · 적용 대기' : '조작 명령'];
   }
   if (kind === 'setpoint') {
     const location = item.formula ?? (LEVEL_TAGS.has(tag) ? '설비 액위 목표선' : `${tag} 실측 추세`);

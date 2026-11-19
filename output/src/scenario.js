@@ -1,11 +1,12 @@
 import { byId, elapsed, escape, reading } from './ui.js';
+import { mountArchive } from './archive.js';
 
 const protections = {
   high_pressure_to_production: '고압 · 생산량 제한',
   high_level_to_recycle: '고액위 · 재순환 밸브 제한',
 };
 
-export function mountScenario(command, onReplay) {
+export function mountScenario(request, command, onReplay) {
   const dialog = byId('scenario-dialog');
   const form = byId('scenario-form');
   const file = byId('scenario-file');
@@ -14,10 +15,16 @@ export function mountScenario(command, onReplay) {
   const open = byId('open-scenario');
   const options = byId('controller-options');
   let latest, online, updating = false;
+  async function replay(scenario) {
+    await command({ op: 'replay_scenario', scenario });
+    dialog.close();
+    onReplay();
+  }
+  const archive = mountArchive(request, replay);
 
   function render() {
-    open.disabled = !online;
     const flags = latest?.controller_flags;
+    open.disabled = !online || !flags;
     for (const box of options.querySelectorAll('input')) {
       box.disabled = !online || updating || !flags;
       box.checked = Boolean(flags?.[box.value]);
@@ -40,6 +47,7 @@ export function mountScenario(command, onReplay) {
     form.reset();
     error.hidden = true;
     dialog.showModal();
+    if (byId('recording-archive').open) archive.refresh();
   });
   byId('close-scenario').addEventListener('click', () => dialog.close());
   form.addEventListener('submit', async (event) => {
@@ -55,9 +63,7 @@ export function mountScenario(command, onReplay) {
       } catch {
         throw new Error('JSON 파일 형식을 확인하세요.');
       }
-      await command({ op: 'replay_scenario', scenario });
-      dialog.close();
-      onReplay();
+      await replay(scenario);
     } catch (failure) {
       error.textContent = failure.message;
       error.hidden = false;
@@ -77,7 +83,8 @@ export function mountScenario(command, onReplay) {
     }
   });
   return {
-    init(flags) {
+    init(flags, channels) {
+      archive.init(channels);
       options.innerHTML = Object.entries(flags).map(([key, label]) =>
         `<label><input type="checkbox" value="${escape(key)}" disabled> ${escape(label)}</label>`).join('');
     },

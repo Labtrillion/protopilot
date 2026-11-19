@@ -385,6 +385,15 @@ dialog::backdrop { background: var(--surface); }
 #controller-detail:empty { display: none; }
 #scenario-dialog a { text-decoration: underline; text-underline-offset: 0.2em; }
 #scenario-error { margin: 0; color: var(--warning); }
+#scenario-dialog { max-height: calc(100dvh - 2rem); overflow: auto; }
+.recording-archive { border-top: 1px solid var(--line); padding-top: 0.45rem; }
+.recording-archive summary { cursor: pointer; }
+.recording-archive label { display: grid; gap: 0.2rem; padding-top: 0.45rem; }
+.recording-archive p { margin: 0.45rem 0; color: var(--muted); font-size: 0.78rem; }
+.recording-archive select { width: 100%; }
+#archived-chart { display: block; width: 100%; height: 6rem; border: 1px solid var(--line); background: var(--inset); }
+#archived-value { font: 0.78rem var(--mono); }
+.archive-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-top: 0.5rem; }
 @media (prefers-reduced-motion: reduce) {
   .pfd-svg.show-flow.running .pipe-ticks { animation: none; }
 }

@@ -26,7 +26,7 @@ let channelScope = 'primary', returnPoint = null, explicitTag = '';
 
 const signal = mountSignal((tag) => loopForTag(tag));
 const response = mountResponse((id) => openControls?.(id), (id) => trackSetpoint(id));
-const scenario = mountScenario(async (body) => {
+const scenario = mountScenario(request, async (body) => {
   try {
     return await command(body);
   } catch (error) {
@@ -475,7 +475,7 @@ async function poll() {
       byId('channel-count').textContent = schema.channels.length;
       byId('channel-group').insertAdjacentHTML('beforeend', schema.groups.map((g) => option(g.id, `${g.label} · ${g.count}`)).join(''));
       setpoints = schema.setpoints;
-      scenario.init(schema.controller_flags);
+      scenario.init(schema.controller_flags ?? {}, schema.channels);
       response.init(setpoints);
       openControls = setupControls(schema, () => status, command, (kind, item) => {
         const next = { kind, item };

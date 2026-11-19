@@ -206,6 +206,22 @@
         <p class="adjust-info">시작 조건과 조작 이력을 저장합니다. 불러오면 초기 상태에서 일시정지된 새 실행이 생성됩니다.</p>
         <label>저장한 시나리오<input id="scenario-file" type="file" accept=".json,application/json" required></label>
         <p id="scenario-error" role="alert" hidden></p>
+        <details id="recording-archive" class="recording-archive">
+          <summary>이전 로컬 기록</summary>
+          <label>기록<select id="archived-run" disabled></select></label>
+          <label>계측 태그<select id="archived-channel" disabled></select></label>
+          <p id="archived-status" role="status"></p>
+          <div id="archived-preview" hidden>
+            <canvas id="archived-chart" aria-hidden="true"></canvas>
+            <label>기록 시점<input id="archived-frame" type="range" min="0" max="0" value="0" step="1"></label>
+            <output id="archived-value" for="archived-frame"></output>
+          </div>
+          <div id="archived-links" class="archive-links" hidden>
+            <a id="archived-csv">CSV</a><a id="archived-json">JSON</a>
+            <a id="archived-scenario" hidden>시나리오 JSON</a>
+            <button type="button" id="archived-replay" hidden>재실행 준비</button>
+          </div>
+        </details>
       </div>
       <div class="dialog-actions"><button type="submit" id="load-scenario" class="solid">불러와 재실행 준비</button></div>
     </form>
