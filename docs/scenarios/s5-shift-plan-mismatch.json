@@ -1,0 +1,63 @@
+{
+  "format": "protopilot-scenario-1",
+  "id": "s5-shift-plan-mismatch",
+  "title": "시나리오 5. 교대 후 생산계획과 실제 생산 목표가 어긋난 상황",
+  "duration_min": 360,
+  "events": [
+    {
+      "at_min": 30,
+      "op": "setpoint",
+      "id": "production_rate",
+      "value": 25.2,
+      "note": "이전 계획(증산 +10%)이 제어기에 남음"
+    }
+  ],
+  "context": {
+    "shift_change_min": 60,
+    "approved_plan": {
+      "production_rate": 22.95,
+      "approved_at_min": 0,
+      "note": "증산 일정 연기"
+    },
+    "setpoint_change_log": [
+      {
+        "at_min": 30,
+        "tag": "production_rate",
+        "value": 25.2,
+        "by": "이전 교대"
+      }
+    ]
+  },
+  "agent": {
+    "trigger": {
+      "after_min": 60,
+      "on": "first_alarm"
+    },
+    "candidates": [
+      "keep_current",
+      "return_to_approved"
+    ]
+  },
+  "assumptions": [
+    "증산 폭 +10% (22.95 -> 25.2 m3/h)",
+    "alarm_limits는 헤드리스 관측 범위로 정한 데모 운전 기준"
+  ],
+  "alarm_limits": {
+    "XMEAS(7)": [
+      null,
+      2725
+    ],
+    "XMEAS(9)": [
+      119.9,
+      120.9
+    ],
+    "XMEAS(12)": [
+      43.0,
+      55.0
+    ],
+    "XMEAS(15)": [
+      37.0,
+      60.0
+    ]
+  }
+}

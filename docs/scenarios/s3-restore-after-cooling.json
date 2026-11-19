@@ -1,0 +1,60 @@
+{
+  "format": "protopilot-scenario-1",
+  "id": "s3-restore-after-cooling",
+  "title": "시나리오 3. 냉각 조건 회복 후 생산량 복원 시점 선택",
+  "duration_min": 720,
+  "events": [
+    {
+      "at_min": 0,
+      "op": "disturbance",
+      "id": "IDV(27)",
+      "value": 1,
+      "note": "반응기 냉각수 압력/유량 불규칙 변동"
+    },
+    {
+      "at_min": 60,
+      "op": "setpoint",
+      "id": "production_rate",
+      "value": 21.8,
+      "note": "감산 운전 (-5%, 가정값)"
+    }
+  ],
+  "context": {
+    "reduced_since_min": 60,
+    "base_production_rate": 22.95
+  },
+  "agent": {
+    "trigger": {
+      "on": "stable_window",
+      "window_min": 60
+    },
+    "candidates": [
+      "hold_reduced",
+      "restore_step_2.5pct",
+      "restore_full"
+    ]
+  },
+  "assumptions": [
+    "감산 폭 -5%",
+    "IDV(27)은 끄지 않고 시뮬레이션에서 관측되는 안정 구간을 사용",
+    "alarm_limits는 헤드리스 관측 범위로 정한 데모 운전 기준"
+  ],
+  "alarm_limits": {
+    "XMEAS(7)": [
+      null,
+      2725
+    ],
+    "XMEAS(9)": [
+      119.9,
+      120.9
+    ],
+    "XMEAS(12)": [
+      43.0,
+      55.0
+    ],
+    "XMEAS(15)": [
+      37.0,
+      60.0
+    ]
+  }
+}
