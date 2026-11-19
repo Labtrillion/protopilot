@@ -31,7 +31,8 @@ class SopAlignTest(unittest.TestCase):
         plant = run_plant(self.root, end_h=0.05)
         observed = plant.history[-1][1]
         tags = {c["tag"] for e in sop_align.INDEX["idv"] for r in e["rules"] for c in r["conditions"]}
-        self.assertEqual(sorted(t for t in tags if t not in observed), [])
+        missing = [t for t in tags if sop_align.observed_value(observed, t) is None]
+        self.assertEqual(sorted(missing), [])
 
     def test_fault_free_history_selects_no_idv_sop(self):
         plant = run_plant(self.root, end_h=3.0)
@@ -47,6 +48,18 @@ class SopAlignTest(unittest.TestCase):
         self.assertEqual(result["alignment"]["idv_selected"], "IDV-06")
         self.assertEqual(result["sop"]["id"], "TEP-IDV-06")
         self.assertIn("XMEAS(1)", [r["tag"] for r in result["readings"]])
+
+    def test_idv20_needs_reactor_separator_pressure_difference(self):
+        # Separator pressure outside its envelope but moving with reactor pressure (difference nominal):
+        # the added IDV-20 condition keeps the rule false; a changed difference makes it hold.
+        env = sop_align.INDEX["live_envelopes"]["by_tag"]
+        sep = env["XMEAS(13)"]["maximum"] + 20
+        nominal_dp = sum(env["XMEAS(7)-XMEAS(13)"].values()) / 2
+        rule = lambda dp: next(r for r in sop_align.rank_idv(
+            [(t / 100, {"XMEAS(13)": sep, "XMEAS(7)": sep + dp}) for t in range(60)])
+            if r["protocol_id"] == "IDV-20")["held_rules"]
+        self.assertNotIn("IDV-20-OBS-01", rule(nominal_dp))
+        self.assertIn("IDV-20-OBS-01", rule(nominal_dp + 20))
 
     def test_sensor_sop_matches_severity_band(self):
         high = sop_align.match_sensor_sop({"kind": "warning", "tag": "XMEAS(7)", "side": "high", "value": 2900})

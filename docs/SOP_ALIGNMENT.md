@@ -43,34 +43,54 @@ retrieval method cannot use the SOP content it retrieves (2).
 - **`alarm_response.py`**: sends the selected SOP to Zoro, along with the held conditions and the
   two runner-up SOPs. It returns the full `alignment` in the result and the trace.
 
+## Added condition: IDV-20 pressure difference
+
+IDV-20's own diagnosis check says "Compare reactor/separator pressures" (cause: reactor-to-separator
+gas-flow relation). Its source condition tests separator pressure `XMEAS(13)` alone, and that signal
+moves with reactor pressure under most faults. With the source condition only, IDV-20 was wrongly
+selected 27 times on the dev seeds (alarms and probes). Examples: the first IDV-01 alarm scored
+IDV-20 2.975 against IDV-01 2.928.
+
+`scripts/build_sop_index.py` therefore ANDs one condition onto `IDV-20-OBS-01`: the reactor−separator
+pressure difference `XMEAS(7)-XMEAS(13)` must be outside its fault-free envelope (69.6–72.6 kPa,
+measured like every other envelope). The condition is marked `added_by_protopilot` in the index;
+tep-sops itself is unchanged.
+
+On the dev seeds, after onset, the pressure difference was outside the envelope 74–81 % of the time
+under IDV-20, 17 % under IDV-01, about 40 % under IDV-06 and 0–2 % under most others.
+
 ## Evaluation
 
 Run `python scripts/eval_sop_align.py --bm25 <vendored zoro-rag>`. Each run injects IDV 0–28 at 1 h
 and continues to 9 h on the headless Plant.
 
-- **Dev seeds** 1431655765 and 20261119 were used while the scoring was designed.
-- **Seed 777** was run once, after the scoring was frozen.
+- **Dev seeds** 1431655765 and 20261119 were used while the scoring and the IDV-20 condition were designed.
+- **Seed 777** was the held-out seed for the first version. It was seen before the IDV-20 change, so
+  it is no longer held out.
+- **Seed 4242** was run once, after the current version was frozen.
 
 Results are in `scripts/eval_sop_align_{dev,heldout}.json`.
 
-| Metric | Dev seeds (2) | Held-out seed 777 |
-|---|---|---|
-| Alarms with the true IDV SOP ranked first: aligner | 96/121 | 60/83 |
-| Same metric: BM25 baseline | 8/121 | 2/83 |
-| First alarm per faulted run, true IDV selected: aligner | 5/7 | 2/5 |
-| Same metric: BM25 baseline | 1/7 | 1/5 |
-| Fault-free run: an IDV SOP selected (alarms and probes) | 0 | 0 |
-| On-demand probe at onset + 2 h: correct / wrong / abstained (of 28) | 13/5/10 and 11/4/13 | 8/7/13 |
-| Alarms with a matching sensor SOP | all | all (only `XMEAS(15)` low fired) |
+| Metric | Dev seeds (2) | Seed 777: before → after IDV-20 change | Held-out seed 4242 |
+|---|---|---|---|
+| Alarms, true IDV SOP ranked 1st: aligner | 104/121 | 60/83 → 62/83 | **63/82** |
+| Same metric: BM25 baseline | 8/121 | 2/83 | 9/82 |
+| First alarm per faulted run, true IDV selected: aligner | 7/7 | 2/5 → 3/5 | **4/5** |
+| Same metric: BM25 baseline | 1/7 | 1/5 | 1/5 |
+| IDV-20 selected when the truth is another IDV (alarms and probes) | 27 → 1 | 22 → 2 | 3 |
+| Fault-free run: an IDV SOP selected | 0 | 0 | 0 |
+| Probe at onset + 2 h: correct / wrong / abstained (of 28) | 14/3/11 and 12/3/13 | 8/7/13 → 10/4/14 | 11/3/14 |
+| Alarms with a matching sensor SOP | all | all | all (only `XMEAS(15)` low fired) |
 
 ## Known limits
 
-- **IDV-20 is over-selected.** Its envelope on separator pressure `XMEAS(13)` moves with most faults.
-  This is the main error: IDV-01, -08 and -13 alarms on the held-out seed went to IDV-20.
+- **Remaining first-alarm errors.** IDV-13 went to IDV-15 (seeds 777 and 4242), and on seed 777
+  IDV-08 went to IDV-01. IDV-08 and IDV-01 share their source-proximal signal (AC-feed A
+  composition) and differ only by random vs step shape.
 - **Some SOP pairs share identical conditions.** IDV 14/17 and 15/18 do; IDV 3/9, 4/11 and 5/12
   differ only by the step-vs-random type, which a short window often cannot separate.
 - **Most IDVs never raise an operating-limit alarm within 8 h of onset.** On those runs the
   alignment is exercised only by the on-demand probes.
 - **The IDV compact SOPs expose only `hold`**, so a correct alignment does not by itself change
   the branches that are compared.
-- The evaluation used 3 seeds and one 8 h horizon. The live envelopes come from 3 calibration seeds.
+- The evaluation used 4 seeds and one 8 h horizon. The live envelopes come from 3 calibration seeds.

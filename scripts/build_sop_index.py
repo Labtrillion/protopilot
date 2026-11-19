@@ -65,13 +65,34 @@ def convert_condition(c: dict) -> dict:
     return out
 
 
+# [ADDED] Conditions that put an SOP's own written check into executable form. Each entry names the
+# check it implements; the source rule's conditions are kept and the added one is ANDed with them.
+AUGMENTATIONS = {
+    "IDV-20-OBS-01": {
+        "implements": "IDV-20 diagnosis check: 'Compare reactor/separator pressures' (reactor-to-separator "
+                      "gas-flow relation). The source condition uses separator pressure alone, which moves "
+                      "with reactor pressure under most faults.",
+        "condition": {"tag": "XMEAS(7)-XMEAS(13)", "source_tag": None, "signal": "reactor_minus_separator_pressure",
+                      "unit": "kPa", "operator": "outside_reference_range", "kind": "envelope",
+                      "minimum": None, "maximum": None},  # measured by scripts/calibrate_envelopes.py
+    },
+}
+
+
 def idv_entry(path: Path, compact: dict) -> dict:
     d = json.loads(path.read_text(encoding="utf-8"))
     rules = []
     for rule in d["observation_rules"]:
         logic = "all" if "all" in rule["if"] else "any"
+        converted = [convert_condition(c) for c in conditions(rule["if"])]
+        added = AUGMENTATIONS.get(rule["rule_id"])
+        if added:
+            if logic != "all" and len(converted) > 1:
+                raise ValueError(f"augmentation needs an all-rule: {rule['rule_id']}")
+            logic = "all"
+            converted.append({**added["condition"], "added_by_protopilot": added["implements"]})
         rules.append({"rule_id": rule["rule_id"], "logic": logic, "title": rule.get("title"),
-                      "conditions": [convert_condition(c) for c in conditions(rule["if"])]})
+                      "conditions": converted})
     return {"id": compact["id"], "protocol_id": d["protocol_id"], "title": d["name"],
             "disturbance_type": d["disturbance"].get("original_type"),
             "mechanism_tags": sorted({canonical_tag(s["tag"]) for s in d["mechanism"].get("signals", [])

@@ -1675,6 +1675,17 @@
        "kind": "envelope",
        "minimum": 2629.735762514043,
        "maximum": 2639.875007978102
+      },
+      {
+       "tag": "XMEAS(7)-XMEAS(13)",
+       "source_tag": null,
+       "signal": "reactor_minus_separator_pressure",
+       "unit": "kPa",
+       "operator": "outside_reference_range",
+       "kind": "envelope",
+       "minimum": null,
+       "maximum": null,
+       "added_by_protopilot": "IDV-20 diagnosis check: 'Compare reactor/separator pressures' (reactor-to-separator gas-flow relation). The source condition uses separator pressure alone, which moves with reactor pressure under most faults."
       }
      ]
     },
@@ -5363,6 +5374,10 @@
    "XMEAS(7)": {
     "minimum": 2702.1478530425725,
     "maximum": 2708.16078213456
+   },
+   "XMEAS(7)-XMEAS(13)": {
+    "minimum": 69.60893821431637,
+    "maximum": 72.62305109221415
    },
    "XMEAS(8)": {
     "minimum": 73.01161253094973,

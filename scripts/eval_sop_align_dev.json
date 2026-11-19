@@ -11,9 +11,9 @@
     "n_nofault": 1,
     "nofault_selected": 0,
     "n_fault": 28,
-    "selected_correct": 4,
-    "selected_wrong": 7,
-    "abstained": 17,
+    "selected_correct": 5,
+    "selected_wrong": 5,
+    "abstained": 18,
     "top3": 9,
     "truth_in_tie": 0
    },
@@ -22,8 +22,8 @@
     "nofault_selected": 0,
     "n_fault": 28,
     "selected_correct": 12,
-    "selected_wrong": 2,
-    "abstained": 14,
+    "selected_wrong": 1,
+    "abstained": 15,
     "top3": 12,
     "truth_in_tie": 0
    },
@@ -31,9 +31,9 @@
     "n_nofault": 1,
     "nofault_selected": 0,
     "n_fault": 28,
-    "selected_correct": 13,
-    "selected_wrong": 5,
-    "abstained": 10,
+    "selected_correct": 14,
+    "selected_wrong": 3,
+    "abstained": 11,
     "top3": 16,
     "truth_in_tie": 0
    },
@@ -41,26 +41,26 @@
     "n_nofault": 1,
     "nofault_selected": 0,
     "n_fault": 28,
-    "selected_correct": 9,
-    "selected_wrong": 9,
+    "selected_correct": 10,
+    "selected_wrong": 8,
     "abstained": 10,
-    "top3": 13,
+    "top3": 14,
     "truth_in_tie": 0
    },
    "probe_8.0h": {
     "n_nofault": 1,
     "nofault_selected": 0,
     "n_fault": 28,
-    "selected_correct": 12,
-    "selected_wrong": 5,
-    "abstained": 11,
+    "selected_correct": 13,
+    "selected_wrong": 3,
+    "abstained": 12,
     "top3": 14,
     "truth_in_tie": 0
    },
    "alarm": {
     "n_fault": 60,
-    "selected_correct": 50,
-    "selected_wrong": 10,
+    "selected_correct": 55,
+    "selected_wrong": 5,
     "abstained": 0,
     "top3": 60,
     "truth_in_tie": 0,
@@ -74,9 +74,9 @@
     "n_nofault": 1,
     "nofault_selected": 0,
     "n_fault": 28,
-    "selected_correct": 5,
-    "selected_wrong": 7,
-    "abstained": 16,
+    "selected_correct": 6,
+    "selected_wrong": 5,
+    "abstained": 17,
     "top3": 10,
     "truth_in_tie": 0
    },
@@ -85,8 +85,8 @@
     "nofault_selected": 0,
     "n_fault": 28,
     "selected_correct": 10,
-    "selected_wrong": 4,
-    "abstained": 14,
+    "selected_wrong": 3,
+    "abstained": 15,
     "top3": 10,
     "truth_in_tie": 0
    },
@@ -94,8 +94,8 @@
     "n_nofault": 1,
     "nofault_selected": 0,
     "n_fault": 28,
-    "selected_correct": 11,
-    "selected_wrong": 4,
+    "selected_correct": 12,
+    "selected_wrong": 3,
     "abstained": 13,
     "top3": 13,
     "truth_in_tie": 0
@@ -104,8 +104,8 @@
     "n_nofault": 1,
     "nofault_selected": 0,
     "n_fault": 28,
-    "selected_correct": 11,
-    "selected_wrong": 4,
+    "selected_correct": 12,
+    "selected_wrong": 3,
     "abstained": 13,
     "top3": 13,
     "truth_in_tie": 0
@@ -115,15 +115,15 @@
     "nofault_selected": 0,
     "n_fault": 28,
     "selected_correct": 10,
-    "selected_wrong": 7,
-    "abstained": 11,
-    "top3": 13,
+    "selected_wrong": 6,
+    "abstained": 12,
+    "top3": 14,
     "truth_in_tie": 0
    },
    "alarm": {
     "n_fault": 61,
-    "selected_correct": 46,
-    "selected_wrong": 15,
+    "selected_correct": 49,
+    "selected_wrong": 12,
     "abstained": 0,
     "top3": 58,
     "truth_in_tie": 0,
@@ -205,11 +205,11 @@
      "t": 3.18,
      "tag": "XMEAS(15)",
      "side": "low",
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-16"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -224,11 +224,11 @@
      "t": 3.23,
      "tag": "XMEAS(15)",
      "side": "low",
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-16"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -243,11 +243,11 @@
      "t": 3.27,
      "tag": "XMEAS(15)",
      "side": "low",
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-16"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -262,11 +262,11 @@
      "t": 3.32,
      "tag": "XMEAS(15)",
      "side": "low",
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-16"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -281,11 +281,11 @@
      "t": 3.34,
      "tag": "XMEAS(15)",
      "side": "low",
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-16"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -398,8 +398,8 @@
      "selected": "IDV-08",
      "top3": [
       "IDV-08",
-      "IDV-20",
-      "IDV-01"
+      "IDV-01",
+      "IDV-02"
      ],
      "tied": []
     },
@@ -408,18 +408,18 @@
      "selected": "IDV-01",
      "top3": [
       "IDV-01",
-      "IDV-20",
-      "IDV-08"
+      "IDV-08",
+      "IDV-02"
      ],
      "tied": []
     },
     {
      "after_onset_h": 2.0,
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-19"
      ],
      "tied": []
     },
@@ -439,7 +439,7 @@
      "top3": [
       "IDV-01",
       "IDV-07",
-      "IDV-20"
+      "IDV-19"
      ],
      "tied": []
     }
@@ -1254,11 +1254,11 @@
    "probes": [
     {
      "after_onset_h": 0.5,
-     "selected": "IDV-20",
+     "selected": "IDV-02",
      "top3": [
-      "IDV-20",
       "IDV-02",
-      "IDV-01"
+      "IDV-01",
+      "IDV-03"
      ],
      "tied": []
     },
@@ -1267,8 +1267,8 @@
      "selected": "IDV-02",
      "top3": [
       "IDV-02",
-      "IDV-20",
-      "IDV-01"
+      "IDV-01",
+      "IDV-03"
      ],
      "tied": []
     },
@@ -1499,7 +1499,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-18"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -1518,7 +1518,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-18"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -1537,7 +1537,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-18"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -1556,7 +1556,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-18"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -1575,7 +1575,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-18"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -1650,8 +1650,8 @@
      "selected": "IDV-06",
      "top3": [
       "IDV-06",
-      "IDV-20",
-      "IDV-23"
+      "IDV-23",
+      "IDV-01"
      ],
      "tied": []
     },
@@ -1660,8 +1660,8 @@
      "selected": "IDV-06",
      "top3": [
       "IDV-06",
-      "IDV-20",
-      "IDV-23"
+      "IDV-23",
+      "IDV-16"
      ],
      "tied": []
     },
@@ -1671,7 +1671,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-16"
      ],
      "tied": []
     },
@@ -1707,21 +1707,21 @@
    "probes": [
     {
      "after_onset_h": 0.5,
-     "selected": "IDV-20",
+     "selected": null,
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-02"
+      "IDV-02",
+      "IDV-03"
      ],
      "tied": []
     },
     {
      "after_onset_h": 1.0,
-     "selected": "IDV-20",
+     "selected": null,
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-02"
+      "IDV-02",
+      "IDV-03"
      ],
      "tied": []
     },
@@ -1790,8 +1790,8 @@
      "selected": "IDV-01",
      "top3": [
       "IDV-01",
-      "IDV-20",
-      "IDV-08"
+      "IDV-08",
+      "IDV-02"
      ],
      "tied": []
     },
@@ -1800,8 +1800,8 @@
      "selected": "IDV-08",
      "top3": [
       "IDV-08",
-      "IDV-20",
-      "IDV-01"
+      "IDV-01",
+      "IDV-06"
      ],
      "tied": []
     },
@@ -1811,7 +1811,7 @@
      "top3": [
       "IDV-01",
       "IDV-07",
-      "IDV-20"
+      "IDV-16"
      ],
      "tied": []
     }
@@ -1981,7 +1981,7 @@
      "top3": [
       "IDV-14",
       "IDV-17",
-      "IDV-20"
+      "IDV-11"
      ],
      "tied": []
     },
@@ -2037,21 +2037,21 @@
     },
     {
      "after_onset_h": 4.0,
-     "selected": "IDV-20",
+     "selected": "IDV-12",
      "top3": [
-      "IDV-20",
       "IDV-12",
-      "IDV-01"
+      "IDV-01",
+      "IDV-02"
      ],
      "tied": []
     },
     {
      "after_onset_h": 8.0,
-     "selected": "IDV-20",
+     "selected": "IDV-12",
      "top3": [
-      "IDV-20",
       "IDV-12",
-      "IDV-15"
+      "IDV-15",
+      "IDV-18"
      ],
      "tied": []
     }
@@ -2087,11 +2087,11 @@
     },
     {
      "after_onset_h": 2.0,
-     "selected": "IDV-20",
+     "selected": null,
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-02"
+      "IDV-02",
+      "IDV-03"
      ],
      "tied": []
     },
@@ -2101,17 +2101,17 @@
      "top3": [
       "IDV-17",
       "IDV-14",
-      "IDV-20"
+      "IDV-06"
      ],
      "tied": []
     },
     {
      "after_onset_h": 8.0,
-     "selected": "IDV-20",
+     "selected": null,
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-02"
+      "IDV-02",
+      "IDV-03"
      ],
      "tied": []
     }
@@ -2397,11 +2397,11 @@
     },
     {
      "after_onset_h": 4.0,
-     "selected": "IDV-20",
+     "selected": "IDV-14",
      "top3": [
-      "IDV-20",
       "IDV-14",
-      "IDV-17"
+      "IDV-17",
+      "IDV-01"
      ],
      "tied": []
     },
@@ -2761,7 +2761,7 @@
      "top3": [
       "IDV-14",
       "IDV-17",
-      "IDV-20"
+      "IDV-01"
      ],
      "tied": []
     },
@@ -2921,7 +2921,7 @@
      "top3": [
       "IDV-14",
       "IDV-17",
-      "IDV-20"
+      "IDV-01"
      ],
      "tied": []
     },
@@ -3088,11 +3088,11 @@
      "t": 3.2,
      "tag": "XMEAS(15)",
      "side": "low",
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-16"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -3107,11 +3107,11 @@
      "t": 3.24,
      "tag": "XMEAS(15)",
      "side": "low",
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-16"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -3126,11 +3126,11 @@
      "t": 3.26,
      "tag": "XMEAS(15)",
      "side": "low",
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-16"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -3319,8 +3319,8 @@
      "selected": "IDV-08",
      "top3": [
       "IDV-08",
-      "IDV-20",
-      "IDV-01"
+      "IDV-01",
+      "IDV-02"
      ],
      "tied": []
     },
@@ -3329,18 +3329,18 @@
      "selected": "IDV-01",
      "top3": [
       "IDV-01",
-      "IDV-20",
-      "IDV-08"
+      "IDV-08",
+      "IDV-02"
      ],
      "tied": []
     },
     {
      "after_onset_h": 2.0,
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-07"
+      "IDV-07",
+      "IDV-19"
      ],
      "tied": []
     },
@@ -3360,7 +3360,7 @@
      "top3": [
       "IDV-01",
       "IDV-07",
-      "IDV-20"
+      "IDV-19"
      ],
      "tied": []
     }
@@ -4023,11 +4023,11 @@
    "probes": [
     {
      "after_onset_h": 0.5,
-     "selected": "IDV-20",
+     "selected": "IDV-02",
      "top3": [
-      "IDV-20",
       "IDV-02",
-      "IDV-01"
+      "IDV-01",
+      "IDV-03"
      ],
      "tied": []
     },
@@ -4036,8 +4036,8 @@
      "selected": "IDV-02",
      "top3": [
       "IDV-02",
-      "IDV-20",
-      "IDV-01"
+      "IDV-01",
+      "IDV-03"
      ],
      "tied": []
     },
@@ -4268,7 +4268,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-18"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -4287,7 +4287,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-18"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -4306,7 +4306,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-18"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -4400,8 +4400,8 @@
      "selected": "IDV-06",
      "top3": [
       "IDV-06",
-      "IDV-20",
-      "IDV-23"
+      "IDV-23",
+      "IDV-01"
      ],
      "tied": []
     },
@@ -4410,8 +4410,8 @@
      "selected": "IDV-06",
      "top3": [
       "IDV-06",
-      "IDV-20",
-      "IDV-23"
+      "IDV-23",
+      "IDV-01"
      ],
      "tied": []
     },
@@ -4421,7 +4421,7 @@
      "top3": [
       "IDV-06",
       "IDV-23",
-      "IDV-20"
+      "IDV-18"
      ],
      "tied": []
     },
@@ -4457,21 +4457,21 @@
    "probes": [
     {
      "after_onset_h": 0.5,
-     "selected": "IDV-20",
+     "selected": null,
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-02"
+      "IDV-02",
+      "IDV-03"
      ],
      "tied": []
     },
     {
      "after_onset_h": 1.0,
-     "selected": "IDV-20",
+     "selected": null,
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-02"
+      "IDV-02",
+      "IDV-03"
      ],
      "tied": []
     },
@@ -4540,8 +4540,8 @@
      "selected": "IDV-08",
      "top3": [
       "IDV-08",
-      "IDV-20",
-      "IDV-13"
+      "IDV-13",
+      "IDV-01"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -4559,8 +4559,8 @@
      "selected": "IDV-08",
      "top3": [
       "IDV-08",
-      "IDV-20",
-      "IDV-01"
+      "IDV-01",
+      "IDV-19"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -4578,8 +4578,8 @@
      "selected": "IDV-08",
      "top3": [
       "IDV-08",
-      "IDV-20",
-      "IDV-01"
+      "IDV-01",
+      "IDV-19"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -4598,7 +4598,7 @@
      "top3": [
       "IDV-08",
       "IDV-16",
-      "IDV-20"
+      "IDV-15"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -4616,8 +4616,8 @@
      "selected": "IDV-16",
      "top3": [
       "IDV-16",
-      "IDV-20",
-      "IDV-19"
+      "IDV-19",
+      "IDV-15"
      ],
      "tied": [],
      "sensor_sop": "TEP-SENSOR-LIR110-L",
@@ -4694,7 +4694,7 @@
      "top3": [
       "IDV-01",
       "IDV-06",
-      "IDV-20"
+      "IDV-15"
      ],
      "tied": []
     },
@@ -4703,18 +4703,18 @@
      "selected": "IDV-08",
      "top3": [
       "IDV-08",
-      "IDV-20",
-      "IDV-01"
+      "IDV-01",
+      "IDV-02"
      ],
      "tied": []
     },
     {
      "after_onset_h": 8.0,
-     "selected": "IDV-20",
+     "selected": "IDV-01",
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-19"
+      "IDV-19",
+      "IDV-08"
      ],
      "tied": []
     }
@@ -4940,11 +4940,11 @@
     },
     {
      "after_onset_h": 4.0,
-     "selected": "IDV-20",
+     "selected": "IDV-12",
      "top3": [
-      "IDV-20",
       "IDV-12",
-      "IDV-05"
+      "IDV-05",
+      "IDV-01"
      ],
      "tied": []
     },
@@ -5010,11 +5010,11 @@
     },
     {
      "after_onset_h": 8.0,
-     "selected": "IDV-20",
+     "selected": "IDV-19",
      "top3": [
-      "IDV-20",
       "IDV-19",
-      "IDV-15"
+      "IDV-15",
+      "IDV-18"
      ],
      "tied": []
     }
@@ -5254,7 +5254,7 @@
      "top3": [
       "IDV-14",
       "IDV-17",
-      "IDV-20"
+      "IDV-01"
      ],
      "tied": []
     }
@@ -5640,11 +5640,11 @@
     },
     {
      "after_onset_h": 1.0,
-     "selected": "IDV-20",
+     "selected": "IDV-14",
      "top3": [
-      "IDV-20",
       "IDV-14",
-      "IDV-17"
+      "IDV-17",
+      "IDV-01"
      ],
      "tied": []
     },
@@ -5670,11 +5670,11 @@
     },
     {
      "after_onset_h": 8.0,
-     "selected": "IDV-20",
+     "selected": null,
      "top3": [
-      "IDV-20",
       "IDV-01",
-      "IDV-02"
+      "IDV-02",
+      "IDV-03"
      ],
      "tied": []
     }
@@ -5921,7 +5921,7 @@
    ]
   }
  ],
- "wall_seconds": 166.9,
+ "wall_seconds": 163.9,
  "aligner": {
   "PERSIST_HOURS": 0.25,
   "WINDOW_HOURS": 1.0,

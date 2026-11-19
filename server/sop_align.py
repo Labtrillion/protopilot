@@ -38,10 +38,23 @@ STEP_TYPES = frozenset(("step", "slow drift"))
 RANDOM_TYPES = frozenset(("random variation",))
 
 
+# [ADDED] Signals derived from observed tags (used by conditions added in scripts/build_sop_index.py).
+DERIVED = {"XMEAS(7)-XMEAS(13)": ("XMEAS(7)", "XMEAS(13)")}
+
+
+def observed_value(observed, tag):
+    if tag in DERIVED:
+        left, right = (observed.get(t) for t in DERIVED[tag])
+        if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+            return left - right
+        return None
+    return observed.get(tag)
+
+
 def _values(history, tag, since):
     out = []
     for time_hours, observed in history:
-        value = observed.get(tag)
+        value = observed_value(observed, tag)
         if time_hours >= since and isinstance(value, (int, float)) and math.isfinite(value):
             out.append(float(value))
     return out
@@ -53,6 +66,8 @@ def _envelope(condition):
     live = INDEX.get("live_envelopes", {}).get("by_tag", {}).get(condition["tag"])
     if live:
         return live["minimum"], live["maximum"]
+    if condition["minimum"] is None:  # [ADDED] added condition without a live calibration: cannot evaluate
+        raise KeyError(f"no envelope for {condition['tag']}")
     return condition["minimum"], condition["maximum"]
 
 

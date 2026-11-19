@@ -18,6 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from server.plant import Plant  # noqa: E402
+from server.sop_align import observed_value  # noqa: E402
 from server.scenario import DEFAULT_FLAGS, LIVE_FORMAT, STEP_HOURS, live_scenario  # noqa: E402
 
 INDEX = ROOT / "server" / "sop-index.json"
@@ -41,7 +42,7 @@ def main():
                 plant.tick()
                 observed = plant.history[-1][1]
                 for t in tags:
-                    v = observed[t]
+                    v = observed_value(observed, t)  # [CHANGED] also derived tags
                     if v is not None:
                         lo[t], hi[t] = min(lo[t], v), max(hi[t], v)
     index["live_envelopes"] = {
