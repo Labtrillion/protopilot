@@ -1,5 +1,6 @@
 import { byId, elapsed, escape, reading } from './ui.js';
 import { formatZoroShare, softmaxShares } from './simulation-score.js';
+import { sopActionLabel, sopProductionTarget } from './sop-action.js';
 
 const summaryMetrics = [
   { key: 'shutdown', label: '보호 정지', format: (branch) => branch.shutdown ? '발생' : '없음' },
@@ -14,19 +15,20 @@ const detailMetrics = [
   ['peak_temperature', '반응기 최고 온도 (°C)'],
   ['temperature_sd', '반응기 온도 표준편차 (°C)'],
   ['peak_separator_level', '후단 분리기 최고 액위 (%)'],
-  ['production_target', '계획된 생산 목표 (m³/h)'],
-  ['action_applied', '감량 적용', (branch) => {
+  ['production_target', '계획 생산량 목표 (m³/h)', sopProductionTarget],
+  ['action_applied', '생산량 목표 변경 적용', (branch) => {
     if (branch.id === 'hold') return '해당 없음';
     return branch.action_applied ? '적용' : '미적용';
   }],
 ];
 
-function renderDecision(decision) {
+function renderDecision(decision, branches) {
   const confidence = decision.response.confidence;
   const source = decision.fallback ? '로컬 규칙' : 'Zoro-1 · System 1';
+  const response = branches.find(({ id }) => id === decision.response.choice) ?? decision.response;
   return `<section class="adjust-info study-decision">
     <div class="study-heading"><h3>우선 검토할 대응</h3><span>${source}${confidence !== null ? ` · 신뢰도 ${Math.round(confidence * 100)}%` : ''}</span></div>
-    <strong>${escape(decision.response.label)}</strong>
+    <strong>${escape(sopActionLabel(response))}</strong>
     <p>${escape(decision.diagnosis.label)}</p>
   </section>`;
 }
@@ -37,7 +39,7 @@ function renderSummary(branches, selected, shares) {
       <thead><tr><th scope="col">대응</th>${summaryMetrics.map(({ label, unit }) =>
         `<th scope="col" class="right">${label}${unit ? `<span class="channel-unit">${unit}</span>` : ''}</th>`).join('')}${shares ? '<th scope="col" class="right">Zoro-1 상대 적합도</th>' : ''}</tr></thead>
       <tbody>${branches.map((branch) => `<tr${branch.id === selected ? ' class="study-selected"' : ''}>
-        <th scope="row">${escape(branch.label)}${branch.id === selected ? '<small>우선 검토</small>' : ''}</th>
+        <th scope="row">${escape(sopActionLabel(branch))}${branch.id === selected ? '<small>우선 검토</small>' : ''}</th>
         ${summaryMetrics.map(({ key, unit, format }) => `<td class="right${unit ? ' numeric' : ''}">
           ${branch.error ? '—' : format ? format(branch) : reading(branch[key])}</td>`).join('')}
         ${shares ? `<td class="right numeric">${formatZoroShare(shares[branch.id])}</td>` : ''}</tr>`).join('')}
@@ -46,13 +48,13 @@ function renderSummary(branches, selected, shares) {
   </div>`;
 }
 
-function renderDetailTable(branches) {
+function renderDetailTable(branches, initialTarget) {
   return `<div class="study-table-frame study-table-scroll" tabindex="0" role="region" aria-label="세부 대응 비교 지표">
     <table class="study-table study-detail-table">
-      <thead><tr><th scope="col">비교 지표</th>${branches.map(({ label }) => `<th scope="col">${escape(label)}</th>`).join('')}</tr></thead>
+      <thead><tr><th scope="col">비교 지표</th>${branches.map((branch) => `<th scope="col">${escape(sopActionLabel(branch))}</th>`).join('')}</tr></thead>
       <tbody>${detailMetrics.map(([key, name, format]) =>
         `<tr><th scope="row">${name}</th>${branches.map((branch) =>
-          `<td>${branch.error ? '—' : format ? format(branch) : reading(branch[key])}</td>`).join('')}</tr>`).join('')}
+          `<td>${branch.error ? '—' : format ? format(branch, initialTarget) : reading(branch[key])}</td>`).join('')}</tr>`).join('')}
       </tbody>
     </table>
   </div>`;
@@ -68,17 +70,17 @@ function renderComparison({ branches, start, decision, alarm, sweep }) {
     ${Object.keys(shares ?? {}).length ? '<p class="study-note">상대 적합도는 전체 대응안 점수에 softmax를 적용한 비중입니다.</p>' : ''}
     <p class="study-note">알람이 발생한 상태에서 시작하며, 이탈 시간은 TEP 모델의 운전 범위를 기준으로 계산합니다.</p>
     ${sensorTest ? '<p class="study-note">센서 시험 전의 모델 측정값으로 비교했습니다.</p>' : ''}
-    ${unavailable.map((branch) => `<p class="study-note" role="status">${escape(branch.label)} · ${escape(branch.error)}</p>`).join('')}
+    ${unavailable.map((branch) => `<p class="study-note" role="status">${escape(sopActionLabel(branch))} · ${escape(branch.error)}</p>`).join('')}
   </section>`;
 }
 
 function renderResult(data) {
-  const { sop, decision, readings, related_alarms, alarm } = data;
+  const { sop, decision, readings, related_alarms, alarm, branches, start } = data;
   if (!sop) return '<p class="adjust-info">이 알람에 등록된 대응 절차가 없습니다. 공정도에서 설비 위치와 알람 발생 시 측정값을 확인할 수 있습니다.</p>';
   const related = related_alarms.filter((item) => item.id !== alarm.id);
   const citation = typeof sop.source_url === 'string' && sop.source_url.startsWith('https://doi.org/') && sop.source_title
     ? `<a href="${escape(sop.source_url)}" target="_blank" rel="noopener noreferrer">${escape(sop.source_title)}</a>` : '';
-  return `${decision ? renderDecision(decision) + renderComparison(data) : ''}
+  return `${decision ? renderDecision(decision, branches) + renderComparison(data) : ''}
   <div class="study-disclosures">
     <details${decision ? '' : ' open'}>
       <summary>확인 절차</summary>
@@ -88,7 +90,7 @@ function renderResult(data) {
         ${citation}
       </div>
     </details>
-    ${decision ? `<details><summary>세부 지표</summary><div class="study-detail">${renderDetailTable(data.branches)}</div></details>` : ''}
+    ${decision ? `<details><summary>세부 지표</summary><div class="study-detail">${renderDetailTable(branches, start.production_target)}</div></details>` : ''}
     <details>
       <summary>알람 당시 계측${related.length ? ` · 동시 알람 ${related.length}건` : ''}</summary>
       <div class="study-section study-detail">
