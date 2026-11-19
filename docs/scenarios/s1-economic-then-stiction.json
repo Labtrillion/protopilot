@@ -1,0 +1,70 @@
+{
+  "format": "protopilot-scenario-1",
+  "id": "s1-economic-then-stiction",
+  "title": "시나리오 1. 경제 운전 중 추가 고장 발생에 따른 전략 변경",
+  "duration_min": 480,
+  "events": [
+    {
+      "at_min": 0,
+      "op": "disturbance",
+      "id": "IDV(8)",
+      "value": 1,
+      "note": "원료 조성 변동"
+    },
+    {
+      "at_min": 30,
+      "op": "setpoint",
+      "id": "reactor_pressure",
+      "value": 2800,
+      "note": "경제 운전 조건 적용(가정값)"
+    },
+    {
+      "at_min": 180,
+      "op": "disturbance",
+      "id": "IDV(14)",
+      "value": 1,
+      "note": "반응기 냉각수 밸브 스틱션 추가"
+    }
+  ],
+  "context": {
+    "prior_recommendation": {
+      "at_min": 30,
+      "action": "reactor_pressure 2705 -> 2800 kPa(g)",
+      "reason": "운전 비용 절감"
+    }
+  },
+  "agent": {
+    "trigger": {
+      "after_min": 180,
+      "on": "first_alarm"
+    },
+    "candidates": [
+      "keep_economic",
+      "adjust_pressure",
+      "reduce_production"
+    ]
+  },
+  "assumptions": [
+    "경제 운전 = 반응기 압력 SP 2800 kPa(g)",
+    "IDV(14) 투입 시각 180분",
+    "alarm_limits는 헤드리스 관측 범위로 정한 데모 운전 기준"
+  ],
+  "alarm_limits": {
+    "XMEAS(7)": [
+      null,
+      2850
+    ],
+    "XMEAS(9)": [
+      119.9,
+      120.9
+    ],
+    "XMEAS(12)": [
+      43.0,
+      55.0
+    ],
+    "XMEAS(15)": [
+      37.0,
+      60.0
+    ]
+  }
+}

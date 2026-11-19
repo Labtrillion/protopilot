@@ -77,3 +77,52 @@ Zoro AI는 경보 대응 절차(SOP)를 확인하고, 최신 승인 생산계획
 Zoro AI는 두 대응의 압력 회복 시간, 분리기 액위 편차, 승인 계획 대비 누적 생산량 차이를 비교해 생산 목표 복귀 여부와 재확인 시점을 추천한다.
 
 주요 변경 후보: 생산량 목표 유지 또는 승인 목표로 복귀.
+
+
+
+---
+
+
+
+## 실행용 시나리오 JSON
+
+관제 화면의 **시나리오 → 데모 시나리오**에서 아래 5개 중 하나를 선택하고 **불러와 재실행 준비**를 누르면 시간 0에서 일시정지된 새 실행이 만들어진다. **실행**을 누르면 선택한 JSON에 적힌 시각에 조작이 들어가고 `duration_min`에서 일시정지한다.
+
+| 시나리오 | 파일 | 조작 (분) | 문서에 없어 정한 값 |
+| --- | --- | --- | --- |
+| 1 | [s1-economic-then-stiction.json](./s1-economic-then-stiction.json) | 0 IDV(8) · 30 반응기 압력 SP 2800 · 180 IDV(14) | 경제 운전 SP 2800 kPa(g), IDV(14) 180분 |
+| 2 | [s2-false-high-temp.json](./s2-false-high-temp.json) | 120 반응기 온도 센서 +32 °C, 2분 | 스파이크 크기와 길이 |
+| 3 | [s3-restore-after-cooling.json](./s3-restore-after-cooling.json) | 0 IDV(27) · 60 생산량 SP 21.8 | 감산 폭 -5% |
+| 4 | [s4-composition-and-two-coolers.json](./s4-composition-and-two-coolers.json) | 60 IDV(8), IDV(11), IDV(12) | 투입 시각 60분 |
+| 5 | [s5-shift-plan-mismatch.json](./s5-shift-plan-mismatch.json) | 30 생산량 SP 25.2 | 증산 폭 +10% |
+
+시나리오 1, 3, 4, 5는 `alarm_limits`로 데모 운전 알람 기준(반응기 압력 상한 2725, 시나리오 1은 2850 · 반응기 온도 119.9–120.9 °C · 분리기 액위 43–55 % · 스트리퍼 액위 37–60 %)을 시작 시점에 적용한다. 기본 기준(Table 6)에서는 제어기가 외란을 흡수해 알람이 거의 뜨지 않는다. 기준은 기본 시드 1431655765로 실행해 관측한 범위로 정했다.
+
+기본 시드, 960배속에서 관측한 첫 알람은 다음과 같다. 960배속에서는 화면 알람을 9.6분(320 스텝)마다 판정한다.
+
+| 시나리오 | 관측된 알람 |
+| --- | --- |
+| 1 | 432분 스트리퍼 액위 하한 |
+| 2 | 120분 반응기 온도 상한 (152.4 °C) |
+| 3 | 없음 |
+| 4 | 153.6분 반응기 압력 상한 → 240분 반응기 온도 하한 → 249.6분 스트리퍼 액위 하한 |
+| 5 | 278.4분 스트리퍼 액위 하한 |
+
+### 형식 (`protopilot-scenario-1`)
+
+```json
+{
+  "format": "protopilot-scenario-1",
+  "duration_min": 300,
+  "alarm_limits": {"XMEAS(7)": [null, 2725]},
+  "events": [
+    {"at_min": 120, "op": "offset", "id": "XMEAS(9)", "value": 32, "duration_min": 2}
+  ]
+}
+```
+
+- `events`의 조작 시각은 `at_min`으로 입력한다. `op`, `id`, `value`, `low`는 라이브 시나리오(`protopilot-live-1`)의 조작과 같다. 지원하는 조작은 `mv`, `setpoint`, `disturbance`, `offset`, `limit`, `pressure_test`, `controller`, `speed`다.
+- `duration_min`을 적은 조작은 그만큼 지난 뒤 되돌린다. 외란·오프셋은 0, 설정값·밸브는 기본값·자동, 알람 기준은 기본 기준으로 돌아간다.
+- `seed`, `controller`, `initial_speed`를 생략하면 기본 시드, 기본 제어 옵션, 960배속을 쓴다.
+- `title`, `context`, `agent`, `assumptions`는 사람이 읽는 설명이며 시뮬레이터는 쓰지 않는다. 승인 생산계획(시나리오 5)이나 이전 추천(시나리오 1)을 에이전트에 전달하는 경로는 아직 없다.
+- 변환은 [server/minute_scenario.py](../../server/minute_scenario.py), 회귀 테스트는 [tests/test_minute_scenario.py](../../tests/test_minute_scenario.py)에 있다.

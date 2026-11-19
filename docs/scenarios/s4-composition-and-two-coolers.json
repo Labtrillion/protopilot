@@ -1,0 +1,62 @@
+{
+  "format": "protopilot-scenario-1",
+  "id": "s4-composition-and-two-coolers",
+  "title": "시나리오 4. 원료 조성과 두 설비의 냉각 조건이 동시에 변할 때의 대응 우선순위",
+  "duration_min": 480,
+  "events": [
+    {
+      "at_min": 60,
+      "op": "disturbance",
+      "id": "IDV(8)",
+      "value": 1
+    },
+    {
+      "at_min": 60,
+      "op": "disturbance",
+      "id": "IDV(11)",
+      "value": 1
+    },
+    {
+      "at_min": 60,
+      "op": "disturbance",
+      "id": "IDV(12)",
+      "value": 1
+    }
+  ],
+  "context": {},
+  "agent": {
+    "trigger": {
+      "on": "first_alarm"
+    },
+    "hide": [
+      "disturbances"
+    ],
+    "candidates": [
+      "C1_sop",
+      "C2_reduce_first",
+      "C3_equipment_first"
+    ]
+  },
+  "assumptions": [
+    "세 외란 동시 투입 시각 60분",
+    "alarm_limits는 헤드리스 관측 범위로 정한 데모 운전 기준"
+  ],
+  "alarm_limits": {
+    "XMEAS(7)": [
+      null,
+      2725
+    ],
+    "XMEAS(9)": [
+      119.9,
+      120.9
+    ],
+    "XMEAS(12)": [
+      43.0,
+      55.0
+    ],
+    "XMEAS(15)": [
+      37.0,
+      60.0
+    ]
+  }
+}

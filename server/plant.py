@@ -15,6 +15,7 @@ from .agent_config import CONFIG
 from .alarm_rules import AlarmMonitor
 from .catalog import (CHANNELS, CONTROL_FLAGS, DISTURBANCES, GROUPS, MEASUREMENT_TAGS, OPERATING_LIMITS,
                       PROTECTIONS, SETPOINTS, TRIPS)
+from .minute_scenario import MinuteScenario
 from .recording import Recording, timestamp
 from .scenario import ADJUSTMENTS, DEFAULT_FLAGS, DEFAULT_SEED, KERNEL_REVISION, LIVE_FORMAT, SPEEDS, STEP_HOURS, adjustment, live_scenario
 
@@ -357,7 +358,11 @@ class Plant:
             self.reset(running=False)
         elif op in {"replay_scenario", "cooling_demo"}:
             is_demo = op == "cooling_demo"
-            scenario = self.cooling_demo() if is_demo else live_scenario(body.get("scenario"))
+            document = body.get("scenario")
+            # [ADDED] An uploaded minute-based scenario is converted first, then validated like a live-1 upload.
+            if not is_demo and MinuteScenario.accepts(document):
+                document = MinuteScenario.from_document(document).to_live()
+            scenario = self.cooling_demo() if is_demo else live_scenario(document)
             candidate = copy(self)
             candidate.reset(running=is_demo, scenario=scenario)
             self.__dict__.update(candidate.__dict__)
