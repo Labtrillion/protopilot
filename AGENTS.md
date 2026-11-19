@@ -2,6 +2,37 @@
 
 해커톤 요구사항은 [Track-1.md](./Track-1.md)를 기준으로 한다. 기능 기획, 구현, 데모, 제출물을 준비할 때 Zoro-1 사용 요건과 심사·제출 기준을 확인한다.
 
+## 작업 시작과 병합
+
+1. 모든 AI 에이전트는 작업을 시작하기 전에 `git status --short --branch`로 현재 브랜치와 변경 파일을 확인한다. 진행 중인 작업이나 다른 사람이 만든 변경을 보존하고, 새 작업에는 깨끗한 체크아웃을 쓴다.
+2. `main`에서 `git pull --ff-only origin main`으로 최신 커밋을 받는다. 로컬 `main`과 `origin/main`의 커밋이 일치하는지 확인한 뒤 목적에 맞는 새 브랜치를 만든다. 예를 들어 Feature 1은 `codex/feature1-setpoint-gate`, Feature 2는 `codex/feature2-sop-ranking`, 문서 작업은 `codex/docs-작업명`을 쓴다.
+
+   ```sh
+   test -z "$(git status --porcelain)" &&
+     git switch main &&
+     git pull --ff-only origin main &&
+     test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" &&
+     git switch -c codex/feature1-setpoint-gate
+   ```
+
+3. 동기화에 실패하거나 커밋이 다르면 양쪽 변경을 보존한 상태에서 원인을 확인한다. 병렬 작업은 각자 다른 브랜치와 체크아웃에서 진행한다. Brev의 `/home/ubuntu/protopilot`은 공유 실행용 `main` 체크아웃으로 사용한다.
+4. 병합 전에 최신 `origin/main`과의 차이 및 충돌을 확인한다. 프론트엔드에서 변경이 겹치면 `main`의 동작을 우선하고, 함께 동작할 수 있는 기능은 연결한다. 프론트엔드 외의 충돌은 경로와 양쪽 변경 내용을 먼저 공유한다.
+5. 작업 결과를 공유할 때 사용한 브랜치, 기준이 된 `main` 커밋, 변경 범위, 실제 실행한 검사를 적는다. PR의 대상 브랜치는 `main`으로 한다.
+
+브랜치 통합 순서, 변경 경로, 검증 내역은 [모노레포 통합 기록](./docs/MONOREPO_MERGE.md)에 있다.
+
+## Feature별 Zoro-1 요구사항
+
+작업 요청에 적힌 Feature 번호에 따라 아래 두 타입을 해당 기능의 판단 흐름에 연결한다. 기존 Zoro-1 클라이언트와 요청·응답 타입을 재사용하고 `POST /v1/systemone`으로 호출한다. [Zoro-1 공식 모델 카드](https://huggingface.co/trillionlabs/Zoro-1#using-the-typed-decision-head)
+
+| 기능 | 필수 타입 | 사용 방법 |
+| --- | --- | --- |
+| **Feature 1** | `noul` + `choice` | `noul`로 명확한 예·아니오 조건의 참일 확률을 얻고 코드에 정의된 기준으로 통과 여부를 정한다. 통과한 항목은 `choice`로 허용된 후보 중 하나를 고른다. 설정값 변경 필요 여부와 변경 방향·크기를 고르는 [기존 구현](./server/setpoint_decision.py)을 참고한다. |
+| **Feature 2** | `choice` + `score` | `choice`로 등록된 SOP 대응이나 다음 행동 중 하나를 고른다. `score`로 선택한 후보의 근거 또는 적합성을 낮은 단계부터 정렬된 기준으로 평가하고 권고, 재검색, 검토 등의 다음 판단에 반영한다. [에이전트 요청 타입](./zoro/zoro_agent/zoro.py)과 [판단 처리](./zoro/zoro_agent/agent.py)를 참고한다. |
+
+- 각 기능의 정상 진입점에서 필수 타입의 요청과 응답이 후속 판단에 쓰이는지 확인한다. `choice`의 허용 후보, `noul`의 0–1 범위, `score`의 평가 단계 범위를 검증한다. 모델의 `score`와 시뮬레이터의 비용·생산량·운전 점수는 각자의 기준과 단위로 기록한다.
+- 실제 호출, 테스트 대역, 규칙 기반 대체 경로는 실행 로그에서 구분한다. 요청 ID, 타입별 결과, 선택된 행동과 실패 이유를 확인할 수 있게 한다. 시간 초과, 필수 응답 누락, 기준 미달은 기존 대체 경로나 운영자 검토로 연결한다.
+
 ## 커밋 메시지
 
 `[유형] 변경 요약` 형식을 사용한다. 유형은 소문자로 쓰고, 변경한 내용을 한 줄로 구체적으로 적는다. 한 커밋에는 한 가지 목적을 담는다.

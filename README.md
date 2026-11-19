@@ -2,6 +2,8 @@
 
 Tennessee Eastman Process의 Mode 1을 로컬에서 실행하는 Three.js 관제 화면입니다. 공정의 배관과 유량·가스 압력을 보고, SP를 조정하거나 채널별 실시간 계측을 확인할 수 있습니다.
 
+작업 브랜치와 Feature별 Zoro-1 요구사항은 [개발 지침](AGENTS.md), Brev와 `main`의 병합 내역은 [모노레포 통합 기록](docs/MONOREPO_MERGE.md)에서 확인할 수 있습니다.
+
 ## 실행
 
 Python 3.13, Node.js, npm, Git 및 Python 패키지의 C 확장 빌드에 필요한 컴파일러가 필요합니다. macOS에서는 Xcode Command Line Tools의 clang을 사용했습니다.
