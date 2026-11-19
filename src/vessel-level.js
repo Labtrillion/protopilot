@@ -15,7 +15,7 @@ const goalMaterial = new T.LineDashedMaterial({
 const segments = 48;
 const capSteps = 12;
 
-export function mountVesselLevel(group, interior, { radius, bottom, top }) {
+export function mountVesselLevel(interior, { radius, bottom, top }) {
   const lowerCap = radius * VESSEL_CAPS.lower, upperCap = radius * VESSEL_CAPS.upper;
   const floor = bottom - lowerCap, ceiling = top + upperCap;
   const innerRadius = radius * 0.96;
@@ -42,8 +42,7 @@ export function mountVesselLevel(group, interior, { radius, bottom, top }) {
   ), goalMaterial);
   goal.computeLineDistances();
   goal.visible = false;
-  group.add(body, waterline, anchor);
-  interior.add(goal);
+  interior.add(body, waterline, anchor, goal);
   let previous;
   return {
     anchor,

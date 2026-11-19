@@ -101,7 +101,7 @@ function buildEquipment(scene) {
     return [tag, skid];
   }));
   for (const [area, spec] of Object.entries(VESSELS)) {
-    sight[area] = geo.vessel(models[area], spec, area in LEVEL_TAGS);
+    sight[area] = geo.vessel(models[area], spec);
   }
   sight.condenser = geo.condenser(models.condenser);
   for (const area of ['product', 'purge']) geo.terminal(models[area], EQUIPMENT_LAYOUT[area].terminalHeight);

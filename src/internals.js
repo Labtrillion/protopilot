@@ -84,7 +84,7 @@ export function buildInternals(groups, equipment) {
   coil(interiors.reboiler, 5, ...INTERNAL_NOZZLES.reboilerSteam, 0.26, steam, 0.8);
   rod(interiors.reboiler, ...INTERNAL_NOZZLES.reboilerProcess, 0.073, edge);
   const levels = Object.entries(LEVEL_TAGS).map(([area, tag]) => ({
-    area, tag: codeFor(tag), meter: mountVesselLevel(groups[area], interiors[area], VESSELS[area]),
+    area, tag: codeFor(tag), meter: mountVesselLevel(interiors[area], VESSELS[area]),
   }));
   const fixedAnchor = (group, position) => {
     const anchor = new T.Object3D();
@@ -108,7 +108,7 @@ export function buildInternals(groups, equipment) {
         const on = enabled && (!only || only === key);
         interior.visible = on;
         for (const shell of equipment[key].casing) {
-          shell.material = on ? glass : equipment[key].shellMaterial ?? steel;
+          shell.material = on ? glass : steel;
           shell.castShadow = !on;
         }
       }
