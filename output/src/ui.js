@@ -1,0 +1,168 @@
+import { AREAS, MEDIA, STREAMS, codeFor } from './topology.js';
+
+export const byId = (id) => document.getElementById(id);
+export const escape = (text = '') => String(text).replace(/[&<>"']/g, (char) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+const number = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 });
+const fine = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 5 });
+export function reading(value, unit) {
+  if (!Number.isFinite(value)) return '—';
+  return (unit === 'mol fraction' || (Math.abs(value) < 1 && value !== 0) ? fine : number).format(value);
+}
+export function elapsed(hours) {
+  const seconds = Math.round((hours ?? 0) * 3600);
+  return [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60].map((value) => String(value).padStart(2, '0')).join(':');
+}
+const time = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+export const wallTime = (stamp) => time.format(new Date(stamp));
+
+const icons = {
+  play: '<path d="m8 5 12 7-12 7z"/>', pause: '<path d="M9 5H6v14h3zm9 0h-3v14h3z"/>',
+  reset: '<path d="M3 12a9 9 0 1 1 3 6.7M3 12V5m0 7h7"/>',
+  sliders: '<path d="M4 7h7m4 0h5M4 17h3m4 0h9"/><circle cx="13" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  flow: '<path d="M3 8h17m-4-4 4 4-4 4M21 16H4m4-4-4 4 4 4"/>',
+  gauge: '<path d="M4 18a9 9 0 1 1 16 0zm8-4 4-5"/>',
+  scan: '<path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3m0 8v3a2 2 0 0 1-2 2h-3m-8 0H5a2 2 0 0 1-2-2v-3m9-7v6m-3-3h6"/>',
+  tag: '<path d="m3 4 8-1 10 10-8 8L3 11z"/><circle cx="8" cy="8" r="1"/>',
+  box: '<path d="m12 3 9 5-9 5-9-5zm-9 5v8l9 5 9-5V8m-9 5v8"/>',
+  activity: '<path d="M2 12h5l3-8 4 16 3-8h5"/>',
+  download: '<path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/>',
+  search: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 5 5"/>',
+  bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12a2 2 0 0 0 4 0"/>',
+  muted: '<path d="M3 9h4l5-4v14l-5-4H3zm13 0 5 6m0-6-5 6"/>',
+  sound: '<path d="M3 9h4l5-4v14l-5-4H3zm13 0a4 4 0 0 1 0 6m2.5-8.5a7.7 7.7 0 0 1 0 11"/>',
+  bolt: '<path d="m13 2-9 12h7l-1 8 10-12h-8z"/>',
+  close: '<path d="m6 6 12 12M18 6 6 18"/>',
+  check: '<path d="m5 12 4 4L19 6"/>',
+  arrow: '<path d="M6 18 18 6M9 6h9v9"/>',
+};
+export function icon(name) {
+  return `<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${icons[name] ?? ''}</svg>`;
+}
+export function initIcons() {
+  for (const el of document.querySelectorAll('[data-icon]')) el.insertAdjacentHTML('afterbegin', icon(el.dataset.icon));
+}
+export const option = (id, label) => `<option value="${escape(id)}">${escape(label)}</option>`;
+
+export function legend(view) {
+  byId('legend').innerHTML = view === 'flow'
+    ? Object.values(MEDIA).map(({ color, name }) => `<span><i style="--medium:${color}"></i>${name}</span>`).join('')
+    : '<span><i class="pressure-scale"></i> 가스 게이지압 · kPa(g)</span><span class="legend-muted">계측 연결 구간</span>';
+}
+
+function drawTrend(canvas, values, index) {
+  const ctx = canvas.getContext('2d');
+  const series = values.filter(Number.isFinite);
+  const { width: w, height: h } = canvas;
+  ctx.clearRect(0, 0, w, h);
+  if (series.length < 2) return;
+  const min = Math.min(...series), max = Math.max(...series), spread = max - min || 1;
+  ctx.strokeStyle = ['#69d1c9', '#91b9f2', '#e5ba7b', '#69d1c9'][index];
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  series.forEach((value, i) => ctx.lineTo(i * (w - 2) / (series.length - 1) + 1, h - 4 - (value - min) / spread * (h - 8)));
+  ctx.stroke();
+}
+
+const kpis = [[7, '반응기 압력'], [9, '반응기 온도'], [6, '반응기 입구 유량'], [17, '제품 유량']];
+export function renderKpis(status, metadata, trends) {
+  const root = byId('kpis');
+  if (!root.children.length) root.innerHTML = kpis.map(([i, label]) =>
+    `<button type="button" data-tag="${codeFor(i)}"><span>${label}</span><b>—</b><small></small><canvas width="88" height="34" aria-hidden="true"></canvas></button>`).join('');
+  [...root.children].forEach((card, i) => {
+    const tag = card.dataset.tag;
+    const { unit } = metadata.get(tag);
+    card.querySelector('b').textContent = reading(status.values[tag], unit);
+    card.querySelector('small').textContent = unit;
+    card.classList.toggle('alarming', status.alarms.some((event) => event.tag === tag));
+    drawTrend(card.querySelector('canvas'), trends.get(tag) ?? [], i);
+  });
+}
+
+export function renderInspector(areaKey, status, metadata) {
+  const area = AREAS[areaKey];
+  const values = status?.values ?? {};
+  const rows = [...area.tags.map(codeFor), ...(area.extra ?? [])].map((tag) => {
+    const channel = metadata.get(tag);
+    const name = channel?.label ?? tag;
+    return `<button class="inspect-value" type="button" data-tag="${tag}" title="${tag} · ${escape(name)}"><span>${escape(name)}</span>
+      <b>${reading(values[tag], channel?.unit)} <small>${escape(channel?.unit ?? '')}</small></b></button>`;
+  }).join('');
+  const streams = STREAMS.filter((stream) => stream.area === areaKey);
+  const flows = streams.map((stream) => {
+    const tag = codeFor(stream.tag);
+    const channel = metadata.get(tag);
+    return `<div class="inspect-stream"><i style="--medium:${MEDIA[stream.media].color}"></i><span>${escape(stream.id)} · ${escape(stream.name)}</span>
+      <small>${tag ? reading(values[tag], channel?.unit) + ' ' + escape(channel?.unit ?? '') : '방향'}</small></div>`;
+  }).join('');
+  // Preserve focused buttons and scroll position when markup hasn't changed structurally.
+  const root = byId('inspector-content');
+  if (root.dataset.area !== areaKey) {
+    root.innerHTML = `<div class="inspector-label"><code>${area.code}</code><span>${area.en}</span></div>
+      <div class="inspect-values"></div>${flows ? '<h3>연결 배관</h3><div class="inspect-streams"></div>' : ''}`;
+    root.dataset.area = areaKey;
+    root.scrollTop = 0;
+  }
+  const measures = root.querySelector('.inspect-values');
+  if (!measures.children.length || !measures.contains(document.activeElement)) measures.innerHTML = rows;
+  else {
+    for (const button of measures.children) {
+      const channel = metadata.get(button.dataset.tag);
+      button.querySelector('b').innerHTML = `${reading(values[button.dataset.tag], channel?.unit)} <small>${escape(channel?.unit ?? '')}</small>`;
+    }
+  }
+  if (flows) root.querySelector('.inspect-streams').innerHTML = flows;
+}
+
+export function renderRows(channels, status, selected) {
+  const holder = byId('rows');
+  if (!channels.length) {
+    holder.innerHTML = '<tr><td colspan="6" class="empty-cell">검색 조건에 해당하는 채널이 없습니다.</td></tr>';
+    return;
+  }
+  if (holder.children.length !== channels.length || channels.some((channel, i) => holder.children[i].dataset.tag !== channel.id)) {
+    holder.innerHTML = channels.map((ch) => `<tr data-tag="${escape(ch.id)}"><td class="tag-cell"><button type="button" data-tag="${escape(ch.id)}" title="3D 설비 보기">${escape(ch.id)}</button></td>
+      <td title="${escape(ch.description)}">${escape(ch.label)}</td><td>${AREAS[ch.area].code}</td><td class="right numeric"></td><td class="channel-unit">${escape(ch.unit)}</td><td class="channel-state"></td></tr>`).join('');
+  }
+  const active = new Set((status?.alarms ?? []).map((alarm) => alarm.tag));
+  channels.forEach((ch, i) => {
+    const tr = holder.children[i];
+    const isAlarm = active.has(ch.id);
+    const isOffset = ch.id in (status?.offsets ?? {});
+    const manual = ch.id in (status?.manual ?? {});
+    tr.classList.toggle('selected-row', selected === ch.id);
+    tr.classList.toggle('alarm-row', isAlarm);
+    tr.cells[3].textContent = reading(status?.values[ch.id], ch.unit);
+    const state = isAlarm ? '경보' : isOffset ? '시험' : manual ? '수동' : ch.period ? `${ch.period} h 샘플` : ch.group.endsWith('monitors') ? '진단' : '정상';
+    tr.cells[5].textContent = state;
+    if (ch.period) tr.cells[5].title = `갱신 ${ch.period} h / 지연 ${ch.delay} h`;
+  });
+}
+
+const KIND = { warning: '경고', trip: '트립', change: '조작', clear: '복구', ack: '확인' };
+export function renderAlarms(status, tab, metadata) {
+  const events = tab === 'active' ? status?.alarms : status?.events;
+  const panel = byId('events');
+  const count = status?.alarms.length ?? 0;
+  byId('alarm-count').textContent = count;
+  byId('alarm-count').classList.toggle('alarming', count > 0);
+  const focused = document.activeElement;
+  const focusKey = panel.contains(focused) && focused.dataset.ack;
+  const items = !events?.length ? `<div class="alarm-empty">${icon('check')}<b>${tab === 'active' ? '활성 알람 없음' : '기록된 이벤트 없음'}</b>
+      <span>${tab === 'active' ? '새 알람이 발생하면 관련 설비로 이동합니다.' : '공정 조작과 알람 내역이 여기에 표시됩니다.'}</span></div>`
+    : events.map((e) => {
+      const unit = metadata.get(e.tag)?.unit;
+      const detail = [e.tag, e.value == null ? '' : `${reading(e.value, unit)} ${unit ?? ''}`,
+        e.limit == null ? '' : `기준 ${reading(e.limit)}`, e.source].filter(Boolean).join(' · ');
+      return `<article class="event ${e.kind}"><div class="event-head"><span class="event-kind">${KIND[e.kind]}</span><time datetime="${e.time_utc}">${wallTime(e.time_utc)}</time></div>
+        <button type="button" class="event-title" data-event-area="${e.area}" data-event-tag="${escape(e.tag ?? '')}">${escape(e.label)}${icon('arrow')}</button>
+        <div class="event-detail">${escape(detail)}</div>
+        ${tab === 'active' ? `<button type="button" class="ack" data-ack="${e.id}" ${e.ack ? 'disabled' : ''}>${e.ack ? '확인됨' : '알람 확인'}</button>` : ''}
+      </article>`;
+    }).join('');
+  if (panel.dataset.html !== items) {
+    panel.innerHTML = items;
+    panel.dataset.html = items;
+    if (focusKey) panel.querySelector(`[data-ack="${focusKey}"]:not(:disabled)`)?.focus();
+  }
+}

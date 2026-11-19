@@ -1,0 +1,17 @@
+{
+  "name": "protopilot-tep",
+  "version": "1.0.0",
+  "description": "Local Three.js console for the Tennessee Eastman Process",
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --minify --outfile=dist/app.js && cp src/index.html src/app.css dist/",
+    "start": "npm run build && .venv/bin/python -m server.app"
+  },
+  "type": "module",
+  "dependencies": {
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "private": true
+}

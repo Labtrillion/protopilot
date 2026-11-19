@@ -1,0 +1,1 @@
+tep-studio @ git+https://github.com/khalidlabs/tep-studio.git@852f0c69ab974540750d61bd1dbfafd56bfd80bb
