@@ -2,36 +2,28 @@ import { placeAnnotation } from './annotation-layout.js';
 import { AREAS, LEVEL_TAGS, levelReading } from './topology.js';
 import { reading } from './ui.js';
 
-export function mountDiagramPreview(host, svg, draw) {
+export function mountDiagramPreview(host, svg, showCloseup) {
   const card = document.createElement('div');
   card.className = 'diagram-preview';
   card.hidden = true;
   card.setAttribute('role', 'img');
   card.innerHTML = `<div class="diagram-preview-heading"><code></code><b></b></div>
-    <canvas width="400" height="300" aria-hidden="true"></canvas><div class="diagram-preview-level" hidden></div>`;
+    <div class="diagram-preview-viewport" aria-hidden="true"></div><div class="diagram-preview-level" hidden></div>`;
   host.after(card);
-  const canvas = card.querySelector('canvas');
+  const closeup = card.querySelector('.diagram-preview-viewport');
   const code = card.querySelector('code'), name = card.querySelector('b'), level = card.querySelector('.diagram-preview-level');
   const chips = new Map([...svg.querySelectorAll('.pfd-chip')].map((chip) => [chip.parentElement.dataset.area, chip]));
   const obstacles = [...svg.querySelectorAll('.pfd-chip, .pfd-valve path, .pfd-pressure')];
-  let area, anchor, symbol, status, renderedArea, renderedLevel;
+  let area, anchor, symbol, status;
 
-  function render() {
+  function updateReading() {
     if (!area) return;
     const value = levelReading(status, area);
-    if (renderedArea === area && Object.is(renderedLevel, value)) return;
-    if (!draw(area, canvas)) {
-      card.hidden = true;
-      return;
-    }
-    renderedArea = area;
-    renderedLevel = value;
-    code.textContent = AREAS[area].code;
-    name.textContent = AREAS[area].name;
     level.hidden = !(area in LEVEL_TAGS);
-    level.textContent = `액위 ${Number.isFinite(value) ? `${reading(value)}%` : '—'}`;
-    card.setAttribute('aria-label', `${code.textContent} ${name.textContent} 3D 미리보기${level.hidden ? '' : `, ${level.textContent}`}`);
-    card.hidden = false;
+    const text = `액위 ${Number.isFinite(value) ? `${reading(value)}%` : '—'}`;
+    if (!level.hidden && level.textContent !== text) level.textContent = text;
+    const label = `${AREAS[area].code} ${AREAS[area].name} 3D 확대${level.hidden ? '' : `, ${text}`}`;
+    if (card.getAttribute('aria-label') !== label) card.setAttribute('aria-label', label);
   }
 
   function position() {
@@ -75,19 +67,19 @@ export function mountDiagramPreview(host, svg, draw) {
   return {
     show(next) {
       anchor = chips.get(next);
-      if (host.hidden || !anchor) {
-        area = renderedArea = undefined;
-        card.hidden = true;
-        return;
-      }
-      area = next;
+      const target = host.hidden || !anchor ? undefined : next;
+      area = showCloseup(target, closeup) ? target : undefined;
+      card.hidden = !area;
+      if (!area) return;
+      code.textContent = AREAS[area].code;
+      name.textContent = AREAS[area].name;
       symbol = svg.querySelector(`[data-symbol="${area}"]`);
-      render();
+      updateReading();
       position();
     },
     update(next) {
       status = next;
-      render();
+      updateReading();
     },
     position,
   };

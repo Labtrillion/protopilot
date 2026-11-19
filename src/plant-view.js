@@ -14,7 +14,7 @@ export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit,
   let tagListOpen = false;
   const flags = { flows: true, pressure: true, internals: false, tags: true };
   const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve, selectFeed,
-    (unit, preview) => scene?.drawEquipmentPreview(unit, preview));
+    (unit, viewport) => scene?.showCloseup(unit, viewport));
   try {
     scene = mountScene(canvas, labels, tagList, (unit, valve) => {
       if (valve) selectValve(valve);

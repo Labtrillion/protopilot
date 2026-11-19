@@ -48,7 +48,7 @@ function equipment() {
   ].join('');
 }
 
-export function mountDiagram(host, selectArea, selectCircuit, openValve, selectFeed, drawPreview) {
+export function mountDiagram(host, selectArea, selectCircuit, openValve, selectFeed, showCloseup) {
   const lines = STREAMS.map((stream) => {
     const d = routePath(ROUTES[stream.id]);
     const { colorToken } = MEDIA[stream.media];
@@ -87,7 +87,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
     <g class="pfd-junctions">${JUNCTIONS.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3"/>`).join('')}</g>
     ${equipment()}${valves}${portsMarkup}${meterMarkup}${labels}${readouts}${flowReadouts}</svg>`;
   const svg = host.firstElementChild;
-  const preview = mountDiagramPreview(host, svg, drawPreview);
+  const preview = mountDiagramPreview(host, svg, showCloseup);
   const targets = [...svg.querySelectorAll('.pfd-hit')];
   const largerTargets = matchMedia('(max-width: 600px), (pointer: coarse)');
   function sizeTargets() {
@@ -159,7 +159,9 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
       else if (area !== 'plant' && ANCHORS[area] && !host.hidden && !feedPorts.has(tag)) {
         const valve = VALVES.find(([id]) => `XMV(${id})` === tag);
         const center = (valve?.[1] ?? ANCHORS[area][0]) / VIEWBOX[0] * svg.clientWidth;
-        host.scrollLeft = Math.max(0, center - host.clientWidth / 2);
+        if (center < host.scrollLeft || center > host.scrollLeft + host.clientWidth) {
+          host.scrollLeft = Math.max(0, center - host.clientWidth / 2);
+        }
       }
       preview.show(area);
     },

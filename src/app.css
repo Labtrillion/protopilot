@@ -197,7 +197,7 @@ h1, h2 { font-size: 1rem; letter-spacing: -0.015em; }
   background: var(--stage);
 }
 .canvas, .model-labels { position: absolute; inset: 0; }
-.canvas canvas { display: block; width: 100%; height: 100%; }
+:is(.canvas, .diagram-preview-viewport) > canvas { display: block; width: 100%; height: 100%; }
 .model-labels { pointer-events: none; isolation: isolate; }
 .model-tag-list {
   display: grid; flex: none; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: 0.28rem;
@@ -456,7 +456,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   content: ""; position: absolute; left: var(--leader-x); top: var(--leader-y); width: var(--leader-length);
   height: 1px; transform-origin: left; transform: rotate(var(--leader-angle)); background: var(--focus);
 }
-.diagram-preview canvas { display: block; flex: 1; min-block-size: 0; inline-size: 100%; object-fit: contain; }
+.diagram-preview-viewport { flex: 1; min-block-size: 0; overflow: hidden; }
 .diagram-preview-heading {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.1rem 0.4rem;
   padding: 0.36rem 0.5rem; border-bottom: 1px solid var(--line-soft); line-height: 1.25;

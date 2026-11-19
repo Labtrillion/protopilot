@@ -129,50 +129,6 @@ function buildEquipment(scene) {
   return { groups, models, sight, feedSkids };
 }
 
-function equipmentPreview(renderer, environment, models) {
-  const preview = new T.Scene();
-  preview.background = new T.Color(readColor('--surface-raised'));
-  preview.environment = environment;
-  preview.environmentIntensity = 0.38;
-  preview.add(new T.HemisphereLight(0xffffff, 0x777777, 1.68));
-  const light = new T.DirectionalLight(0xffffff, 1.65);
-  light.position.set(-3, 6, 4);
-  preview.add(light);
-  const camera = new T.OrthographicCamera();
-  const bounds = new T.Box3(), center = new T.Vector3(), size = new T.Vector3();
-  const viewDirection = new T.Vector3(0.65, 0.52, 1).normalize();
-  const originalSize = new T.Vector2();
-
-  return (area, canvas) => {
-    const model = models[area];
-    if (!model || renderer.getContext().isContextLost()) return false;
-    // Borrow the live model while the main canvas is hidden, including the current liquid geometry.
-    const parent = model.parent;
-    renderer.getSize(originalSize);
-    preview.add(model);
-    try {
-      bounds.setFromObject(model).getCenter(center);
-      camera.position.copy(center).addScaledVector(viewDirection, bounds.getSize(size).length() + 1);
-      camera.lookAt(center);
-      camera.updateMatrixWorld();
-      bounds.applyMatrix4(camera.matrixWorldInverse).getSize(size);
-      const aspect = canvas.width / canvas.height;
-      camera.top = Math.max(size.y, size.x / aspect) * 0.55;
-      camera.right = camera.top * aspect;
-      camera.bottom = -camera.top;
-      camera.left = -camera.right;
-      camera.updateProjectionMatrix();
-      renderer.setSize(canvas.width, canvas.height, false);
-      renderer.render(preview, camera);
-      canvas.getContext('2d').drawImage(renderer.domElement, 0, 0, canvas.width, canvas.height);
-    } finally {
-      parent.add(model);
-      renderer.setSize(originalSize.x, originalSize.y, false);
-    }
-    return true;
-  };
-}
-
 function buildStreams(scene, groups) {
   const markerGeometry = new T.ConeGeometry(0.103, 0.31, 9);
   const markerMaterial = new T.MeshBasicMaterial({ color: readColor('--flow-marker'), toneMapped: false });
@@ -336,7 +292,6 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   scene.add(rim);
 
   const { groups, models, sight, feedSkids } = buildEquipment(scene);
-  const drawEquipmentPreview = equipmentPreview(renderer, scene.environment, models);
   const streams = buildStreams(scene, groups);
   const pickable = [...Object.values(groups)];
   for (const { def, feedTag, tube, flanges } of streams) {
@@ -396,14 +351,15 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   let panX = 0, cameraDirty = true, lastRender = 0, lastProcessFrame = -Infinity;
   largerTargets.addEventListener('change', () => { cameraDirty = true; });
   let alertAreas = new Set();
-  const geometryBounds = {};
+  const equipmentBounds = {}, geometryBounds = {};
   scene.updateMatrixWorld(true);
   for (const [area, group] of Object.entries(groups)) {
     // Large auxiliary pipes/pumps belong to the unit but the orbit centers on its vessel.
     const spans = { reactor: 2.25, separator: 1.69, stripper: 1.56, feeds: 4.2, condenser: 2.33, compressor: 1.7 };
     geometryBounds[area] = spans[area] ?? 0.77;
-    box.setFromObject(models[area]);
-    group.userData.top = box.max.y;
+    const bounds = new T.Box3().setFromObject(models[area]);
+    equipmentBounds[area] = bounds;
+    group.userData.top = bounds.max.y;
   }
   const casingBounds = Object.fromEntries(Object.entries(sight).map(([area, { casing }]) => {
     const bounds = new T.Box3();
@@ -417,9 +373,11 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     cameraDirty = true;
   }
 
-  new ResizeObserver(() => {
-    width = Math.max(1, container.clientWidth);
-    height = Math.max(1, container.clientHeight);
+  function resizeMain() {
+    const w = container.clientWidth, h = container.clientHeight;
+    if (!displayed || !w || !h) return;
+    width = w;
+    height = h;
     const aspect = width / height;
     const half = Math.max(overviewFrame.halfHeight, overviewFrame.halfWidth / aspect);
     camera.left = -half * aspect;
@@ -428,7 +386,51 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     camera.bottom = -half;
     updateProjection();
     renderer.setSize(width, height, false);
-  }).observe(container);
+  }
+  new ResizeObserver(resizeMain).observe(container);
+
+  const closeupCamera = new T.OrthographicCamera(-1, 1, 1, -1, camera.near, camera.far);
+  const closeupCenter = new T.Vector3(), closeupSize = new T.Vector3();
+  let closeupViewport, closeupBounds, closeupDirty = false, closeupReady = false;
+  const closeupObserver = new ResizeObserver(() => { closeupDirty = true; });
+
+  function frameCloseup() {
+    const w = closeupViewport.clientWidth, h = closeupViewport.clientHeight;
+    if (!w || !h) return false;
+    closeupBounds.getCenter(closeupCenter);
+    closeupCamera.position.subVectors(camera.position, controls.target).add(closeupCenter);
+    closeupCamera.lookAt(closeupCenter);
+    closeupCamera.updateMatrixWorld();
+    box.copy(closeupBounds).applyMatrix4(closeupCamera.matrixWorldInverse).getSize(closeupSize);
+    const aspect = w / h;
+    closeupCamera.top = Math.max(closeupSize.y, closeupSize.x / aspect) * 0.67;
+    closeupCamera.right = closeupCamera.top * aspect;
+    closeupCamera.bottom = -closeupCamera.top;
+    closeupCamera.left = -closeupCamera.right;
+    closeupCamera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+    return true;
+  }
+
+  function showCloseup(area, viewport) {
+    closeupBounds = equipmentBounds[area];
+    if (!closeupBounds || displayed) {
+      if (closeupViewport) {
+        closeupObserver.unobserve(closeupViewport);
+        closeupViewport = undefined;
+        container.append(renderer.domElement);
+      }
+      return false;
+    }
+    if (viewport !== closeupViewport) {
+      // Only the canvas moves between views. Both cameras render the same live scene.
+      closeupViewport = viewport;
+      viewport.append(renderer.domElement);
+      closeupObserver.observe(viewport);
+    }
+    closeupDirty = true;
+    return true;
+  }
 
   function go(area, resetOrientation = false, tag) {
     if (area !== focus || resetOrientation) resetAnnotationOffsets();
@@ -776,16 +778,24 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
 
   function animate(now) {
     requestAnimationFrame(animate);
-    if (!displayed || !container.isConnected || document.hidden) return;
+    if ((!displayed && !closeupViewport) || !container.isConnected || document.hidden) return;
     const processDue = now - lastProcessFrame >= processFrameInterval;
+    if (!displayed) {
+      const reframed = closeupDirty;
+      if (reframed) {
+        closeupReady = frameCloseup();
+        closeupDirty = false;
+      }
+      if (!closeupReady || (!reframed && !processDue)) return;
+      if (processDue) stepProcess(now);
+      renderer.render(scene, closeupCamera);
+      return;
+    }
     const cameraChanged = cameraDirty || Boolean(frame);
     // Redraw changed camera poses on the next display frame while process motion keeps its own cadence.
     if (!cameraChanged && !processDue && !annotationsDirty) return;
     if (frame) animateCamera(Math.min(0.075, (now - lastRender) / 1000));
-    if (processDue) {
-      animateProcess(Math.min(0.075, (now - lastProcessFrame) / 1000));
-      lastProcessFrame = now;
-    }
+    if (processDue) stepProcess(now);
     if (cameraChanged) {
       cameraDirty = false;
       camera.updateMatrixWorld();
@@ -799,9 +809,14 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     }
   }
 
+  function stepProcess(now) {
+    animateProcess(Math.min(0.075, (now - lastProcessFrame) / 1000));
+    lastProcessFrame = now;
+  }
+
   requestAnimationFrame(animate);
   return {
-    go, updateVisuals, drawEquipmentPreview,
+    go, updateVisuals, showCloseup,
     interiorAreas: () => openInteriors,
     track(area, tag) {
       trackedArea = area;
@@ -858,7 +873,10 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     display(enabled) {
       displayed = enabled;
       host.hidden = !displayed || !showLabels;
-      if (enabled) cameraDirty = true;
+      if (enabled) {
+        showCloseup();
+        resizeMain();
+      }
     },
     tags(visible) {
       showLabels = visible;
