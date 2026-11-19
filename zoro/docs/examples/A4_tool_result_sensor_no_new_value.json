@@ -1,0 +1,24 @@
+{
+  "tool_request_id": "EVT-TEP-0001-D01-T1",
+  "tool_name": "sensor_query",
+  "status": "succeeded",
+  "payload": {
+    "kind": "sensor_query",
+    "observations": [
+      {
+        "origin": "plant_measurement",
+        "sensor_id": "XMEAS(30)",
+        "value": 13.79,
+        "unit": "mol%",
+        "measured_at_s": 20100.0,
+        "quality": "good",
+        "sample_id": "PURGE-0112"
+      }
+    ],
+    "unavailable_sensor_ids": [],
+    "note": "분석기 새 시료 없음 — 기존 시료 재전달"
+  },
+  "error": null,
+  "finished_sim_time_s": 21660.0,
+  "is_virtual": true
+}

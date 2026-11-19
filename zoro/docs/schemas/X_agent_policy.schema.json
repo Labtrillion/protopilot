@@ -1,0 +1,371 @@
+{
+  "$defs": {
+    "BenchmarkPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "values_status": {
+          "default": "example",
+          "enum": [
+            "example",
+            "agreed"
+          ],
+          "title": "Values Status",
+          "type": "string"
+        },
+        "tracked": {
+          "description": "항상 추적하는 변수. 경보 변수는 경보 임계값으로 덮어씀",
+          "items": {
+            "$ref": "#/$defs/TrackedVariable"
+          },
+          "title": "Tracked",
+          "type": "array"
+        },
+        "reference_setpoints": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "default": {},
+          "description": "경보 태그의 정확도 목표 (tracked 에 없을 때)",
+          "title": "Reference Setpoints",
+          "type": "object"
+        },
+        "alarm_weight": {
+          "default": 2.0,
+          "description": "사건 경보 변수의 정확도 가중치(나머지는 각 변수 weight)",
+          "title": "Alarm Weight",
+          "type": "number"
+        },
+        "horizon_s": {
+          "description": "case 평가 run 길이 [s]",
+          "title": "Horizon S",
+          "type": "number"
+        },
+        "final_window_s": {
+          "description": "마지막 이 구간 동안 모든 추적 변수가 임계값 안이어야 적격",
+          "title": "Final Window S",
+          "type": "number"
+        },
+        "production_ratio_min": {
+          "description": "심슨 생산량 대비 최소 비율",
+          "title": "Production Ratio Min",
+          "type": "number"
+        },
+        "g_mass_pct_range": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "G Mass Pct Range",
+          "type": "array"
+        },
+        "max_def_mol_pct": {
+          "title": "Max Def Mol Pct",
+          "type": "number"
+        },
+        "vs_baseline": {
+          "$ref": "#/$defs/Margins",
+          "description": "심슨보다 '의미 있게 좋다'의 최소 개선폭"
+        },
+        "vs_incumbent": {
+          "$ref": "#/$defs/Margins",
+          "description": "현재 최선 case 를 갈아치울 최소 개선폭"
+        },
+        "non_inferiority": {
+          "$ref": "#/$defs/Margins",
+          "description": "다른 지표가 이만큼까지만 나빠져도 허용"
+        },
+        "patience": {
+          "description": "최선 case 이후 연속으로 이기지 못한 case 수가 이 값이면 종료",
+          "title": "Patience",
+          "type": "integer"
+        },
+        "max_cases": {
+          "description": "심슨 외 case 최대 시험 수",
+          "title": "Max Cases",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "label",
+        "tracked",
+        "horizon_s",
+        "final_window_s",
+        "production_ratio_min",
+        "g_mass_pct_range",
+        "max_def_mol_pct",
+        "vs_baseline",
+        "vs_incumbent",
+        "non_inferiority",
+        "patience",
+        "max_cases"
+      ],
+      "title": "BenchmarkPolicy",
+      "type": "object"
+    },
+    "Budget": {
+      "additionalProperties": false,
+      "properties": {
+        "max_decisions": {
+          "description": "Zoro 호출 최대 횟수",
+          "minimum": 1,
+          "title": "Max Decisions",
+          "type": "integer"
+        },
+        "max_tool_calls": {
+          "minimum": 0,
+          "title": "Max Tool Calls",
+          "type": "integer"
+        },
+        "max_simulations": {
+          "minimum": 0,
+          "title": "Max Simulations",
+          "type": "integer"
+        },
+        "max_wall_time_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "실행 벽시계 한도. null = 제한 없음",
+          "title": "Max Wall Time S"
+        }
+      },
+      "required": [
+        "max_decisions",
+        "max_tool_calls",
+        "max_simulations"
+      ],
+      "title": "Budget",
+      "type": "object"
+    },
+    "FreshnessPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "default_max_age_s": {
+          "exclusiveMinimum": 0,
+          "title": "Default Max Age S",
+          "type": "number"
+        },
+        "per_sensor_max_age_s": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "default": {},
+          "title": "Per Sensor Max Age S",
+          "type": "object"
+        }
+      },
+      "required": [
+        "default_max_age_s"
+      ],
+      "title": "FreshnessPolicy",
+      "type": "object"
+    },
+    "Margins": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_rel": {
+          "description": "m³당 비용 상대 차이 (0.01 = 1%)",
+          "title": "Cost Rel",
+          "type": "number"
+        },
+        "acc_abs": {
+          "description": "정확도 절대 차이 (0~1 척도)",
+          "title": "Acc Abs",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cost_rel",
+        "acc_abs"
+      ],
+      "title": "Margins",
+      "type": "object"
+    },
+    "RecommendationPolicy": {
+      "additionalProperties": false,
+      "description": "최종 권고 옵션을 여는 기준과 필수 비교 대상.",
+      "properties": {
+        "baseline_action_id": {
+          "description": "필수 기준(무조치) 실험 행동",
+          "title": "Baseline Action Id",
+          "type": "string"
+        },
+        "min_candidate_runs": {
+          "description": "기준 외 성공·비교 가능한 후보 실험 최소 수",
+          "minimum": 1,
+          "title": "Min Candidate Runs",
+          "type": "integer"
+        },
+        "required_safety_checks": {
+          "default": [],
+          "description": "pass 여야 권고 가능",
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Safety Checks",
+          "type": "array"
+        },
+        "advisory_safety_checks": {
+          "default": [],
+          "description": "권고를 막지 않고 불확실성으로 보고",
+          "items": {
+            "type": "string"
+          },
+          "title": "Advisory Safety Checks",
+          "type": "array"
+        },
+        "required_fresh_sensors": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Fresh Sensors",
+          "type": "array"
+        },
+        "require_alarm_recovery": {
+          "default": true,
+          "title": "Require Alarm Recovery",
+          "type": "boolean"
+        },
+        "block_if_limit_exceedance": {
+          "default": true,
+          "title": "Block If Limit Exceedance",
+          "type": "boolean"
+        },
+        "require_rag_evidence": {
+          "default": true,
+          "title": "Require Rag Evidence",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "baseline_action_id",
+        "min_candidate_runs"
+      ],
+      "title": "RecommendationPolicy",
+      "type": "object"
+    },
+    "TrackedVariable": {
+      "additionalProperties": false,
+      "properties": {
+        "tag": {
+          "description": "예: XMEAS(7)",
+          "title": "Tag",
+          "type": "string"
+        },
+        "setpoint": {
+          "description": "정확도 기준값(목표)",
+          "title": "Setpoint",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "hi": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "상한 경보 임계값. null = 상한 없음",
+          "title": "Hi"
+        },
+        "lo": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "하한 경보 임계값. null = 하한 없음",
+          "title": "Lo"
+        },
+        "weight": {
+          "default": 1.0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "source": {
+          "description": "목표·임계값 출처",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tag",
+        "setpoint",
+        "unit",
+        "hi",
+        "lo",
+        "source"
+      ],
+      "title": "TrackedVariable",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "agent_policy.v0",
+      "default": "agent_policy.v0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "label": {
+      "description": "예: 'EXAMPLE — 검증된 기준 아님'",
+      "title": "Label",
+      "type": "string"
+    },
+    "freshness": {
+      "$ref": "#/$defs/FreshnessPolicy"
+    },
+    "recommendation": {
+      "$ref": "#/$defs/RecommendationPolicy"
+    },
+    "budget": {
+      "$ref": "#/$defs/Budget"
+    },
+    "benchmark": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BenchmarkPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "있으면 심슨(hold) 대비 비용·정확도 비교와 case 탐색 종료 규칙으로 권고를 연다"
+    }
+  },
+  "required": [
+    "label",
+    "freshness",
+    "recommendation",
+    "budget"
+  ],
+  "title": "AgentPolicy",
+  "type": "object"
+}

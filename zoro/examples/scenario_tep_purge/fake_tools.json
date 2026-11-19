@@ -1,0 +1,735 @@
+{
+  "label": "VIRTUAL — 가짜 도구 응답. 실제 TEP Studio 실행 결과 아님 (수치는 흐름 확인용 임의값)",
+  "sensor_query": {
+    "XMEAS(30)": [
+      {
+        "status": "succeeded",
+        "finished_sim_time_s": 21660,
+        "note": "분석기 새 시료 없음 — 기존 시료 재전달",
+        "observations": [
+          {
+            "sensor_id": "XMEAS(30)",
+            "value": 13.79,
+            "unit": "mol%",
+            "measured_at_s": 20100,
+            "quality": "good",
+            "sample_id": "PURGE-0112"
+          }
+        ]
+      },
+      {
+        "status": "succeeded",
+        "finished_sim_time_s": 21840,
+        "observations": [
+          {
+            "sensor_id": "XMEAS(30)",
+            "value": 13.81,
+            "unit": "mol%",
+            "measured_at_s": 21780,
+            "quality": "good",
+            "sample_id": "PURGE-0117"
+          }
+        ]
+      }
+    ]
+  },
+  "relation_query": {
+    "edges": [
+      {
+        "source": "CONTRL19",
+        "relation": "reads",
+        "target": "XMEAS(30)"
+      },
+      {
+        "source": "CONTRL19",
+        "relation": "sets_target_of",
+        "target": "CONTRL6"
+      },
+      {
+        "source": "CONTRL6",
+        "relation": "manipulates",
+        "target": "XMV(6)"
+      },
+      {
+        "source": "XMEAS(13)",
+        "relation": "overrides",
+        "target": "CONTRL6"
+      }
+    ]
+  },
+  "simulation": {
+    "defaults": {
+      "simulator_version": "tepsim-wasm 0.0.0 (example)",
+      "disturbance_profile_id": "DIST-REPLAY-EXAMPLE",
+      "seed": 4651207995
+    },
+    "CASE-HOLD": {
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/{run_id}/studio.csv",
+      "impact": {
+        "original_alarm_recovered": false,
+        "recovery_time_s": null,
+        "affected_equipment": [
+          "reactor",
+          "purge"
+        ],
+        "affected_sensors": [
+          "XMEAS(7)",
+          "XMEAS(10)"
+        ],
+        "exceedances": [
+          {
+            "sensor_id": "XMEAS(7)",
+            "equipment_id": "reactor",
+            "limit_name": "반응기 압력 경보 임계값",
+            "limit_value": 2895,
+            "unit": "kPa(g)",
+            "first_exceeded_at_s": 0,
+            "duration_s": 14400,
+            "max_excess": 18
+          }
+        ],
+        "metrics": {
+          "usd_per_m3": {
+            "value": 7.62,
+            "unit": "USD/m3",
+            "better": "lower"
+          },
+          "tracking_accuracy": {
+            "value": 0.52,
+            "unit": "score_0_1",
+            "better": "higher"
+          },
+          "product_m3": {
+            "value": 91.6,
+            "unit": "m3",
+            "better": "higher"
+          },
+          "cost_total_usd": {
+            "value": 697.99,
+            "unit": "USD(benchmark)",
+            "better": "lower"
+          }
+        },
+        "evidence_spans": [
+          {
+            "run_id": "{run_id}",
+            "sensor_id": "XMEAS(7)",
+            "t_start_s": 0,
+            "t_end_s": 14400
+          }
+        ],
+        "score": {
+          "run_id": "{run_id}",
+          "tripped": false,
+          "usd_per_m3": 7.62,
+          "cost_usd": {
+            "purge": 467.65,
+            "product": 125.64,
+            "power": 74.68,
+            "steam": 30.02,
+            "total": 697.99
+          },
+          "product_m3": 91.6,
+          "tracking_accuracy": 0.52,
+          "per_variable_accuracy": {},
+          "in_threshold_fraction": 0.0,
+          "time_to_stable_s": null,
+          "final_window_inside": false,
+          "quality_ok": true,
+          "failed_gates": [
+            "final_window_inside"
+          ]
+        }
+      }
+    },
+    "CASE-SP19-UP050": {
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/{run_id}/studio.csv",
+      "impact": {
+        "original_alarm_recovered": false,
+        "recovery_time_s": null,
+        "affected_equipment": [
+          "reactor",
+          "purge"
+        ],
+        "affected_sensors": [
+          "XMEAS(7)",
+          "XMEAS(10)"
+        ],
+        "exceedances": [
+          {
+            "sensor_id": "XMEAS(7)",
+            "equipment_id": "reactor",
+            "limit_name": "반응기 압력 경보 임계값",
+            "limit_value": 2895,
+            "unit": "kPa(g)",
+            "first_exceeded_at_s": 0,
+            "duration_s": 14400,
+            "max_excess": 18
+          }
+        ],
+        "metrics": {
+          "usd_per_m3": {
+            "value": 7.58,
+            "unit": "USD/m3",
+            "better": "lower"
+          },
+          "tracking_accuracy": {
+            "value": 0.4,
+            "unit": "score_0_1",
+            "better": "higher"
+          },
+          "product_m3": {
+            "value": 91.7,
+            "unit": "m3",
+            "better": "higher"
+          },
+          "cost_total_usd": {
+            "value": 695.09,
+            "unit": "USD(benchmark)",
+            "better": "lower"
+          }
+        },
+        "evidence_spans": [
+          {
+            "run_id": "{run_id}",
+            "sensor_id": "XMEAS(7)",
+            "t_start_s": 0,
+            "t_end_s": 14400
+          }
+        ],
+        "score": {
+          "run_id": "{run_id}",
+          "tripped": false,
+          "usd_per_m3": 7.58,
+          "cost_usd": {
+            "purge": 465.71,
+            "product": 125.12,
+            "power": 74.37,
+            "steam": 29.89,
+            "total": 695.09
+          },
+          "product_m3": 91.7,
+          "tracking_accuracy": 0.4,
+          "per_variable_accuracy": {},
+          "in_threshold_fraction": 0.0,
+          "time_to_stable_s": null,
+          "final_window_inside": false,
+          "quality_ok": true,
+          "failed_gates": [
+            "final_window_inside"
+          ]
+        }
+      }
+    },
+    "CASE-SP19-DN050": {
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/{run_id}/studio.csv",
+      "impact": {
+        "original_alarm_recovered": true,
+        "recovery_time_s": 5400,
+        "affected_equipment": [
+          "reactor",
+          "purge"
+        ],
+        "affected_sensors": [
+          "XMEAS(7)",
+          "XMEAS(10)"
+        ],
+        "exceedances": [],
+        "metrics": {
+          "usd_per_m3": {
+            "value": 7.66,
+            "unit": "USD/m3",
+            "better": "lower"
+          },
+          "tracking_accuracy": {
+            "value": 0.74,
+            "unit": "score_0_1",
+            "better": "higher"
+          },
+          "product_m3": {
+            "value": 91.5,
+            "unit": "m3",
+            "better": "higher"
+          },
+          "cost_total_usd": {
+            "value": 700.89,
+            "unit": "USD(benchmark)",
+            "better": "lower"
+          }
+        },
+        "evidence_spans": [
+          {
+            "run_id": "{run_id}",
+            "sensor_id": "XMEAS(7)",
+            "t_start_s": 0,
+            "t_end_s": 5400
+          }
+        ],
+        "score": {
+          "run_id": "{run_id}",
+          "tripped": false,
+          "usd_per_m3": 7.66,
+          "cost_usd": {
+            "purge": 469.6,
+            "product": 126.16,
+            "power": 75.0,
+            "steam": 30.13,
+            "total": 700.89
+          },
+          "product_m3": 91.5,
+          "tracking_accuracy": 0.74,
+          "per_variable_accuracy": {},
+          "in_threshold_fraction": 0.625,
+          "time_to_stable_s": 5400,
+          "final_window_inside": true,
+          "quality_ok": true,
+          "failed_gates": []
+        }
+      }
+    },
+    "CASE-SP19-UP100": {
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/{run_id}/studio.csv",
+      "impact": {
+        "original_alarm_recovered": false,
+        "recovery_time_s": null,
+        "affected_equipment": [
+          "reactor",
+          "purge"
+        ],
+        "affected_sensors": [
+          "XMEAS(7)",
+          "XMEAS(10)"
+        ],
+        "exceedances": [
+          {
+            "sensor_id": "XMEAS(7)",
+            "equipment_id": "reactor",
+            "limit_name": "반응기 압력 경보 임계값",
+            "limit_value": 2895,
+            "unit": "kPa(g)",
+            "first_exceeded_at_s": 0,
+            "duration_s": 14400,
+            "max_excess": 18
+          }
+        ],
+        "metrics": {
+          "usd_per_m3": {
+            "value": 7.55,
+            "unit": "USD/m3",
+            "better": "lower"
+          },
+          "tracking_accuracy": {
+            "value": 0.33,
+            "unit": "score_0_1",
+            "better": "higher"
+          },
+          "product_m3": {
+            "value": 91.8,
+            "unit": "m3",
+            "better": "higher"
+          },
+          "cost_total_usd": {
+            "value": 693.09,
+            "unit": "USD(benchmark)",
+            "better": "lower"
+          }
+        },
+        "evidence_spans": [
+          {
+            "run_id": "{run_id}",
+            "sensor_id": "XMEAS(7)",
+            "t_start_s": 0,
+            "t_end_s": 14400
+          }
+        ],
+        "score": {
+          "run_id": "{run_id}",
+          "tripped": false,
+          "usd_per_m3": 7.55,
+          "cost_usd": {
+            "purge": 464.37,
+            "product": 124.76,
+            "power": 74.16,
+            "steam": 29.8,
+            "total": 693.09
+          },
+          "product_m3": 91.8,
+          "tracking_accuracy": 0.33,
+          "per_variable_accuracy": {},
+          "in_threshold_fraction": 0.0,
+          "time_to_stable_s": null,
+          "final_window_inside": false,
+          "quality_ok": true,
+          "failed_gates": [
+            "final_window_inside"
+          ]
+        }
+      }
+    },
+    "CASE-SP19-DN100": {
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/{run_id}/studio.csv",
+      "impact": {
+        "original_alarm_recovered": true,
+        "recovery_time_s": 4500,
+        "affected_equipment": [
+          "reactor",
+          "purge"
+        ],
+        "affected_sensors": [
+          "XMEAS(7)",
+          "XMEAS(10)"
+        ],
+        "exceedances": [],
+        "metrics": {
+          "usd_per_m3": {
+            "value": 7.72,
+            "unit": "USD/m3",
+            "better": "lower"
+          },
+          "tracking_accuracy": {
+            "value": 0.77,
+            "unit": "score_0_1",
+            "better": "higher"
+          },
+          "product_m3": {
+            "value": 91.3,
+            "unit": "m3",
+            "better": "higher"
+          },
+          "cost_total_usd": {
+            "value": 704.84,
+            "unit": "USD(benchmark)",
+            "better": "lower"
+          }
+        },
+        "evidence_spans": [
+          {
+            "run_id": "{run_id}",
+            "sensor_id": "XMEAS(7)",
+            "t_start_s": 0,
+            "t_end_s": 4500
+          }
+        ],
+        "score": {
+          "run_id": "{run_id}",
+          "tripped": false,
+          "usd_per_m3": 7.72,
+          "cost_usd": {
+            "purge": 472.24,
+            "product": 126.87,
+            "power": 75.42,
+            "steam": 30.31,
+            "total": 704.84
+          },
+          "product_m3": 91.3,
+          "tracking_accuracy": 0.77,
+          "per_variable_accuracy": {},
+          "in_threshold_fraction": 0.688,
+          "time_to_stable_s": 4500,
+          "final_window_inside": true,
+          "quality_ok": true,
+          "failed_gates": []
+        }
+      }
+    },
+    "CASE-SP19-UP150": {
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/{run_id}/studio.csv",
+      "impact": {
+        "original_alarm_recovered": false,
+        "recovery_time_s": null,
+        "affected_equipment": [
+          "reactor",
+          "purge"
+        ],
+        "affected_sensors": [
+          "XMEAS(7)",
+          "XMEAS(10)"
+        ],
+        "exceedances": [
+          {
+            "sensor_id": "XMEAS(7)",
+            "equipment_id": "reactor",
+            "limit_name": "반응기 압력 경보 임계값",
+            "limit_value": 2895,
+            "unit": "kPa(g)",
+            "first_exceeded_at_s": 0,
+            "duration_s": 14400,
+            "max_excess": 18
+          }
+        ],
+        "metrics": {
+          "usd_per_m3": {
+            "value": 7.53,
+            "unit": "USD/m3",
+            "better": "lower"
+          },
+          "tracking_accuracy": {
+            "value": 0.27,
+            "unit": "score_0_1",
+            "better": "higher"
+          },
+          "product_m3": {
+            "value": 91.8,
+            "unit": "m3",
+            "better": "higher"
+          },
+          "cost_total_usd": {
+            "value": 691.25,
+            "unit": "USD(benchmark)",
+            "better": "lower"
+          }
+        },
+        "evidence_spans": [
+          {
+            "run_id": "{run_id}",
+            "sensor_id": "XMEAS(7)",
+            "t_start_s": 0,
+            "t_end_s": 14400
+          }
+        ],
+        "score": {
+          "run_id": "{run_id}",
+          "tripped": false,
+          "usd_per_m3": 7.53,
+          "cost_usd": {
+            "purge": 463.14,
+            "product": 124.42,
+            "power": 73.96,
+            "steam": 29.73,
+            "total": 691.25
+          },
+          "product_m3": 91.8,
+          "tracking_accuracy": 0.27,
+          "per_variable_accuracy": {},
+          "in_threshold_fraction": 0.0,
+          "time_to_stable_s": null,
+          "final_window_inside": false,
+          "quality_ok": true,
+          "failed_gates": [
+            "final_window_inside"
+          ]
+        }
+      }
+    },
+    "CASE-SP19-DN150": {
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/{run_id}/studio.csv",
+      "impact": {
+        "original_alarm_recovered": true,
+        "recovery_time_s": 4200,
+        "affected_equipment": [
+          "reactor",
+          "purge"
+        ],
+        "affected_sensors": [
+          "XMEAS(7)",
+          "XMEAS(10)"
+        ],
+        "exceedances": [],
+        "metrics": {
+          "usd_per_m3": {
+            "value": 7.83,
+            "unit": "USD/m3",
+            "better": "lower"
+          },
+          "tracking_accuracy": {
+            "value": 0.78,
+            "unit": "score_0_1",
+            "better": "higher"
+          },
+          "product_m3": {
+            "value": 91.0,
+            "unit": "m3",
+            "better": "higher"
+          },
+          "cost_total_usd": {
+            "value": 712.53,
+            "unit": "USD(benchmark)",
+            "better": "lower"
+          }
+        },
+        "evidence_spans": [
+          {
+            "run_id": "{run_id}",
+            "sensor_id": "XMEAS(7)",
+            "t_start_s": 0,
+            "t_end_s": 4200
+          }
+        ],
+        "score": {
+          "run_id": "{run_id}",
+          "tripped": false,
+          "usd_per_m3": 7.83,
+          "cost_usd": {
+            "purge": 477.4,
+            "product": 128.26,
+            "power": 76.24,
+            "steam": 30.63,
+            "total": 712.53
+          },
+          "product_m3": 91.0,
+          "tracking_accuracy": 0.78,
+          "per_variable_accuracy": {},
+          "in_threshold_fraction": 0.708,
+          "time_to_stable_s": 4200,
+          "final_window_inside": true,
+          "quality_ok": true,
+          "failed_gates": []
+        }
+      }
+    },
+    "CASE-SP19-UP200": {
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/{run_id}/studio.csv",
+      "impact": {
+        "original_alarm_recovered": false,
+        "recovery_time_s": null,
+        "affected_equipment": [
+          "reactor",
+          "purge"
+        ],
+        "affected_sensors": [
+          "XMEAS(7)",
+          "XMEAS(10)"
+        ],
+        "exceedances": [
+          {
+            "sensor_id": "XMEAS(7)",
+            "equipment_id": "reactor",
+            "limit_name": "반응기 압력 경보 임계값",
+            "limit_value": 2895,
+            "unit": "kPa(g)",
+            "first_exceeded_at_s": 0,
+            "duration_s": 14400,
+            "max_excess": 18
+          }
+        ],
+        "metrics": {
+          "usd_per_m3": {
+            "value": 7.52,
+            "unit": "USD/m3",
+            "better": "lower"
+          },
+          "tracking_accuracy": {
+            "value": 0.22,
+            "unit": "score_0_1",
+            "better": "higher"
+          },
+          "product_m3": {
+            "value": 91.9,
+            "unit": "m3",
+            "better": "higher"
+          },
+          "cost_total_usd": {
+            "value": 691.09,
+            "unit": "USD(benchmark)",
+            "better": "lower"
+          }
+        },
+        "evidence_spans": [
+          {
+            "run_id": "{run_id}",
+            "sensor_id": "XMEAS(7)",
+            "t_start_s": 0,
+            "t_end_s": 14400
+          }
+        ],
+        "score": {
+          "run_id": "{run_id}",
+          "tripped": false,
+          "usd_per_m3": 7.52,
+          "cost_usd": {
+            "purge": 463.03,
+            "product": 124.4,
+            "power": 73.95,
+            "steam": 29.71,
+            "total": 691.09
+          },
+          "product_m3": 91.9,
+          "tracking_accuracy": 0.22,
+          "per_variable_accuracy": {},
+          "in_threshold_fraction": 0.0,
+          "time_to_stable_s": null,
+          "final_window_inside": false,
+          "quality_ok": true,
+          "failed_gates": [
+            "final_window_inside"
+          ]
+        }
+      }
+    },
+    "CASE-SP19-DN200": {
+      "status": "succeeded",
+      "timeseries_ref": "virtual://runs/{run_id}/studio.csv",
+      "impact": {
+        "original_alarm_recovered": true,
+        "recovery_time_s": 3900,
+        "affected_equipment": [
+          "reactor",
+          "purge"
+        ],
+        "affected_sensors": [
+          "XMEAS(7)",
+          "XMEAS(10)"
+        ],
+        "exceedances": [],
+        "metrics": {
+          "usd_per_m3": {
+            "value": 7.95,
+            "unit": "USD/m3",
+            "better": "lower"
+          },
+          "tracking_accuracy": {
+            "value": 0.79,
+            "unit": "score_0_1",
+            "better": "higher"
+          },
+          "product_m3": {
+            "value": 90.2,
+            "unit": "m3",
+            "better": "higher"
+          },
+          "cost_total_usd": {
+            "value": 717.09,
+            "unit": "USD(benchmark)",
+            "better": "lower"
+          }
+        },
+        "evidence_spans": [
+          {
+            "run_id": "{run_id}",
+            "sensor_id": "XMEAS(7)",
+            "t_start_s": 0,
+            "t_end_s": 3900
+          }
+        ],
+        "score": {
+          "run_id": "{run_id}",
+          "tripped": false,
+          "usd_per_m3": 7.95,
+          "cost_usd": {
+            "purge": 480.45,
+            "product": 129.08,
+            "power": 76.73,
+            "steam": 30.83,
+            "total": 717.09
+          },
+          "product_m3": 90.2,
+          "tracking_accuracy": 0.79,
+          "per_variable_accuracy": {},
+          "in_threshold_fraction": 0.729,
+          "time_to_stable_s": 3900,
+          "final_window_inside": true,
+          "quality_ok": true,
+          "failed_gates": []
+        }
+      }
+    }
+  }
+}

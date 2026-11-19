@@ -1,0 +1,185 @@
+{
+  "nominal": {
+    "scenario": "tepsim.scenario.v1;seed=4651207995;hours=48;step=2.777777777777778e-4;every=180;faults=;controlled=1;idv12=0;trip=1;continuous=0;integrator=euler;events=",
+    "model": "tepsim-wasm 0.0.0.",
+    "outcome": "completed",
+    "samples": 960,
+    "window_h": [
+      0.04972222222222225,
+      47.99972222210173
+    ],
+    "observed_hours": 47.94999999987951,
+    "cost_usd": {
+      "purge": 5503.442955394583,
+      "product": 1469.8075341551914,
+      "power": 877.6532750337068,
+      "steam": 356.169604735287,
+      "total": 8207.073369318769
+    },
+    "mean_usd_h": {
+      "purge": 114.77461846524322,
+      "product": 30.6529204204147,
+      "power": 18.30350938552476,
+      "steam": 7.427937533601293,
+      "total": 171.15898580478398
+    },
+    "product_m3": 1100.0626984424894,
+    "usd_per_m3": 7.4605505494720035,
+    "primary_band": {
+      "status": "maintained",
+      "outside_samples": 0,
+      "first_outside_h": null,
+      "first_confirmed_after_1h": null,
+      "final_reentry_h": null,
+      "final_2h_all_in_band": true
+    },
+    "temperature_fine_band": {
+      "status": "maintained",
+      "outside_samples": 0,
+      "first_outside_h": null,
+      "first_confirmed_after_1h": null,
+      "final_reentry_h": null,
+      "final_2h_all_in_band": true
+    },
+    "final_2h_mean": {
+      "XMEAS(9)": 120.40176434134766,
+      "XMEAS(8)": 74.80462786260979,
+      "XMEAS(12)": 49.92223688095412,
+      "XMEAS(15)": 50.239505486480276,
+      "XMEAS(17)": 22.853670920116873
+    },
+    "temperature_range_c": [
+      120.34012973737002,
+      120.45754052429544
+    ],
+    "reactor_pressure_max_kpag": 2730.8748468888125,
+    "g_mass_pct_of_gh_range": [
+      49.128291388165344,
+      50.91168113502152
+    ],
+    "max_product_def_mol_pct": 1.0350191472405161,
+    "failed_gates": []
+  },
+  "cooling_step": {
+    "scenario": "tepsim.scenario.v1;seed=4651207995;hours=48;step=2.777777777777778e-4;every=180;faults=4;controlled=1;idv12=0;trip=1;continuous=0;integrator=euler;events=",
+    "model": "tepsim-wasm 0.0.0.",
+    "outcome": "completed",
+    "samples": 960,
+    "window_h": [
+      0.04972222222222225,
+      47.99972222210173
+    ],
+    "observed_hours": 47.94999999987951,
+    "cost_usd": {
+      "purge": 5503.434529017819,
+      "product": 1469.8064014871907,
+      "power": 877.6536132434433,
+      "steam": 356.16889778193627,
+      "total": 8207.063441530388
+    },
+    "mean_usd_h": {
+      "purge": 114.77444273267254,
+      "product": 30.652896798558583,
+      "power": 18.30351643890821,
+      "steam": 7.427922790048618,
+      "total": 171.15877876018794
+    },
+    "product_m3": 1100.0620777318413,
+    "usd_per_m3": 7.460545734339002,
+    "primary_band": {
+      "status": "maintained",
+      "outside_samples": 0,
+      "first_outside_h": null,
+      "first_confirmed_after_1h": null,
+      "final_reentry_h": null,
+      "final_2h_all_in_band": true
+    },
+    "temperature_fine_band": {
+      "status": "recovered",
+      "outside_samples": 1,
+      "first_outside_h": 0.04972222222222225,
+      "first_confirmed_after_1h": 1.0997222222223,
+      "final_reentry_h": 0.09972222222222257,
+      "final_2h_all_in_band": true
+    },
+    "final_2h_mean": {
+      "XMEAS(9)": 120.40194752342605,
+      "XMEAS(8)": 74.80468800193239,
+      "XMEAS(12)": 49.92225653705988,
+      "XMEAS(15)": 50.239506585404314,
+      "XMEAS(17)": 22.853673368402177
+    },
+    "temperature_range_c": [
+      120.33850975487465,
+      120.5479562138036
+    ],
+    "reactor_pressure_max_kpag": 2730.8639209745133,
+    "g_mass_pct_of_gh_range": [
+      49.12811335355898,
+      50.910296398109075
+    ],
+    "max_product_def_mol_pct": 1.0350116588720688,
+    "failed_gates": []
+  },
+  "cooling_combined": {
+    "scenario": "tepsim.scenario.v1;seed=4651207995;hours=48;step=2.777777777777778e-4;every=180;faults=4,5,11;controlled=1;idv12=0;trip=1;continuous=0;integrator=euler;events=",
+    "model": "tepsim-wasm 0.0.0.",
+    "outcome": "completed",
+    "samples": 960,
+    "window_h": [
+      0.04972222222222225,
+      47.99972222210173
+    ],
+    "observed_hours": 47.94999999987951,
+    "cost_usd": {
+      "purge": 5503.177354240321,
+      "product": 1468.6216975118173,
+      "power": 877.3993008479431,
+      "steam": 352.6204245266288,
+      "total": 8201.81877712671
+    },
+    "mean_usd_h": {
+      "purge": 114.76907933793846,
+      "product": 30.62818972920767,
+      "power": 18.298212739314867,
+      "steam": 7.353919176799059,
+      "total": 171.04940098326006
+    },
+    "product_m3": 1099.1983452332845,
+    "usd_per_m3": 7.461636758001146,
+    "primary_band": {
+      "status": "maintained",
+      "outside_samples": 0,
+      "first_outside_h": null,
+      "first_confirmed_after_1h": null,
+      "final_reentry_h": null,
+      "final_2h_all_in_band": true
+    },
+    "temperature_fine_band": {
+      "status": "recurred",
+      "outside_samples": 275,
+      "first_outside_h": 0.04972222222222225,
+      "first_confirmed_after_1h": 19.549722222210953,
+      "final_reentry_h": 47.79972222210362,
+      "final_2h_all_in_band": false
+    },
+    "final_2h_mean": {
+      "XMEAS(9)": 120.39155746059,
+      "XMEAS(8)": 74.82829602483284,
+      "XMEAS(12)": 49.91982244481627,
+      "XMEAS(15)": 50.234392822168836,
+      "XMEAS(17)": 22.84959387207942
+    },
+    "temperature_range_c": [
+      120.03826377597932,
+      120.74035215502491
+    ],
+    "reactor_pressure_max_kpag": 2755.6765013951367,
+    "g_mass_pct_of_gh_range": [
+      49.077951554645374,
+      50.90141409858774
+    ],
+    "max_product_def_mol_pct": 1.1484531539809681,
+    "failed_gates": []
+  }
+}
