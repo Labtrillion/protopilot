@@ -4,6 +4,7 @@ import { readColor } from './palette.js';
 const relatedControl = {
   reactor_pressure: 'XMV(6)', reactor_temperature: 'XMV(10)', reactor_level: 'XMV(11)',
   separator_level: 'XMV(7)', stripper_level: 'XMV(8)', production_rate: 'XMV(8)', pct_g: 'XMV(2)',
+  ya: 'XMV(3)', yac: 'XMV(4)',
 };
 const COLORS = {
   pv: readColor('--plot-pv'), sp: readColor('--plot-sp'),
@@ -11,7 +12,7 @@ const COLORS = {
 };
 const CHANGES = 360;
 // Deviation and the PV trend use the raw measurement; a sensor test offset only changes the displayed value.
-const measuredPv = (status, tag) => status.native_values?.[tag] ?? status.values[tag];
+const measuredPv = (status, tag) => status.derived?.[tag] ?? status.native_values?.[tag] ?? status.values[tag];
 
 function draw(canvas, points, unit) {
   const w = canvas.clientWidth, h = canvas.clientHeight;

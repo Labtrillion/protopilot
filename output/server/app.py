@@ -26,12 +26,14 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
         if args[1] not in ("200", "304"):
             super().log_message(format, *args)
 
-    def respond(self, body, status=200):
+    def respond(self, body, status=200, *, attachment=None):
         payload = encode(body).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(payload)))
+        if attachment:
+            self.send_header("Content-Disposition", f'attachment; filename="{attachment}"')
         self.end_headers()
         self.wfile.write(payload)
 
@@ -42,6 +44,9 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
         elif path == "/api/live":
             with self.lock:
                 self.respond(self.plant.status())
+        elif path == "/api/scenario":
+            with self.lock:
+                self.respond(self.plant.scenario(), attachment=f"scenario-{self.plant.recording.id}.json")
         elif path in ("/api/export/csv", "/api/export/json"):
             self.download(path.rsplit("/", 1)[1])
         else:
@@ -56,7 +61,7 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             return
         try:
             size = int(self.headers.get("Content-Length", 0))
-            if not 0 < size <= 4096:
+            if not 0 < size <= 1024 * 1024:
                 raise ValueError("요청 크기를 확인하세요.")
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):

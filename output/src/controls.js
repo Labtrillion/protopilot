@@ -53,11 +53,12 @@ export function setupControls(schema, current, command, onAdjustment) {
       value.max = item.max;
       value.value = +status.setpoints[id].toFixed(5);
       descriptor = `현재 목표 ${reading(status.setpoints[id])} ${item.unit} · 입력 범위 ${item.min}–${item.max}`;
+      if (item.formula) descriptor += ` · PV ${reading(status.derived?.[item.pv])} ${item.unit} (${item.formula})`;
     } else if (kind === 'mv') {
       value.min = 0;
       value.max = 100;
       value.value = +(status.manual[id] ?? currentValue ?? 0).toFixed(4);
-      descriptor = `현재 명령 ${tagValue} · 실제 ${reading(status.actuators?.[id])}% · ${id in status.manual ? '수동' : '자동 제어'}`;
+      descriptor = `현재 명령 ${tagValue} · 실제 ${reading(status.actuators?.[id])}% · ${status.limited_manual?.includes(id) ? '보호 제어 제한' : id in status.manual ? '수동' : '자동 제어'}`;
     } else if (kind === 'offset') {
       value.value = status.offsets[id] ?? 0;
       descriptor = `현재 표시 ${tagValue} · 오프셋은 화면과 알람에 적용됩니다.`;

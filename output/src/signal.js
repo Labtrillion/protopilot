@@ -27,7 +27,7 @@ function describe(signal, status, format) {
   const route = STREAMS.filter((line) => streamMatchesTag(line, tag));
   const routeNames = route.map((line) => `#${line.id}`).join(' · ');
   const offset = status.offsets[tag];
-  const measured = status.values[tag];
+  const measured = status.derived?.[tag] ?? status.values[tag];
   const native = status.native_values[tag];
 
   if (kind === 'mv') {
@@ -39,7 +39,7 @@ function describe(signal, status, format) {
     return [location, `${mode} 제어 · ${actual}${paused}`, pending ? '조작 명령 · 적용 대기' : '조작 명령'];
   }
   if (kind === 'setpoint') {
-    const location = LEVEL_TAGS.has(tag) ? '설비 액위 목표선' : `${tag} 실측 추세`;
+    const location = item.formula ?? (LEVEL_TAGS.has(tag) ? '설비 액위 목표선' : `${tag} 실측 추세`);
     const test = offset != null ? ` · 센서 시험 표시값 ${format(measured)}` : '';
     return [location, `실측 PV ${format(native ?? measured)}${test}${paused}`, 'SP 목표'];
   }

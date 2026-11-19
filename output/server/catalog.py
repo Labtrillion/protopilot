@@ -44,6 +44,21 @@ SETPOINTS = {
     "stripper_level": ("스트리퍼 액위", "%", "stripper", 30, 100),
     "production_rate": ("제품 유량", "m³/h", "stripper", 1, 40),
     "pct_g": ("제품 G 조성 목표", "mol %", "stripper", 1, 95),
+    "ya": ("반응기 입구 A / (A+C)", "%", "gc_feed", 0, 100),
+    "yac": ("반응기 입구 A+C", "mol %", "gc_feed", 0, 100),
+}
+DERIVED_PVS = {
+    "ya": ("YA", "100 × XMEAS(23) / (XMEAS(23) + XMEAS(25))"),
+    "yac": ("YAC", "XMEAS(23) + XMEAS(25)"),
+}
+CONTROL_FLAGS = {
+    "composition": "원료 조성 보정",
+    "overrides": "자동 보호 제어",
+    "pct_g_feedback": "제품 G 피드백",
+}
+PROTECTIONS = {
+    "high_pressure_to_production": ("고압 · 생산량 제한", "XMEAS(7)"),
+    "high_level_to_recycle": ("고액위 · 재순환 밸브 제한", "XMEAS(8)"),
 }
 
 # Downs & Vogel Table 6 operating limits. The engine separately reports actual shutdowns.
@@ -108,7 +123,10 @@ METADATA = {
         for v in TEP_SCHEMA.disturbances
     ],
     "setpoints": [
-        {"id": key, "label": label, "unit": unit, "area": area, "min": lo, "max": hi, "pv": f"XMEAS({PV_TAGS[key]})"}
+        {"id": key, "label": label, "unit": unit, "area": area, "min": lo, "max": hi,
+         "pv": DERIVED_PVS[key][0] if key in DERIVED_PVS else f"XMEAS({PV_TAGS[key]})",
+         "formula": DERIVED_PVS[key][1] if key in DERIVED_PVS else None}
         for key, (label, unit, area, lo, hi) in SETPOINTS.items()
     ],
+    "controller_flags": CONTROL_FLAGS,
 }

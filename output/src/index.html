@@ -17,6 +17,7 @@
       <label class="speed"><span class="sr-only">시뮬레이션 배속</span><select id="speed"><option value="15">15×</option><option value="60" selected>60×</option><option value="240">240×</option><option value="960">960×</option></select></label>
       <button type="button" id="run" data-icon="pause" disabled>일시정지</button>
       <button type="button" id="reset" class="icon-button" aria-label="새 실행으로 초기화" title="새 실행으로 초기화" data-icon="reset" disabled></button>
+      <button type="button" id="open-scenario" disabled>시나리오</button>
       <button type="button" id="open-controls" class="solid" data-icon="sliders" disabled>값 조정</button>
     </div>
   </header>
@@ -115,6 +116,11 @@
             <button id="history-tab" type="button" aria-pressed="false">이벤트 이력</button>
           </div>
         </div>
+        <details id="controller-panel" class="controller-panel">
+          <summary>제어 옵션 <span id="protection-state"></span></summary>
+          <div id="controller-options"></div>
+          <p id="controller-detail"></p>
+        </details>
         <div id="events" class="alarm-items" role="region" tabindex="0" aria-label="알람 또는 이벤트 목록"></div>
         <div class="alarm-footer">
           <button type="button" id="pressure-test" data-icon="bolt" disabled>압력 알람 테스트</button>
@@ -187,6 +193,20 @@
         <p id="adjust-error" role="alert" hidden></p>
       </div>
       <div class="dialog-actions"><button id="adjust-release" type="button">기본값 복원</button><button type="submit" id="adjust-apply" class="solid">적용하고 설비 보기</button></div>
+    </form>
+  </dialog>
+  <dialog id="scenario-dialog" aria-labelledby="scenario-title">
+    <form id="scenario-form">
+      <div class="dialog-head"><h2 id="scenario-title">라이브 시나리오</h2>
+        <button id="close-scenario" type="button" class="icon-button" data-icon="close" aria-label="시나리오 닫기"></button>
+      </div>
+      <div class="dialog-fields">
+        <a href="/api/scenario">현재 시나리오 JSON 저장</a>
+        <p class="adjust-info">시작 조건과 조작 이력을 저장합니다. 불러오면 초기 상태에서 일시정지된 새 실행이 생성됩니다.</p>
+        <label>저장한 시나리오<input id="scenario-file" type="file" accept=".json,application/json" required></label>
+        <p id="scenario-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-actions"><button type="submit" id="load-scenario" class="solid">불러와 재실행 준비</button></div>
     </form>
   </dialog>
   <div id="notice" class="notice" role="status" hidden></div>

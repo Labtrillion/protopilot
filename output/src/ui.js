@@ -209,7 +209,7 @@ export function renderRows(channels, status, selected) {
     tr.cells[1].lastElementChild.textContent = `${ch.unit ?? ''}${isOffset ? `${ch.unit ? ' · ' : ''}시험` : ''}`;
     tr.cells[1].title = isOffset ? `센서 시험 표시값 · 원계측 ${reading(status.native_values?.[ch.id], ch.unit)} ${ch.unit ?? ''} · 오프셋 ${reading(status.offsets[ch.id])}` : '';
     const pending = manual && status.manual[ch.id] !== status.values[ch.id];
-    const base = pending ? '명령 대기' : manual ? '수동' : ch.period ? `${ch.period} h 샘플` : ch.group.endsWith('monitors') ? '진단' : '정상';
+    const base = status?.limited_manual?.includes(ch.id) ? '보호 제어 제한' : pending ? '명령 대기' : manual ? '수동' : ch.period ? `${ch.period} h 샘플` : ch.group.endsWith('monitors') ? '진단' : '정상';
     const flags = [isAlarm && '경보', isOffset && '시험', isSelected && '추적'].filter(Boolean);
     // Manual / pending-command state stays visible next to alarm, test and tracking flags.
     tr.cells[2].textContent = (flags.length && !manual ? flags : [...flags, base]).join(' · ');
@@ -217,7 +217,7 @@ export function renderRows(channels, status, selected) {
   });
 }
 
-const KIND = { warning: '경고', trip: '트립', change: '조작', clear: '복구', ack: '확인' };
+const KIND = { warning: '경고', trip: '트립', change: '조작', clear: '복구', ack: '확인', protection: '보호 제어' };
 export function renderAlarms(status, tab, metadata) {
   const events = tab === 'active' ? status?.alarms : status?.events;
   const panel = byId('events');

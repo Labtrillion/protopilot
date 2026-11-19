@@ -3,6 +3,7 @@ import { mountPlantView } from './plant-view.js';
 import { mountResponse } from './response.js';
 import { setupControls } from './controls.js';
 import { mountSignal, signalTag } from './signal.js';
+import { mountScenario } from './scenario.js';
 import {
   KPI_TAGS, byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderKpis, renderRows, wallTime,
 } from './ui.js';
@@ -25,6 +26,20 @@ let channelScope = 'primary', returnPoint = null, explicitTag = '';
 
 const signal = mountSignal((tag) => loopForTag(tag));
 const response = mountResponse((id) => openControls?.(id), (id) => trackSetpoint(id));
+const scenario = mountScenario(async (body) => {
+  try {
+    return await command(body);
+  } catch (error) {
+    if (body.op === 'controller') note(error.message, 'danger');
+    else throw error;
+  }
+}, () => {
+  clearReturn();
+  explicitTag = '';
+  follow({ kind: 'channel', item: channels.get('XMEAS(7)') });
+  focus('plant', '', true);
+  note('시나리오를 불러왔습니다. 실행을 누르면 처음부터 재현합니다.');
+});
 
 const loopForTag = (tag) => setpoints.find((item) => item.pv === tag);
 // A general tag keeps an open SP view only when its loop belongs to the unit being viewed
@@ -248,6 +263,7 @@ function markNewAlarm(on) {
 }
 
 function renderConnection() {
+  scenario.update(status, connected);
   const kind = !connected || status?.error ? 'offline' : status?.shutdown.terminated ? 'trip' : status?.running ? 'live' : 'paused';
   const labels = { offline: '연결 끊김', trip: '모델 트립', live: '시뮬레이션 실행 중', paused: '일시정지' };
   connection.className = `status ${kind}`;
@@ -459,6 +475,7 @@ async function poll() {
       byId('channel-count').textContent = schema.channels.length;
       byId('channel-group').insertAdjacentHTML('beforeend', schema.groups.map((g) => option(g.id, `${g.label} · ${g.count}`)).join(''));
       setpoints = schema.setpoints;
+      scenario.init(schema.controller_flags);
       response.init(setpoints);
       openControls = setupControls(schema, () => status, command, (kind, item) => {
         const next = { kind, item };
