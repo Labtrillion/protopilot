@@ -2,13 +2,14 @@
 
 import math
 from collections import deque
-from copy import copy
+from copy import copy, deepcopy
 from uuid import UUID
-from dataclasses import asdict, replace
+from dataclasses import asdict, dataclass, replace
 
 import numpy as np
 from tep_studio import RickerMultiLoopController, TEP_SCHEMA, TennesseeEastmanProcess
 from tep_studio.control.metrics import MetricsAccumulator
+from tep_studio.simulation.native import NativeSnapshot
 
 from .catalog import CHANNELS, CONTROL_FLAGS, DISTURBANCES, GROUPS, OPERATING_LIMITS, PROTECTIONS, SETPOINTS, TRIPS
 from .recording import Recording, timestamp
@@ -16,6 +17,39 @@ from .scenario import ADJUSTMENTS, DEFAULT_FLAGS, DEFAULT_SEED, KERNEL_REVISION,
 
 TICK_SECONDS = 0.6
 REACTION_FEED_VALVES = frozenset((0, 1, 2, 3))
+COOLING_TAGS = ("XMEAS(9)", "XMEASADD(5)", "XMEASADD(6)", "XMV(10)")
+
+
+@dataclass(frozen=True)
+class AlarmCheckpoint:
+    run_id: str
+    step: int
+    seed: int
+    alarm: dict
+    native: NativeSnapshot
+    controller: RickerMultiLoopController
+    measurements: np.ndarray
+    manual: dict
+    idv: np.ndarray
+    limits: dict
+    observed: dict
+    cooling_trend: tuple
+    related_alarms: tuple
+
+
+def control_action(controller, measurements, time, manual):
+    action, control = controller.compute_action(measurements, time=time)
+    protection = control.overrides_active
+    limited = set()
+    for index, value in manual.items():
+        restricted = (index in REACTION_FEED_VALVES and protection.get("high_pressure_to_production")) or (
+            index == 4 and protection.get("high_level_to_recycle")
+        )
+        if restricted and value > action[index]:
+            limited.add(f"XMV({index + 1})")
+        else:
+            action[index] = value
+    return action, control, limited
 
 
 def finite_metrics(metrics):
@@ -58,6 +92,8 @@ class Plant:
         self.limits = dict(OPERATING_LIMITS)
         self.active = {}
         self.events = deque(maxlen=80)
+        self.alarm_checkpoints = {}
+        self.cooling_trend = deque(maxlen=8)
         self.samples = 0
         self.running = running
         self.error = None
@@ -78,16 +114,10 @@ class Plant:
             if self.step == self.replay_end:
                 self.running = False
                 break
-            action, self.control = self.controller.compute_action(self.measurements, time=self.sim.time)
+            action, self.control, self.limited_manual = control_action(
+                self.controller, self.measurements, self.sim.time, self.manual,
+            )
             self.update_protection(self.control.overrides_active)
-            self.limited_manual.clear()
-            for index, value in self.manual.items():
-                restricted = (index in REACTION_FEED_VALVES and self.protection.get("high_pressure_to_production")) or (
-                    index == 4 and self.protection.get("high_level_to_recycle"))
-                if restricted and value > action[index]:
-                    self.limited_manual.add(f"XMV({index + 1})")
-                    continue
-                action[index] = value
             result = self.sim.advance(action, control_interval=STEP_HOURS, disturbances=self.idv)
             self.metrics.update(result)
             self.measurements = result.measurements
@@ -136,7 +166,15 @@ class Plant:
         for tag, offset in self.offsets.items():
             if native[tag] is not None:
                 values[tag] += offset
-        self.check_alarms(values)
+        observed = {**values, "XMV(10):actual": float(self.sim.state[47])}
+        cooling = {"time_hours": round(self.sim.time, 8),
+                   **{tag: observed[tag] for tag in (*COOLING_TAGS, "XMV(10):actual")}}
+        if self.cooling_trend and self.cooling_trend[-1]["time_hours"] == cooling["time_hours"]:
+            self.cooling_trend.pop()
+        self.cooling_trend.append(cooling)
+        raised = self.check_alarms(values)
+        if raised:
+            self.record_alarm_checkpoints(raised, observed)
         self.samples += 1
         self.version += 1
         self.latest = {
@@ -191,24 +229,47 @@ class Plant:
         for key in self.active.keys() - hits.keys() - {"trip"}:
             previous = self.active.pop(key)
             self.event("clear", f"{previous['label']} 복구", previous["area"], tag=previous["tag"])
+        raised = []
         for key, (tag, side, value, bound) in hits.items():
             if key not in self.active:
                 entry = CHANNELS[tag]
                 label = entry["label"] + (" 상한 초과" if side == "high" else " 하한 미달")
                 source = "센서 시험" if tag in self.offsets else "공정 계측"
-                self.active[key] = self.event("warning", label, entry["area"], tag=tag, value=value, limit=bound, source=source)
+                self.active[key] = self.event("warning", label, entry["area"], tag=tag, value=value,
+                                              limit=bound, side=side, source=source)
+                raised.append(self.active[key])
         if self.shutdown["terminated"] and "trip" not in self.active:
             tag = f"XMEAS({TRIPS.get(int(self.shutdown['code']), 7)})"
             self.active["trip"] = self.event(
                 "trip", f"{CHANNELS[tag]['label']} · 모델 트립", CHANNELS[tag]["area"],
                 tag=tag, value=values[tag], source="TEP 커널", detail=self.shutdown["message"],
             )
+            raised.append(self.active["trip"])
+        return raised
+
+    def record_alarm_checkpoints(self, alarms, observed):
+        snapshot = self.sim.snapshot()
+        controller = deepcopy(self.controller)
+        related = tuple(dict(alarm) for alarm in self.active.values())
+        for alarm in alarms:
+            self.alarm_checkpoints[alarm["id"]] = AlarmCheckpoint(
+                self.recording.id, self.step, self.seed, dict(alarm), snapshot, controller,
+                self.measurements.copy(), self.manual.copy(), self.idv.copy(), self.limits.copy(),
+                observed, tuple(self.cooling_trend), related,
+            )
+        while len(self.alarm_checkpoints) > self.events.maxlen:
+            active_ids = {alarm["id"] for alarm in self.active.values()}
+            expired = next((key for key in self.alarm_checkpoints if key not in active_ids), None)
+            if expired is None:
+                break
+            del self.alarm_checkpoints[expired]
 
     def status(self):
         return {
             **self.latest, "version": self.version, "run": self.recording.id, "speed": self.speed,
             "running": self.running, "shutdown": self.shutdown, "error": self.error,
             "alarms": list(self.active.values()), "events": list(self.events),
+            "response_events": list(self.alarm_checkpoints),
             "manual": {f"XMV({i + 1})": value for i, value in self.manual.items()},
             "limits": self.limits, "disturbances": self.active_disturbances(),
             "replay_end": self.replay_end, "scheduled_changes": len(self.pending),
@@ -245,10 +306,11 @@ class Plant:
             raise ValueError("지원하지 않는 요청입니다.")
         if op == "reset":
             self.reset(running=False)
-        elif op == "replay_scenario":
-            scenario = live_scenario(body.get("scenario"))
+        elif op in {"replay_scenario", "cooling_demo"}:
+            is_demo = op == "cooling_demo"
+            scenario = self.cooling_demo() if is_demo else live_scenario(body.get("scenario"))
             candidate = copy(self)
-            candidate.reset(running=False, scenario=scenario)
+            candidate.reset(running=is_demo, scenario=scenario)
             self.__dict__.update(candidate.__dict__)
         elif op == "new_recording":
             self.rotate_recording(body.get("page_id"))
@@ -275,6 +337,19 @@ class Plant:
         else:
             raise ValueError("지원하지 않는 요청입니다.")
         self.version += 1
+
+    def cooling_demo(self):
+        # A narrower, demo-only indication makes the real model's temperature variation visible as an alarm.
+        start = round(0.48 / STEP_HOURS)
+        return live_scenario({
+            "format": LIVE_FORMAT, "step_hours": STEP_HOURS, "seed": DEFAULT_SEED,
+            "controller": DEFAULT_FLAGS, "initial_speed": 960, "through_step": round(1.28 / STEP_HOURS),
+            "timeline": [
+                {"step": start, "op": "disturbance", "id": "IDV(11)", "value": 1},
+                {"step": start, "op": "disturbance", "id": "IDV(14)", "value": 1},
+                {"step": start, "op": "limit", "id": "XMEAS(9)", "low": 119.9, "value": 120.9},
+            ],
+        })
 
     def adjust(self, op, body):
         tag = body.get("id")
