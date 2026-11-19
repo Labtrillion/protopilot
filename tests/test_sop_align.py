@@ -29,14 +29,14 @@ class SopAlignTest(unittest.TestCase):
 
     def test_index_tags_are_live_observed_keys(self):
         plant = run_plant(self.root, end_h=0.05)
-        observed = plant.history[-1][1]
+        observed = plant.sop_history[-1][1]
         tags = {c["tag"] for e in sop_align.INDEX["idv"] for r in e["rules"] for c in r["conditions"]}
         missing = [t for t in tags if sop_align.observed_value(observed, t) is None]
         self.assertEqual(sorted(missing), [])
 
     def test_fault_free_history_selects_no_idv_sop(self):
         plant = run_plant(self.root, end_h=3.0)
-        result = sop_align.align({"kind": "probe"}, list(plant.history))
+        result = sop_align.align({"kind": "probe"}, list(plant.sop_history))
         self.assertIsNone(result["idv_selected"])
 
     def test_a_feed_loss_alarm_aligns_to_idv06_and_reaches_zoro_state(self):

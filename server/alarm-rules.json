@@ -1,0 +1,21 @@
+{
+  "note": "Condition-based alarms for the agent input only (not shown on the console). Condition types: threshold {above|below}, rate {above|below} (units per hour, 30-minute least-squares slope), deviation {max_abs[, setpoint]} (measured minus setpoint), all {conditions: [...]} (every part, each part may name its own tag). Optional for_minutes: the condition must hold on every 3-minute sample over that span. The examples below are placeholders and are disabled; set enabled to true or add rules.",
+  "rules": [
+    {
+      "id": "EX-P-RISE", "enabled": false, "tag": "XMEAS(7)", "label": "반응기 압력 급상승 (예시)",
+      "condition": {"type": "rate", "above": 30}, "for_minutes": 15
+    },
+    {
+      "id": "EX-T-DEV", "enabled": false, "tag": "XMEAS(9)", "label": "반응기 온도 목표 이탈 (예시)",
+      "condition": {"type": "deviation", "max_abs": 2.0}, "for_minutes": 6
+    },
+    {
+      "id": "EX-P-HIGH-RISING", "enabled": false, "tag": "XMEAS(7)", "label": "반응기 압력 고압 접근 (예시)",
+      "condition": {"type": "all", "conditions": [{"type": "threshold", "above": 2800}, {"type": "rate", "above": 0}]}
+    },
+    {
+      "id": "EX-A-FEED-LOST", "enabled": false, "tag": "XMEAS(1)", "label": "A 원료 유량 상실 (예시)",
+      "condition": {"type": "threshold", "below": 0.05}, "for_minutes": 6
+    }
+  ]
+}

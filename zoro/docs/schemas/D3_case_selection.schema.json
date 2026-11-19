@@ -1,0 +1,153 @@
+{
+  "$defs": {
+    "SelectionStep": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "action_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Action Id"
+        },
+        "beats_baseline": {
+          "title": "Beats Baseline",
+          "type": "boolean"
+        },
+        "vs_baseline": {
+          "title": "Vs Baseline",
+          "type": "string"
+        },
+        "beats_incumbent": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "null = 아직 최선 case 없음",
+          "title": "Beats Incumbent"
+        },
+        "vs_incumbent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Vs Incumbent"
+        },
+        "incumbent_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Incumbent After"
+        }
+      },
+      "required": [
+        "run_id",
+        "action_id",
+        "beats_baseline",
+        "vs_baseline",
+        "beats_incumbent",
+        "vs_incumbent",
+        "incumbent_after"
+      ],
+      "title": "SelectionStep",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "enum": [
+        "continue",
+        "select_case",
+        "select_baseline",
+        "none_acceptable"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "baseline_run_id": {
+      "title": "Baseline Run Id",
+      "type": "string"
+    },
+    "selected_run_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Selected Run Id"
+    },
+    "selected_action_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Selected Action Id"
+    },
+    "since_incumbent": {
+      "description": "최선 case 이후 이기지 못한 case 수",
+      "title": "Since Incumbent",
+      "type": "integer"
+    },
+    "tested": {
+      "title": "Tested",
+      "type": "integer"
+    },
+    "remaining": {
+      "title": "Remaining",
+      "type": "integer"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/SelectionStep"
+      },
+      "title": "Steps",
+      "type": "array"
+    }
+  },
+  "required": [
+    "status",
+    "reason",
+    "baseline_run_id",
+    "selected_run_id",
+    "selected_action_id",
+    "since_incumbent",
+    "tested",
+    "remaining",
+    "steps"
+  ],
+  "title": "CaseSelection",
+  "type": "object"
+}

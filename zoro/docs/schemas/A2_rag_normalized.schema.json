@@ -1,0 +1,244 @@
+{
+  "$defs": {
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "doc_id": {
+          "title": "Doc Id",
+          "type": "string"
+        },
+        "doc_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "null = 출처가 버전을 제공하지 않음 (불확실성으로 보고)",
+          "title": "Doc Version"
+        },
+        "doc_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Doc Title"
+        },
+        "clause": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "조항/섹션 번호. null = 미제공",
+          "title": "Clause"
+        },
+        "text": {
+          "description": "원문 발췌",
+          "title": "Text",
+          "type": "string"
+        },
+        "source_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Uri"
+        },
+        "retrieval_score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "검색 관련도. 실행 가능성·안전성·정답 확률이 아님",
+          "title": "Retrieval Score"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "doc_id",
+        "doc_version",
+        "clause",
+        "text"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "RagCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "raw_ref": {
+          "description": "RAG가 반환한 원래 참조 문자열",
+          "title": "Raw Ref",
+          "type": "string"
+        },
+        "action_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "등록 action_id. null = 등록 행동과 매핑되지 않음",
+          "title": "Action Id"
+        },
+        "mapping": {
+          "enum": [
+            "exact",
+            "alias",
+            "unmapped"
+          ],
+          "title": "Mapping",
+          "type": "string"
+        },
+        "purpose": {
+          "title": "Purpose",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "condition_ids": {
+          "default": [],
+          "description": "등록 조건으로 매핑된 적용·확인 조건",
+          "items": {
+            "type": "string"
+          },
+          "title": "Condition Ids",
+          "type": "array"
+        },
+        "unmapped_condition_refs": {
+          "default": [],
+          "description": "매핑 못한 조건 → unknown 으로 취급",
+          "items": {
+            "type": "string"
+          },
+          "title": "Unmapped Condition Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "raw_ref",
+        "action_id",
+        "mapping",
+        "purpose",
+        "evidence_ids"
+      ],
+      "title": "RagCandidate",
+      "type": "object"
+    },
+    "UnresolvedItem": {
+      "additionalProperties": false,
+      "description": "검색 결과만으로 판단할 수 없는 내용.",
+      "properties": {
+        "topic": {
+          "title": "Topic",
+          "type": "string"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "topic",
+        "detail"
+      ],
+      "title": "UnresolvedItem",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "rag_normalized.v0",
+      "default": "rag_normalized.v0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "query_id": {
+      "title": "Query Id",
+      "type": "string"
+    },
+    "adapter": {
+      "title": "Adapter",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/RagCandidate"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "unresolved": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/UnresolvedItem"
+      },
+      "title": "Unresolved",
+      "type": "array"
+    },
+    "warnings": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "query_id",
+    "adapter",
+    "evidence",
+    "candidates"
+  ],
+  "title": "NormalizedRagResult",
+  "type": "object"
+}

@@ -4,22 +4,35 @@ import math
 from collections import deque
 from copy import copy, deepcopy
 from uuid import UUID
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass, field, replace
 
 import numpy as np
 from tep_studio import RickerMultiLoopController, TEP_SCHEMA, TennesseeEastmanProcess
 from tep_studio.control.metrics import MetricsAccumulator
 from tep_studio.simulation.native import NativeSnapshot
 
-from .catalog import CHANNELS, CONTROL_FLAGS, DISTURBANCES, GROUPS, OPERATING_LIMITS, PROTECTIONS, SETPOINTS, TRIPS
+from .agent_config import CONFIG
+from .alarm_rules import AlarmMonitor
+from .catalog import (CHANNELS, CONTROL_FLAGS, DISTURBANCES, GROUPS, MEASUREMENT_TAGS, OPERATING_LIMITS,
+                      PROTECTIONS, SETPOINTS, TRIPS)
 from .recording import Recording, timestamp
 from .scenario import ADJUSTMENTS, DEFAULT_FLAGS, DEFAULT_SEED, KERNEL_REVISION, LIVE_FORMAT, SPEEDS, STEP_HOURS, adjustment, live_scenario
 
 TICK_SECONDS = 0.6
 REACTION_FEED_VALVES = frozenset((0, 1, 2, 3))
 COOLING_TAGS = ("XMEAS(9)", "XMEASADD(5)", "XMEASADD(6)", "XMV(10)")
-# [ADDED] Observation history kept for SOP alignment (server/sop_align.py evaluates SOP predicates over it).
-HISTORY_HOURS = 2.0
+SOP_HISTORY_HOURS = 2.0
+# Operator-visible history for setpoint decisions (default: one sample per 3 simulated minutes over 2 h).
+HISTORY_SAMPLE_HOURS = CONFIG["history_sample_hours"]
+HISTORY_WINDOW_HOURS = CONFIG["history_window_hours"]
+
+
+@dataclass(frozen=True)
+class HistorySample:
+    time_hours: float
+    values: tuple  # XMEAS(1..41) as the operator sees them (sensor offsets included)
+    commands: tuple  # requested XMV(1..12) commands, % of range
+    protection: tuple  # active protection keys
 
 
 @dataclass(frozen=True)
@@ -37,8 +50,11 @@ class AlarmCheckpoint:
     observed: dict
     cooling_trend: tuple
     related_alarms: tuple
-    # [ADDED] (time_hours, observed) samples up to the alarm, newest last; empty for older callers.
-    history: tuple = ()
+    # AlarmMonitor copy at the alarm (counters at zero) and the sensor offsets then active: the agent reads its
+    # alarms from the monitor's observed channel and branches keep counting alarm minutes from here.
+    monitor: object = None
+    offsets: dict = field(default_factory=dict)
+    history: tuple = ()  # (time_hours, observed) samples for SOP alignment, newest last
 
 
 def control_action(controller, measurements, time, manual):
@@ -94,11 +110,14 @@ class Plant:
         self.manual = {}
         self.offsets = {}
         self.limits = dict(OPERATING_LIMITS)
+        self.alarm_monitor = AlarmMonitor(self.limits)  # agent/scoring alarms; the console list is check_alarms
         self.active = {}
         self.events = deque(maxlen=80)
         self.alarm_checkpoints = {}
         self.cooling_trend = deque(maxlen=8)
-        self.history = deque()  # [ADDED] see HISTORY_HOURS
+        self.sop_history = deque()
+        self.history = deque()  # sampled setpoint-decision history
+        self.rollout = None  # server.rollout.Rollout while a baseline comparison runs
         self.samples = 0
         self.running = running
         self.error = None
@@ -125,6 +144,10 @@ class Plant:
             self.update_protection(self.control.overrides_active)
             result = self.sim.advance(action, control_interval=STEP_HOURS, disturbances=self.idv)
             self.metrics.update(result)
+            self.alarm_monitor.update(self.sim.time, result.measurements, self.offsets, self.controller.setpoints,
+                                      STEP_HOURS)
+            if self.rollout is not None:
+                self.rollout.live.update(result, any(self.control.overrides_active.values()))
             self.measurements = result.measurements
             self.xmv = result.implemented_action
             self.requested = result.requested_action
@@ -171,19 +194,20 @@ class Plant:
         for tag, offset in self.offsets.items():
             if native[tag] is not None:
                 values[tag] += offset
-        # [CHANGED] actual positions of all 12 valves (state[38:50]); XMV(10):actual is unchanged.
+        # SOP predicates can use actual valve positions as well as observed signals.
         observed = {**values, **{f"XMV({i + 1}):actual": float(v) for i, v in enumerate(self.sim.state[38:50])}}
         now = round(self.sim.time, 8)
-        if self.history and self.history[-1][0] == now:
-            self.history.pop()
-        self.history.append((now, observed))
-        while self.history and now - self.history[0][0] > HISTORY_HOURS:
-            self.history.popleft()
-        cooling = {"time_hours": round(self.sim.time, 8),
+        if self.sop_history and self.sop_history[-1][0] == now:
+            self.sop_history.pop()
+        self.sop_history.append((now, observed))
+        while now - self.sop_history[0][0] > SOP_HISTORY_HOURS:
+            self.sop_history.popleft()
+        cooling = {"time_hours": now,
                    **{tag: observed[tag] for tag in (*COOLING_TAGS, "XMV(10):actual")}}
         if self.cooling_trend and self.cooling_trend[-1]["time_hours"] == cooling["time_hours"]:
             self.cooling_trend.pop()
         self.cooling_trend.append(cooling)
+        self.record_history(values)
         raised = self.check_alarms(values)
         if raised:
             self.record_alarm_checkpoints(raised, observed)
@@ -210,6 +234,18 @@ class Plant:
             "metrics": finite_metrics(self.metrics.finalize()),
         }
         self.recording.sample(self.latest)
+
+    def record_history(self, values):
+        now = self.sim.time
+        if self.history and now - self.history[-1].time_hours < HISTORY_SAMPLE_HOURS - 1e-9:
+            return
+        self.history.append(HistorySample(
+            round(now, 8), tuple(values[tag] for tag in MEASUREMENT_TAGS),
+            tuple(float(value) for value in self.requested),
+            tuple(sorted(key for key, active in self.protection.items() if active)),
+        ))
+        while now - self.history[0].time_hours > HISTORY_WINDOW_HOURS + 1e-9:
+            self.history.popleft()
 
     def active_disturbances(self):
         return [f"IDV({index + 1})" for index in np.flatnonzero(self.idv)]
@@ -267,7 +303,8 @@ class Plant:
             self.alarm_checkpoints[alarm["id"]] = AlarmCheckpoint(
                 self.recording.id, self.step, self.seed, dict(alarm), snapshot, controller,
                 self.measurements.copy(), self.manual.copy(), self.idv.copy(), self.limits.copy(),
-                observed, tuple(self.cooling_trend), related, tuple(self.history),
+                observed, tuple(self.cooling_trend), related,
+                monitor=self.alarm_monitor.copy(), offsets=self.offsets.copy(), history=tuple(self.sop_history),
             )
         while len(self.alarm_checkpoints) > self.events.maxlen:
             active_ids = {alarm["id"] for alarm in self.active.values()}
@@ -409,6 +446,7 @@ class Plant:
         elif op == "limit":
             low, high = body["low"], value
             self.limits[tag] = OPERATING_LIMITS.get(tag, (None, None)) if low is None and high is None else (low, high)
+            self.alarm_monitor.set_limits(self.limits)
             self.event("change", "알람 기준 변경", CHANNELS[tag]["area"], tag=tag, low=low, value=high)
             self.capture()
         elif op == "controller":

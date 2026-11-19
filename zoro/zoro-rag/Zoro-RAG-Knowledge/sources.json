@@ -1,0 +1,57 @@
+{
+  "evaluation": {
+    "title": "해커톤 팀 평가 설계 · SOP 단독 대 SOP+Zoro",
+    "version": "1.0",
+    "url": "ARCHITECTURE.md"
+  },
+  "downs": {
+    "title": "Downs & Vogel — A plant-wide industrial process control problem",
+    "version": "1993 · DOI 10.1016/0098-1354(93)80018-I",
+    "url": "https://users.abo.fi/khaggblo/RS/Downs.pdf",
+    "path": "01_Process_Knowledge/Downs_Vogel_1993.pdf",
+    "downloads": [
+      "https://users.abo.fi/khaggblo/RS/Downs.pdf"
+    ],
+    "type": "pdf"
+  },
+  "apmonitor": {
+    "title": "APMonitor — Tennessee Eastman Challenge Instructions",
+    "version": "web snapshot verified 2026-11-19",
+    "url": "https://apmonitor.com/apps/tennessee-eastman/instructions.php",
+    "path": "02_Operational_Guidance/APMonitor_Instructions.html",
+    "downloads": [
+      "https://apmonitor.com/apps/tennessee-eastman/instructions.php"
+    ],
+    "type": "html"
+  },
+  "braatz": {
+    "title": "PSE-Research — Tennessee-Eastman-profBraatz README",
+    "version": "master · verified 2026-11-19",
+    "url": "https://github.com/PSE-Research/Tennessee-Eastman-profBraatz/blob/master/README.md",
+    "path": "03_Control_and_Variables/Braatz_TEP_README.md",
+    "downloads": [
+      "https://raw.githubusercontent.com/PSE-Research/Tennessee-Eastman-profBraatz/master/README.md"
+    ],
+    "type": "markdown"
+  },
+  "manca": {
+    "title": "Gianluca Manca — TEP Alarm Management Dataset Technical Report",
+    "version": "v1.1 · 2021-09-24",
+    "url": "https://www.researchgate.net/publication/355917633_Tennessee-Eastman-Process_Alarm_Management_Dataset_-_Technical_Report",
+    "path": "04_Alarm_and_Safety/TEP_Alarm_Technical_Report.pdf",
+    "downloads": [
+      "https://www.researchgate.net/profile/Gianluca-Manca/publication/355917633_Tennessee-Eastman-Process_Alarm_Management_Dataset_-_Technical_Report/links/6184632aa767a03c14f6c56f/Tennessee-Eastman-Process-Alarm-Management-Dataset-Technical-Report.pdf"
+    ],
+    "type": "pdf"
+  },
+  "studio-control": {
+    "title": "TEP-Rust · Braatz control scheme",
+    "version": "0735ad3b5bb7fdd367a8a31da1db8a209dac2a15",
+    "url": "https://github.com/jkitchin/tep-rust/blob/0735ad3b5bb7fdd367a8a31da1db8a209dac2a15/crates/tepsim-control/src/lib.rs"
+  },
+  "studio": {
+    "title": "CMU TEP Studio",
+    "version": "tepsim-wasm 0.0.0 (export label)",
+    "url": "https://kitchingroup.cheme.cmu.edu/tep-rust/studio/"
+  }
+}

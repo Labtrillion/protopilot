@@ -1,0 +1,25 @@
+{
+  "_comment": "가짜 Zoro 선호 순서. 허용 목록에 있는 첫 항목을 고른다 (실제 모델 동작 아님)",
+  "preference": [
+    "QUERY_PURGE_ANALYZER",
+    "SIM_HOLD",
+    "SIM_SP19_UP050",
+    "SIM_SP19_DN050",
+    "SIM_SP19_UP100",
+    "SIM_SP19_DN100",
+    "SIM_SP19_UP150",
+    "SIM_SP19_DN150",
+    "SIM_SP19_UP200",
+    "SIM_SP19_DN200",
+    "RECOMMEND:SIM_SP19_UP050",
+    "RECOMMEND:SIM_SP19_DN050",
+    "RECOMMEND:SIM_SP19_UP100",
+    "RECOMMEND:SIM_SP19_DN100",
+    "RECOMMEND:SIM_SP19_UP150",
+    "RECOMMEND:SIM_SP19_DN150",
+    "RECOMMEND:SIM_SP19_UP200",
+    "RECOMMEND:SIM_SP19_DN200",
+    "RECOMMEND:SIM_HOLD",
+    "REQUEST_HUMAN_REVIEW"
+  ]
+}

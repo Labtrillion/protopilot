@@ -13,6 +13,8 @@ from uuid import uuid4
 import numpy as np
 from tep_studio import TennesseeEastmanProcess
 
+from .agent_config import CONFIG
+from .alarm_rules import AlarmMonitor
 from .assistant import FALLBACK, append_trace, zoro_choices
 from .catalog import CHANNELS, OPERATING_LIMITS
 from .plant import COOLING_TAGS, control_action, finite_metrics
@@ -21,7 +23,7 @@ from .scenario import KERNEL_REVISION, STEP_HOURS, adjustment
 from .sop_align import align, compact_for
 
 SOPS = json.loads(Path(__file__).with_name("demo-sops.json").read_text(encoding="utf-8"))
-HORIZON_HOURS = 3.75
+HORIZON_HOURS = CONFIG["alarm_branch_hours"]
 CANDIDATES = {
     "hold": ("현재 생산 목표 유지", None),
     "reduce_now": ("즉시 5% 감량", 0),
@@ -148,6 +150,11 @@ def run_branch(checkpoint, candidate):
     protected_steps = 0
     shutdown = None
     applied = False
+    cost = 0.0
+    offsets = {tag: checkpoint.observed[tag] - float(checkpoint.measurements[i])
+               for i, tag in enumerate(f"XMEAS({k})" for k in range(1, 42))
+               if checkpoint.observed.get(tag) is not None and abs(checkpoint.observed[tag] - checkpoint.measurements[i]) > 1e-9}
+    monitor = AlarmMonitor(checkpoint.limits)
     try:
         if delay_steps is not None:
             target = adjustment({"op": "setpoint", "id": "production_rate", "value": target * 0.95})["value"]
@@ -160,6 +167,8 @@ def run_branch(checkpoint, candidate):
             measurements = result.measurements
             rows.append(measurements)
             protected_steps += int(any(control.overrides_active.values()))
+            cost += step_cost(result)
+            monitor.update(sim.time, measurements, offsets, controller.setpoints, STEP_HOURS)
             if result.shutdown_status["terminated"]:
                 shutdown = result.shutdown_status
                 break
@@ -167,17 +176,47 @@ def run_branch(checkpoint, candidate):
         return {"id": candidate, "label": label, "error": "이 조건에서 분기를 계산할 수 없습니다."}
     finally:
         sim.kernel.close()
-    matrix = np.asarray(rows)
-    violations = np.zeros(len(rows) - 1, dtype=bool)
+    summary = branch_summary(np.asarray(rows), protected_steps, shutdown, cost=cost,
+                             reference=checkpoint.controller.setpoints.production_rate,
+                             horizon_hours=HORIZON_HOURS, alarm=monitor.summary())
+    return {"id": candidate, "label": label, **summary, "production_target": float(target), "action_applied": applied}
+
+
+def step_cost(result):
+    """TEP's internal operating cost ($/h) over one control step, as MetricsAccumulator integrates it."""
+    return float(result.objective_terms.get("operating_cost_internal_per_hour", 0.0)) * STEP_HOURS
+
+
+def branch_summary(matrix, protected_steps, shutdown, *, cost=0.0, reference=None, horizon_hours=None, alarm=None):
+    """Outcome of one branch: `matrix` is the starting measurements followed by one row per control step.
+
+    Production loss = `reference` target x the full horizon - produced volume, so a branch that trips
+    early is charged for the rest of the horizon. `alarm` is the branch's AlarmMonitor summary (minutes on
+    true values, plus what the operator would have seen).
+    """
+    produced = float(np.sum(matrix[1:, 16]) * STEP_HOURS)
+    horizon = horizon_hours if horizon_hours is not None else (len(matrix) - 1) * STEP_HOURS
+    return finite_metrics({
+        **_base_summary(matrix, protected_steps, shutdown),
+        **(alarm or {}),
+        "operating_cost": float(cost),
+        "produced_m3": produced,
+        "production_loss_m3": None if reference is None else float(reference) * horizon - produced,
+        "cost_per_m3": float(cost) / produced if produced > 0 else None,
+    })
+
+
+def _base_summary(matrix, protected_steps, shutdown):
+    violations = np.zeros(len(matrix) - 1, dtype=bool)
     for tag, (low, high) in OPERATING_LIMITS.items():
         series = matrix[1:, int(tag[6:-1]) - 1]
         if low is not None:
             violations |= series < low
         if high is not None:
             violations |= series > high
-    return finite_metrics({
-        "id": candidate, "label": label, "shutdown": shutdown,
-        "window_hours": round((len(rows) - 1) * STEP_HOURS, 6),
+    return {
+        "shutdown": shutdown,
+        "window_hours": round((len(matrix) - 1) * STEP_HOURS, 6),
         "violation_minutes": float(violations.sum() * STEP_HOURS * 60),
         "protection_minutes": protected_steps * STEP_HOURS * 60,
         "peak_pressure": float(np.max(matrix[:, 6])),
@@ -185,8 +224,7 @@ def run_branch(checkpoint, candidate):
         "temperature_sd": float(np.std(matrix[1:, 8])),
         "peak_separator_level": float(np.max(matrix[:, 11])),
         "mean_production": float(np.mean(matrix[1:, 16])),
-        "production_target": float(target), "action_applied": applied,
-    })
+    }
 
 
 def analyze_alarm(checkpoint, trace_path):

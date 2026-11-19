@@ -1,0 +1,128 @@
+{
+  "schema_version": "event_input.v0",
+  "event_id": "EVT-TEP-0001",
+  "state_version": 0,
+  "sim_time_s": 21600,
+  "time_basis": "simulation_seconds",
+  "snapshot_id": "SNAP-TEP-0001-T21600",
+  "alarms": [
+    {
+      "alarm_id": "ALM-XMEAS10-DEV",
+      "sensor_id": "XMEAS(10)",
+      "condition": "deviation",
+      "raised_at_s": 20700,
+      "active": false,
+      "priority": "low",
+      "message": "퍼지 유량 편차 (해소됨, 가상)"
+    },
+    {
+      "alarm_id": "ALM-XMEAS7-H",
+      "sensor_id": "XMEAS(7)",
+      "condition": "high",
+      "raised_at_s": 21240,
+      "active": true,
+      "priority": "high",
+      "message": "반응기 압력 높음 (가상, 경보값은 예시)",
+      "threshold": 2895.0,
+      "unit": "kPa(g)",
+      "raw_tag": "PIR100"
+    }
+  ],
+  "observations": [
+    {
+      "sensor_id": "XMEAS(7)",
+      "value": 2790,
+      "unit": "kPa(g)",
+      "measured_at_s": 21060,
+      "quality": "good"
+    },
+    {
+      "sensor_id": "XMEAS(7)",
+      "value": 2815,
+      "unit": "kPa(g)",
+      "measured_at_s": 21240,
+      "quality": "good"
+    },
+    {
+      "sensor_id": "XMEAS(7)",
+      "value": 2838,
+      "unit": "kPa(g)",
+      "measured_at_s": 21420,
+      "quality": "good"
+    },
+    {
+      "sensor_id": "XMEAS(7)",
+      "value": 2846,
+      "unit": "kPa(g)",
+      "measured_at_s": 21590,
+      "quality": "good"
+    },
+    {
+      "sensor_id": "XMEAS(13)",
+      "value": 2742,
+      "unit": "kPa(g)",
+      "measured_at_s": 21590,
+      "quality": "good"
+    },
+    {
+      "sensor_id": "XMEAS(10)",
+      "value": 0.31,
+      "unit": "kscmh",
+      "measured_at_s": 21590,
+      "quality": "good"
+    },
+    {
+      "sensor_id": "XMV(6)",
+      "value": 36.2,
+      "unit": "%",
+      "measured_at_s": 21590,
+      "quality": "good"
+    },
+    {
+      "sensor_id": "XMEAS(9)",
+      "value": 120.41,
+      "unit": "degC",
+      "measured_at_s": 21590,
+      "quality": "good"
+    },
+    {
+      "sensor_id": "XMEAS(30)",
+      "value": 13.79,
+      "unit": "mol%",
+      "measured_at_s": 20100,
+      "quality": "good",
+      "sample_id": "PURGE-0112"
+    }
+  ],
+  "safety_checks": [
+    {
+      "check_id": "SC-PRESSURE-OVERRIDE-INACTIVE",
+      "description": "분리기 압력 우선 제어 비작동 (S05)",
+      "status": "pass",
+      "source": "external_rule_engine (example)",
+      "evaluated_at_s": 21590
+    },
+    {
+      "check_id": "SC-PRODUCT-QUALITY-IN-SPEC",
+      "description": "제품 G/(G+H) 45–55%, D+E+F ≤ 2 mol% (팀 기준, 예시)",
+      "status": "unknown",
+      "source": "external_rule_engine (example)",
+      "evaluated_at_s": null
+    }
+  ],
+  "missing_info": [
+    {
+      "item": "퍼지 분석 최신 시료",
+      "sensor_id": "XMEAS(30)",
+      "reason": "분석값이 1500 s 째 갱신되지 않음"
+    }
+  ],
+  "active_setpoints": [
+    {
+      "setpoint_id": "SETPT(19)",
+      "value": 13.823,
+      "unit": "mol%",
+      "since_s": 0
+    }
+  ]
+}

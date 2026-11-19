@@ -1,0 +1,141 @@
+{
+  "$defs": {
+    "TrackedVariable": {
+      "additionalProperties": false,
+      "properties": {
+        "tag": {
+          "description": "예: XMEAS(7)",
+          "title": "Tag",
+          "type": "string"
+        },
+        "setpoint": {
+          "description": "정확도 기준값(목표)",
+          "title": "Setpoint",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "hi": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "상한 경보 임계값. null = 상한 없음",
+          "title": "Hi"
+        },
+        "lo": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "하한 경보 임계값. null = 하한 없음",
+          "title": "Lo"
+        },
+        "weight": {
+          "default": 1.0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "source": {
+          "description": "목표·임계값 출처",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tag",
+        "setpoint",
+        "unit",
+        "hi",
+        "lo",
+        "source"
+      ],
+      "title": "TrackedVariable",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "모든 case run 을 같은 기준으로 채점하도록 시뮬레이션 요청에 붙이는 평가 명세.",
+  "properties": {
+    "policy_label": {
+      "title": "Policy Label",
+      "type": "string"
+    },
+    "values_status": {
+      "enum": [
+        "example",
+        "agreed"
+      ],
+      "title": "Values Status",
+      "type": "string"
+    },
+    "horizon_s": {
+      "title": "Horizon S",
+      "type": "number"
+    },
+    "final_window_s": {
+      "title": "Final Window S",
+      "type": "number"
+    },
+    "tracked": {
+      "items": {
+        "$ref": "#/$defs/TrackedVariable"
+      },
+      "title": "Tracked",
+      "type": "array"
+    },
+    "untracked_alarm_tags": {
+      "default": [],
+      "description": "목표값이 없어 정확도에서 빠진 경보 태그",
+      "items": {
+        "type": "string"
+      },
+      "title": "Untracked Alarm Tags",
+      "type": "array"
+    },
+    "production_ratio_min": {
+      "title": "Production Ratio Min",
+      "type": "number"
+    },
+    "g_mass_pct_range": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "G Mass Pct Range",
+      "type": "array"
+    },
+    "max_def_mol_pct": {
+      "title": "Max Def Mol Pct",
+      "type": "number"
+    }
+  },
+  "required": [
+    "policy_label",
+    "values_status",
+    "horizon_s",
+    "final_window_s",
+    "tracked",
+    "production_ratio_min",
+    "g_mass_pct_range",
+    "max_def_mol_pct"
+  ],
+  "title": "EvaluationSpec",
+  "type": "object"
+}
