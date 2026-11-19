@@ -24,6 +24,7 @@
     "revision": 1,
     "title": "반응기 압력 상한",
     "tags": ["XMEAS(7)"],
+    "side": "high",
     "source_title": "Downs·Vogel TEP 벤치마크 · 표 6",
     "source_url": "https://doi.org/10.1016/0098-1354(93)80018-I",
     "checks": [

@@ -38,7 +38,8 @@ COOLING_LABELS = {
 def find_sop(alarm):
     if alarm["kind"] == "trip":
         return next(sop for sop in SOPS if sop.get("kind") == "trip")
-    return next((sop for sop in SOPS if alarm["tag"] in sop.get("tags", ())), None)
+    return next((sop for sop in SOPS if alarm["tag"] in sop.get("tags", ())
+                 and ("side" not in sop or sop["side"] == alarm.get("side"))), None)
 
 
 def evidence(checkpoint, sop):
