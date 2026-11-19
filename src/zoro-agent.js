@@ -89,6 +89,10 @@ export function mountZoroAgent(request) {
         signal: AbortSignal.timeout(300000),
       });
       if (number !== requestNumber || !dialog.open) return;
+      if (data.status === 'unsupported') {
+        status.textContent = '등록된 대응 절차가 없어 운영자 확인이 필요합니다.';
+        return;
+      }
       result.innerHTML = renderResult(data);
       result.hidden = false;
       status.textContent = '라이브 관제와 분리해 계산한 결과입니다.';
