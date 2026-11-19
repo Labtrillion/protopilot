@@ -69,10 +69,10 @@ function trackSetpoint(id, jump = false) {
   }
 }
 
-function note(message, isError = false) {
+function note(message, level = 'ok') {
   const box = byId('notice');
   box.textContent = message;
-  box.classList.toggle('error', isError);
+  box.dataset.level = level;
   box.hidden = false;
   clearTimeout(noticeTimer);
   noticeTimer = setTimeout(() => { box.hidden = true; }, 4500);
@@ -149,7 +149,7 @@ function receive(next) {
     byId('active-tab').setAttribute('aria-pressed', 'true');
     byId('history-tab').setAttribute('aria-pressed', 'false');
     ringAlarm();
-    note(newAlarm.label, true);
+    note(newAlarm.label, newAlarm.kind === 'trip' ? 'danger' : 'warning');
   }
   renderConnection();
   byId('clock').textContent = elapsed(status.time_hours);
@@ -180,7 +180,7 @@ async function command(body, onSuccess) {
   if (!status || result.version >= status.version) receive(result);
   onSuccess?.(result);
 }
-const doCommand = (body, callback) => command(body, callback).catch((error) => note(error.message, true));
+const doCommand = (body, callback) => command(body, callback).catch((error) => note(error.message, 'danger'));
 
 function selectTag(tag, navigate = false) {
   const ch = channels.get(tag);
@@ -272,7 +272,7 @@ function attachEvents() {
         await audio.resume();
         buzzer = true;
       } catch {
-        note('브라우저에서 알람 소리를 재생할 수 없습니다.', true);
+        note('브라우저에서 알람 소리를 재생할 수 없습니다.', 'danger');
       }
     }
     soundBtn.setAttribute('aria-pressed', buzzer);

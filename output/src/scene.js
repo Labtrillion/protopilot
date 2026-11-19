@@ -4,6 +4,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { AREAS, CORE_PRESSURES, MEDIA, PORTS, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { buildInternals } from './internals.js';
 import { reading } from './ui.js';
+import { readColor } from './palette.js';
 import * as geo from './geometry.js';
 
 const initialOffset = new T.Vector3(6.8, 18, 28);
@@ -39,9 +40,9 @@ function setupSite(scene) {
   scene.add(floor);
   const ground = geo.box(floor, [40, 0.27, 22], [0, -0.19, -0.63], geo.base, true);
   ground.castShadow = false;
-  const slab = new T.MeshStandardMaterial({ color: 0x24333d, roughness: 0.99 });
+  const slab = new T.MeshStandardMaterial({ color: 0x23251f, roughness: 0.99 });
   geo.box(floor, [38.9, 0.035, 20.9], [0, -0.045, -0.65], slab, true).castShadow = false;
-  const grid = new T.GridHelper(40, 40, 0x526a75, 0x3b4e57);
+  const grid = new T.GridHelper(40, 40, 0x74776b, 0x62645a);
   grid.position.set(0, 0.002, -0.65);
   grid.scale.z = 0.52;
   grid.material.transparent = true;
@@ -49,7 +50,7 @@ function setupSite(scene) {
   scene.add(grid);
   const lines = new T.LineSegments(
     new T.EdgesGeometry(new T.BoxGeometry(40, 0.29, 22)),
-    new T.LineBasicMaterial({ color: 0x466573 }),
+    new T.LineBasicMaterial({ color: 0x5d6056 }),
   );
   lines.position.set(0, -0.18, -0.63);
   scene.add(lines);
@@ -109,15 +110,15 @@ function buildStreams(scene, groups) {
   const markerGeometry = new T.ConeGeometry(0.103, 0.31, 9);
   return STREAMS.map((def) => {
     const path = pathFor(def.points), length = path.getLength();
-    const color = new T.Color(MEDIA[def.media].color);
-    const pipeColor = color.clone().lerp(new T.Color(0x334d58), 0.55);
+    const color = new T.Color(readColor(MEDIA[def.media].colorToken));
+    const pipeColor = color.clone().lerp(geo.edge.color, 0.55);
     const material = new T.MeshStandardMaterial({
       color: pipeColor, emissive: color, emissiveIntensity: 0.08, roughness: 0.50, metalness: 0.32,
     });
     const radius = ['06','07','07B','08','08I','08R','08M','10','10S','11','11S'].includes(def.id) ? 0.114 : 0.079;
     const tube = new T.Mesh(new T.TubeGeometry(path, Math.ceil(Math.max(18, length * 10)), radius, 12), material);
     scene.add(tube);
-    const geom = new T.MeshBasicMaterial({ color, transparent: true, opacity: 0.98 });
+    const geom = new T.MeshBasicMaterial({ color, toneMapped: false });
     const count = Math.max(1, Math.ceil(length / (def.tag ? 2.15 : 4.0)));
     const markers = new T.InstancedMesh(markerGeometry, geom, count);
     markers.frustumCulled = false;
@@ -168,7 +169,7 @@ function makePortLabels(host) {
     const el = document.createElement('span');
     el.className = 'model-port';
     el.textContent = text;
-    el.style.setProperty('--route-color', MEDIA[medium].color);
+    el.style.setProperty('--route-color', `var(${MEDIA[medium].colorToken})`);
     el.dataset.circuit = circuit;
     host.append(el);
     const point = geo.v3(origin);
@@ -211,8 +212,8 @@ export function mountScene(container, host, select) {
   renderer.domElement.style.touchAction = 'pan-y';
   controls.update();
 
-  scene.add(new T.HemisphereLight(0xdef8ff, 0x6e899b, 2.27));
-  const key = new T.DirectionalLight(0xe5f5ff, 2.55);
+  scene.add(new T.HemisphereLight(0xf4f2eb, 0x77776e, 2.27));
+  const key = new T.DirectionalLight(0xfffaf0, 2.55);
   key.position.set(-10, 24, 13);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
@@ -223,7 +224,7 @@ export function mountScene(container, host, select) {
   key.shadow.camera.far = 67;
   key.shadow.normalBias = 0.08;
   scene.add(key);
-  const rim = new T.DirectionalLight(0x77cbe0, 1.05);
+  const rim = new T.DirectionalLight(0xe4e6e0, 1.05);
   rim.position.set(8, 6, -12);
   scene.add(rim);
 
@@ -242,8 +243,12 @@ export function mountScene(container, host, select) {
   });
   for (const [, label] of labelEntries) labelSizes.observe(label.button);
   const ports = makePortLabels(host);
-  const highlightMat = new T.MeshBasicMaterial({ color: 0x53eff1, transparent: true, opacity: 0.85, depthWrite: false });
-  const trackedColor = new T.Color(0xf0cf82);
+  const selectionColor = readColor('--accent');
+  const warningColor = readColor('--warning');
+  const trackedColor = new T.Color(readColor('--tracked'));
+  const highlightMat = new T.MeshBasicMaterial({
+    color: selectionColor, toneMapped: false, transparent: true, opacity: 0.85, depthWrite: false,
+  });
   const highlight = new T.Mesh(new T.RingGeometry(1, 1.07, 56), highlightMat);
   highlight.rotation.x = -Math.PI / 2;
   highlight.visible = false;
@@ -436,7 +441,7 @@ export function mountScene(container, host, select) {
       material.color.copy(line.tracked && !dimmed ? trackedColor : selected ? color : pipeColor);
       material.color.multiplyScalar(dimmed ? 0.28 : 1);
       material.emissive.copy(line.tracked && !dimmed ? trackedColor : color);
-      material.emissiveIntensity = dimmed ? 0 : (line.tracked || selected) ? 0.44 : 0.08 + Math.min(ratio, 2) * 0.10;
+      material.emissiveIntensity = dimmed ? 0 : (line.tracked || selected) ? 0.24 : 0.04 + Math.min(ratio, 2) * 0.06;
       for (const flange of flanges) flange.visible = !dimmed;
       if (valve) {
         const pos = data?.actuators?.[valve.userData.valve];
@@ -447,6 +452,7 @@ export function mountScene(container, host, select) {
       }
       markers.visible = showFlow && !dimmed && ratio > 0.012 && Boolean(data);
       if (!markers.visible) continue;
+      markers.material.color.copy(line.tracked ? trackedColor : color);
       if (data.running && !motionReduced) line.phase = (line.phase + dt * Math.min(5.3, 0.3 + 2.15 * ratio) / length) % 1;
       for (let i = 0; i < markers.count; i++) {
         const t = (i / markers.count + line.phase + 0.03) % 1;
@@ -458,7 +464,7 @@ export function mountScene(container, host, select) {
       }
       markers.instanceMatrix.needsUpdate = true;
     }
-    highlightMat.color.set(alertAreas.has(focus) ? 0xff8c58 : trackedArea === focus ? trackedColor : 0x53eff1);
+    highlightMat.color.set(alertAreas.has(focus) ? warningColor : trackedArea === focus ? trackedColor : selectionColor);
     highlightMat.opacity = alertAreas.has(focus) && !motionReduced ? 0.68 + 0.26 * Math.sin(now / 240) : 0.86;
     projectLabels();
     renderer.render(scene, camera);

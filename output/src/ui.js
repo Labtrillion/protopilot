@@ -1,4 +1,5 @@
 import { AREAS, CIRCUITS, CORE_PRESSURES, MEDIA, STREAMS, codeFor } from './topology.js';
+import { readColor } from './palette.js';
 
 export const byId = (id) => document.getElementById(id);
 export const escape = (text = '') => String(text).replace(/[&<>"']/g, (char) =>
@@ -49,8 +50,8 @@ export const option = (id, label) => `<option value="${escape(id)}">${escape(lab
 export function legend(circuit, interiors) {
   const media = circuit ? Object.keys(MEDIA).filter((kind) => STREAMS.some((line) => line.circuit === circuit && line.media === kind)) : Object.keys(MEDIA);
   byId('legend').innerHTML = media.map((key) => {
-    const { color, name } = MEDIA[key];
-    return `<span><i style="--medium:${color}"></i>${name}</span>`;
+    const { colorToken, name } = MEDIA[key];
+    return `<span><i style="--medium:var(${colorToken})"></i>${name}</span>`;
   }).join('') + (interiors ? '<span><i class="level-key"></i>액위 SP</span>' : '');
 }
 
@@ -77,18 +78,20 @@ function routeDetails(circuit) {
   if (!circuit) return '';
   const route = CIRCUITS[circuit];
   const paths = route.paths.map((path) => `<li>${path.map((item) => `<span>${escape(item)}</span>`).join('<i aria-hidden="true">→</i>')}</li>`).join('');
-  return `<section class="route-inspector" style="--route-color:${route.color}">
+  return `<section class="route-inspector" style="--route-color:var(${route.colorToken})">
     <h3>${route.title} 경로</h3><ul>${paths}</ul><p>${route.info}</p></section>`;
 }
 
-function drawTrend(canvas, values, index) {
+const trendColor = readColor('--plot-pv');
+
+function drawTrend(canvas, values) {
   const ctx = canvas.getContext('2d');
   const series = values.filter(Number.isFinite);
   const { width: w, height: h } = canvas;
   ctx.clearRect(0, 0, w, h);
   if (series.length < 2) return;
   const min = Math.min(...series), max = Math.max(...series), spread = max - min || 1;
-  ctx.strokeStyle = ['#69d1c9', '#91b9f2', '#e5ba7b', '#69d1c9'][index];
+  ctx.strokeStyle = trendColor;
   ctx.lineWidth = 2;
   ctx.beginPath();
   series.forEach((value, i) => ctx.lineTo(i * (w - 2) / (series.length - 1) + 1, h - 4 - (value - min) / spread * (h - 8)));
@@ -100,15 +103,15 @@ export function renderKpis(status, metadata, trends, tracked) {
   const root = byId('kpis');
   if (!root.children.length) root.innerHTML = kpis.map(([i, label]) =>
     `<button type="button" data-tag="${codeFor(i)}"><span>${label}</span><b>—</b><small></small><canvas width="88" height="34" aria-hidden="true"></canvas></button>`).join('');
-  [...root.children].forEach((card, i) => {
+  for (const card of root.children) {
     const tag = card.dataset.tag;
     const { unit } = metadata.get(tag);
     card.querySelector('b').textContent = reading(status.values[tag], unit);
     card.querySelector('small').textContent = unit;
     card.classList.toggle('alarming', status.alarms.some((event) => event.tag === tag));
     card.toggleAttribute('data-tracked', tag === tracked);
-    drawTrend(card.querySelector('canvas'), trends.get(tag) ?? [], i);
-  });
+    drawTrend(card.querySelector('canvas'), trends.get(tag) ?? []);
+  }
 }
 
 export function renderInspector(areaKey, status, metadata, circuit = '', setpoint = null, control = null, tracked = '') {
@@ -125,7 +128,7 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
     const streams = STREAMS.filter((stream) => circuit ? stream.circuit === circuit : stream.area === areaKey && areaKey !== 'plant');
     const flows = streams.map((stream) => {
       const tag = codeFor(stream.tag);
-      return `<div class="inspect-stream"><span class="line-id"><i style="--medium:${MEDIA[stream.media].color}"></i>${stream.id}</span>
+      return `<div class="inspect-stream"><span class="line-id"><i style="--medium:var(${MEDIA[stream.media].colorToken})"></i>${stream.id}</span>
         <span><b>${escape(stream.from)} → ${escape(stream.to)}</b>${tag ? `<small data-flow-tag="${tag}"></small>` : '<small>흐름 방향</small>'}</span></div>`;
     }).join('');
     root.innerHTML = `${routeDetails(circuit)}<div class="inspector-label"><code>${area.code}</code><span>${area.en}</span></div>
@@ -141,8 +144,10 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
     const command = status?.manual[control.id] ?? values[control.id];
     root.querySelector('[data-control] b').textContent = `실제 ${reading(current)}% · 명령 ${reading(command)}%`;
   }
+  const activeAlarms = new Set(status?.alarms.map((alarm) => alarm.tag));
   for (const button of root.querySelector('.inspect-values').children) {
     const tag = button.dataset.tag;
+    button.classList.toggle('alarming', activeAlarms.has(tag));
     button.querySelector('b span').textContent = reading(values[tag], metadata.get(tag)?.unit);
     button.toggleAttribute('data-tracked', tag === tracked);
     button.setAttribute('aria-current', tag === tracked);

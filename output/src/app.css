@@ -158,6 +158,8 @@ h2 { font-size: 1rem; letter-spacing: -0.015em; }
 .inspect-value > span { color: var(--subtext); font-size: 0.83rem; white-space: normal; overflow-wrap: anywhere; }
 .inspect-value b { font: 650 0.86rem var(--mono); }
 .inspect-value small, .inspect-stream small { color: var(--muted); font: 0.71rem var(--mono); }
+.inspect-value.alarming { background: var(--warning-bg); }
+.inspect-value.alarming b { color: var(--warning); }
 .inspector h3 { font-size: 0.83rem; padding-block: 0.9rem 0.45rem; }
 .inspect-stream { display: flex; gap: 0.25rem; justify-content: space-between; align-items: center; margin-bottom: 0.41rem; font-size: 0.75rem; }
 .inspect-stream i { flex: 0 0 0.53rem; margin: 0; }
@@ -252,7 +254,8 @@ dialog::backdrop { background: var(--scrim); }
 .dialog-actions { justify-content: flex-end; border-bottom: 0; border-top: 1px solid var(--line); }
 #adjust-error { color: var(--danger); }
 .notice { position: fixed; z-index: 5; right: 1.2rem; bottom: 1.2rem; color: var(--ok); background: var(--ok-bg); border: 1px solid var(--ok); padding: 0.71rem 0.93rem; border-radius: 5px; box-shadow: 0 8px 32px var(--shadow); }
-.notice.error { color: var(--danger); background: var(--danger-bg); border-color: var(--danger-line); }
+.notice[data-level=warning] { color: var(--warning); background: var(--warning-bg); border-color: var(--warning-line); }
+.notice[data-level=danger] { color: var(--danger); background: var(--danger-bg); border-color: var(--danger-line); }
 
 @media (max-width: 1000px) {
   .site-label { display: none; }
@@ -428,6 +431,7 @@ dialog::backdrop { background: var(--scrim); }
 .signal-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1fr); }
 .signal-source, .signal-trace, .signal-destination { padding: 0.58rem 0.72rem; min-width: 0; }
 .signal-source { background: var(--inset); }
+.signal-detail.alarming .signal-source { background: var(--warning-bg); }
 .signal-trace, .signal-destination { border-left: 1px solid var(--line-soft); }
 .signal-title, .signal-reading, .signal-effect, .signal-actions { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.36rem 0.54rem; }
 .signal-title code { color: var(--tracked); font: 650 0.81rem var(--mono); }
@@ -435,6 +439,7 @@ dialog::backdrop { background: var(--scrim); }
 .signal-reading { margin: 0.28rem 0; }
 .signal-reading span { color: var(--muted); font-size: 0.77rem; }
 .signal-reading b { font: 700 1.3rem var(--mono); }
+.signal-detail.alarming :is(.signal-title code, .signal-reading b) { color: var(--warning); }
 .signal-trace-label { display: flex; justify-content: space-between; gap: 0.3rem; }
 #signal-chart { display: block; width: 100%; height: 2.53rem; margin-block: 0.14rem; }
 #signal-trace-range { display: block; text-align: right; }
@@ -448,8 +453,8 @@ dialog::backdrop { background: var(--scrim); }
 .pfd-stream.tracked { --display-pipe: var(--tracked); }
 .pfd-stream.tracked .pipe-line { stroke-width: 3.5; marker-end: url(#arrow-tracked); }
 .pfd-unit.tracked:not(.in-alarm) .pfd-chip, .pfd-symbol.tracked:not(.in-alarm), .pfd-valve.tracked path { stroke: var(--tracked); stroke-width: 2; }
-.pressure-overview button[data-tracked]:not(.alarming), .inspect-value[data-tracked], .kpis button[data-tracked]:not(.alarming) { background: var(--tracked-bg); }
-.pressure-overview button[data-tracked]:not(.alarming) b, .inspect-value[data-tracked] b, tr.selected-row:not(.alarm-row) .channel-id code, .kpis button[data-tracked]:not(.alarming) b { color: var(--tracked); }
+.pressure-overview button[data-tracked]:not(.alarming), .inspect-value[data-tracked]:not(.alarming), .kpis button[data-tracked]:not(.alarming) { background: var(--tracked-bg); }
+.pressure-overview button[data-tracked]:not(.alarming) b, .inspect-value[data-tracked]:not(.alarming) b, tr.selected-row:not(.alarm-row) .channel-id code, .kpis button[data-tracked]:not(.alarming) b { color: var(--tracked); }
 
 @container (max-width: 560px) {
   .toolbar-label, .orbit-hint { display: none; }

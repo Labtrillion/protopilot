@@ -1,10 +1,14 @@
 import { byId, option, reading } from './ui.js';
+import { readColor } from './palette.js';
 
 const relatedControl = {
   reactor_pressure: 'XMV(6)', reactor_temperature: 'XMV(10)', reactor_level: 'XMV(11)',
   separator_level: 'XMV(7)', stripper_level: 'XMV(8)', production_rate: 'XMV(8)', pct_g: 'XMV(2)',
 };
-const COLORS = { pv: '#7be6d8', sp: '#a7bbff', grid: '#314550', label: '#a9bcc7' };
+const COLORS = {
+  pv: readColor('--plot-pv'), sp: readColor('--plot-sp'),
+  grid: readColor('--plot-grid'), label: readColor('--muted'),
+};
 const CHANGES = 360;
 
 function draw(canvas, points, unit) {

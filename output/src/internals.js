@@ -1,24 +1,25 @@
 import * as T from 'three';
 import { steel, edge, lightSteel, gold, box, rod, v3 } from './geometry.js';
 import { CORE_PRESSURES, codeFor } from './topology.js';
+import { readColor } from './palette.js';
 
 const glass = new T.MeshPhysicalMaterial({
-  color: 0x9bc4d9, roughness: 0.30, metalness: 0.30,
+  color: 0xd2d8ce, roughness: 0.30, metalness: 0.30,
   transparent: true, opacity: 0.11, depthWrite: false, side: T.FrontSide,
 });
 const liquid = new T.MeshStandardMaterial({
-  color: 0xe2ab64, transparent: true, opacity: 0.52, depthWrite: false, roughness: 0.32,
+  color: readColor('--process-liquid'), transparent: true, opacity: 0.52, depthWrite: false, roughness: 0.32,
 });
 const surface = new T.MeshStandardMaterial({
-  color: 0xf5d191, transparent: true, opacity: 0.8, depthWrite: false, roughness: 0.28,
+  color: readColor('--process-liquid'), transparent: true, opacity: 0.8, depthWrite: false, roughness: 0.28,
 });
 const water = new T.MeshStandardMaterial({
-  color: 0x578fe2, emissive: 0x164f94, emissiveIntensity: 0.30, metalness: 0.32, roughness: 0.28,
+  color: readColor('--process-water'), metalness: 0.32, roughness: 0.28,
 });
 const steam = new T.MeshStandardMaterial({
-  color: 0xdb895c, emissive: 0x69331c, emissiveIntensity: 0.34, metalness: 0.29, roughness: 0.28,
+  color: readColor('--process-steam'), metalness: 0.29, roughness: 0.28,
 });
-const goalMaterial = new T.LineDashedMaterial({ color: 0x9bc2ff, dashSize: 0.14, gapSize: 0.085 });
+const goalMaterial = new T.LineDashedMaterial({ color: readColor('--plot-sp'), toneMapped: false, dashSize: 0.14, gapSize: 0.085 });
 const limit = (value) => T.MathUtils.clamp(value, 0, 1);
 
 function pipe(group, points, material, radius = 0.055, segments = 48) {

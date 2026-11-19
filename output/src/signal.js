@@ -1,9 +1,13 @@
 import { AREAS, CORE_PRESSURES, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { byId, elapsed, reading } from './ui.js';
+import { readColor } from './palette.js';
 
 const PRESSURE_TAGS = new Set(Object.values(CORE_PRESSURES).map(codeFor));
 const LEVEL_TAGS = new Set([8, 12, 15].map(codeFor));
 const TRACE_LENGTH = 60;
+const traceColors = {
+  grid: readColor('--plot-grid'), tracked: readColor('--tracked'), warning: readColor('--warning'),
+};
 
 export function signalTag(signal) {
   return signal?.item.pv ?? signal?.item.id ?? '';
@@ -52,7 +56,7 @@ function describe(signal, status, format) {
   return [location, PRESSURE_TAGS.has(tag) || LEVEL_TAGS.has(tag) ? '' : '선택한 태그를 공정 화면에 표시합니다.', '현재 계측'];
 }
 
-function drawTrace(canvas, values, min, max, discrete) {
+function drawTrace(canvas, values, min, max, discrete, color) {
   const width = canvas.clientWidth, height = canvas.clientHeight;
   if (!width || !height) return;
   const dpr = Math.min(2, devicePixelRatio);
@@ -63,14 +67,14 @@ function drawTrace(canvas, values, min, max, discrete) {
   ctx.scale(dpr, dpr);
   const x = (i) => values.length === 1 ? width - 4 : 4 + i / (values.length - 1) * (width - 8);
   const y = (value) => min === max ? height / 2 : height - 5 - (value - min) / (max - min) * (height - 10);
-  ctx.strokeStyle = '#2c414a';
+  ctx.strokeStyle = traceColors.grid;
   ctx.beginPath();
   for (const row of [5, height / 2, height - 5]) {
     ctx.moveTo(0, row);
     ctx.lineTo(width, row);
   }
   ctx.stroke();
-  ctx.strokeStyle = ctx.fillStyle = '#f0cf82';
+  ctx.strokeStyle = ctx.fillStyle = color;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   let contiguous = false;
@@ -132,6 +136,7 @@ export function mountSignal() {
     nodes.response.hidden = kind !== 'setpoint';
     nodes.locate.hidden = item.area === 'plant';
     stage.classList.toggle('alarming', alarming);
+    nodes.detail.classList.toggle('alarming', alarming);
     stageTag.textContent = `${code} · ${tag}${kind === 'setpoint' ? ' SP' : kind === 'mv' ? ' 명령' : ''}`;
     stageValue.textContent = format(current);
 
@@ -140,7 +145,8 @@ export function mountSignal() {
     nodes['trace-count'].textContent = `${values.length}점`;
     const start = kind === 'disturbance' ? format(min) : reading(min, item.unit);
     nodes['trace-range'].textContent = min === max ? format(min) : numeric.length ? `${start} ~ ${format(max)}` : '—';
-    drawTrace(nodes.chart, values, min, max, ['setpoint', 'disturbance', 'mv'].includes(kind));
+    drawTrace(nodes.chart, values, min, max, ['setpoint', 'disturbance', 'mv'].includes(kind),
+      alarming ? traceColors.warning : traceColors.tracked);
   }
 
   new ResizeObserver(render).observe(byId('signal-trace'));

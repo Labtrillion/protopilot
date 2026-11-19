@@ -1,21 +1,22 @@
 import * as T from 'three';
+import { readColor } from './palette.js';
 
 export const v3 = (coordinates) => new T.Vector3(...coordinates);
 const material = (color, roughness = 0.55, metalness = 0.18) =>
   new T.MeshStandardMaterial({ color, roughness, metalness });
 
-export const steel = material(0xb6c2c0, 0.34, 0.66);
-export const lightSteel = material(0xc6d0cc, 0.35, 0.53);
-export const edge = material(0x617781, 0.42, 0.42);
-export const dark = material(0x263b46, 0.74);
-export const base = material(0x293f49, 0.81);
-export const gold = material(0xbaa36d);
-const valveColor = material(0x4e8394);
-const black = material(0x17272c);
-const dialFace = material(0xe8ecdf, 0.57, 0.06);
-const pointerRed = material(0xe37c57, 0.41, 0.25);
-const blue = material(0x436e82);
-const display = new T.MeshStandardMaterial({ color: 0x8ee0d9, emissive: 0x337c73, emissiveIntensity: 0.6 });
+export const steel = material(0xb0b1a8, 0.34, 0.66);
+export const lightSteel = material(0xc7c8bf, 0.35, 0.53);
+export const edge = material(0x65685e, 0.42, 0.42);
+export const dark = material(0x31342e, 0.74);
+export const base = material(0x2d3029, 0.81);
+export const gold = material(0xad9b76);
+const valveColor = material(0x756f61);
+const black = material(0x21231e);
+const dialFace = material(0xe9e6dc, 0.57, 0.06);
+const pointerRed = material(0xbd5947, 0.41, 0.25);
+const instrumentHousing = material(0x585e55);
+const display = new T.MeshStandardMaterial({ color: readColor('--process-liquid'), emissive: 0x77634e, emissiveIntensity: 0.6 });
 const UP = new T.Vector3(0, 1, 0);
 
 function mesh(group, geometry, mat, location, shadow = false) {
@@ -93,7 +94,7 @@ function ladder(group, height, x, z) {
 function sightGlass(group, radius, bottom, height) {
   const x = radius * 0.56, z = radius * 0.90;
   box(group, [0.18, height + 0.18, 0.12], [x, bottom + height / 2, z], dark);
-  box(group, [0.085, height, 0.028], [x, bottom + height / 2, z + 0.066], blue);
+  box(group, [0.085, height, 0.028], [x, bottom + height / 2, z + 0.066], instrumentHousing);
   const fill = box(group, [0.085, 1, 0.037], [x, bottom, z + 0.087], display);
   return { fill, bottom, height };
 }
@@ -119,7 +120,7 @@ export function vessel(group, spec) {
   }
   cylinder(group, radius * 0.24, 0.17, [0, top + radius * 0.42 + 0.08, 0], edge);
   if (agitator) {
-    cylinder(group, 0.31, 0.69, [0, top + 1.0, 0], blue, true);
+    cylinder(group, 0.31, 0.69, [0, top + 1.0, 0], instrumentHousing, true);
     for (let i = 0; i < 6; i++) ring(group, 0.32, 0.021, top + 0.72 + i * 0.105, edge);
     cylinder(group, 0.34, 0.11, [0, top + 1.38, 0], lightSteel);
     box(group, [0.41, 0.32, 0.42], [0.3, top + 0.99, 0], dark);
@@ -164,7 +165,7 @@ export function rotary(group, kind) {
   group.add(core);
   plinth(core, 3.12, 1.88);
   box(core, [2.6, 0.27, 1.35], [0, 0.34, 0], dark, true);
-  rod(core, [-1.13, 1.13, 0], [0.05, 1.13, 0], 0.43, blue, 26).castShadow = true;
+  rod(core, [-1.13, 1.13, 0], [0.05, 1.13, 0], 0.43, instrumentHousing, 26).castShadow = true;
   for (let i = 0; i < 10; i++) {
     const x = -1.1 + i * 0.10;
     rod(core, [x, 1.13, 0], [x + 0.044, 1.13, 0], 0.478, edge, 24);

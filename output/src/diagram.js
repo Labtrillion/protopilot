@@ -73,15 +73,15 @@ function equipment() {
 export function mountDiagram(host, selectArea, selectCircuit, openValve) {
   const lines = STREAMS.map((stream) => {
     const d = ROUTING[stream.id];
-    const { color } = MEDIA[stream.media];
+    const { colorToken } = MEDIA[stream.media];
     const hit = stream.circuit ? `<path class="pipe-hit" d="${d}" vector-effect="non-scaling-stroke"/>` : '';
-    return `<g class="pfd-stream" data-stream="${stream.id}" data-circuit="${stream.circuit ?? ''}" style="--pipe:${color}">
+    return `<g class="pfd-stream" data-stream="${stream.id}" data-circuit="${stream.circuit ?? ''}" style="--pipe:var(${colorToken})">
       <title>${stream.id} · ${stream.from} → ${stream.to}</title>
       <path class="pipe-sleeve" d="${d}"/><path class="pipe-line" d="${d}" marker-end="url(#arrow-${stream.media})"/>
       <path class="pipe-ticks" d="${d}"/>${hit}</g>`;
   }).join('');
-  const arrows = Object.entries(MEDIA).map(([id, { color }]) =>
-    `<marker id="arrow-${id}" viewBox="0 0 9 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 9 4 0 8 2 4Z" fill="${color}"/></marker>`).join('');
+  const arrows = Object.entries({ ...MEDIA, tracked: { colorToken: '--tracked' } }).map(([id, { colorToken }]) =>
+    `<marker id="arrow-${id}" viewBox="0 0 9 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 9 4 0 8 2 4Z" fill="var(${colorToken})"/></marker>`).join('');
   const portsMarkup = ports.map(([x,y,name]) =>
     `<g class="pfd-port" transform="translate(${x} ${y})"><rect x="0" y="-10" width="${x === 1040 ? 78 : 47}" height="20" rx="3"/>
       <text x="${x === 1040 ? 39 : 23}" y="4">${name}</text></g>`).join('');
