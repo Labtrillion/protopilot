@@ -1,6 +1,6 @@
 import { CurvePath, LineCurve3, QuadraticBezierCurve3, Vector3 } from 'three';
 import { ANCHORS, BODIES, BOUNDARY_PORTS, FEEDS, FLOW_READOUTS, JUNCTIONS, ROUTES, SAMPLES, VALVES, VIEWBOX } from './schematic.js';
-import { STREAMS } from './topology.js';
+import { FEED_TAGS, STREAMS } from './topology.js';
 
 const pixelsPerUnit = 28;
 const sinPitch = 0.6;
@@ -164,7 +164,7 @@ export const LABEL_POINTS = Object.fromEntries(Object.entries(ANCHORS).map(([are
 }));
 
 export const PORTS_3D = [
-  ...FEEDS.map(([id, name]) => [name, scenePoint([55, ROUTES[id][0][1]], feedElevation + 0.7), 'gas', '']),
+  ...FEEDS.map(([id, name]) => [name, scenePoint([55, ROUTES[id][0][1]], feedElevation + 0.7), 'gas', '', FEED_TAGS[id]]),
   ...BOUNDARY_PORTS.map(([id, name, end]) => {
     const { media, circuit = '' } = STREAMS.find((stream) => stream.id === id);
     const [x, y] = ROUTES[id].at(end === 'start' ? 0 : -1);

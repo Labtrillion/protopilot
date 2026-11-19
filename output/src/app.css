@@ -330,6 +330,8 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .toolbar-label { font-weight: 650; color: var(--muted); margin-right: 0.38rem; font-size: 0.81rem; }
 .circuit-controls button, .layer-controls button { padding: 0.26rem 0.56rem; font-size: 0.81rem; }
 .model-port { color: var(--route-color); position: absolute; padding: 0.20rem 0.35rem; border-radius: 3px; border: 1px solid var(--route-color); background: var(--surface); font: 650 0.75rem var(--mono); white-space: nowrap; }
+.model-port[data-feed-tag] { min-height: 0; min-width: 0; pointer-events: auto; }
+.model-port[data-feed-tag][aria-pressed="true"] { color: var(--tracked); border-color: var(--tracked); }
 .model-flow-reading { position: absolute; padding-inline: 0.2rem; color: var(--subtext); background: var(--stage); font: 650 0.73rem var(--mono); white-space: nowrap; }
 .model-flow-reading.tracked { color: var(--tracked); }
 .model-tag.has-pressure span { color: var(--text); font-size: 0.76rem; font-weight: 700; }
@@ -362,7 +364,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .pfd-svg.show-flow.running .pipe-ticks { animation: pipe-motion var(--speed, 2s) linear infinite; }
 @keyframes pipe-motion { to { stroke-dashoffset: -60; } }
 .pfd-stream.out-of-circuit:not(:hover) .pipe-line { stroke: var(--pipe-muted); marker-end: url(#arrow-muted); }
-.pfd-stream:not([data-circuit=""]) { cursor: pointer; }
+.pfd-stream:not([data-circuit=""]), .pfd-stream[data-feed-tag] { cursor: pointer; }
 .pfd-junctions circle { fill: var(--equipment-line); stroke: var(--line); stroke-width: 1; }
 .pfd-samples path { fill: none; stroke: var(--process-liquid); stroke-width: 1.4; stroke-dasharray: 3 3; }
 .pfd-symbol { fill: var(--equipment-fill); stroke: var(--equipment-line); stroke-width: 1.5; cursor: pointer; }
@@ -379,10 +381,13 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .pfd-unit, .pfd-valve { cursor: pointer; outline: 0; }
 .pfd-hit { fill: transparent; stroke: none; pointer-events: all; }
 .pfd-chip { fill: var(--surface); stroke: var(--equipment-line); stroke-width: 1; }
-.pfd-unit:is(:hover,.selected) .pfd-chip, .pfd-valve:hover path { stroke: var(--focus); stroke-width: 2; }
+.pfd-unit:hover .pfd-chip, .pfd-unit.selected:not(.tracking-feed [data-area="feeds"]) .pfd-chip, .pfd-valve:hover path { stroke: var(--focus); stroke-width: 2; }
 .pfd-unit.in-alarm .pfd-chip { stroke: var(--warning); }
 .pfd-unit:focus-visible .pfd-hit, .pfd-valve:focus-visible .pfd-hit { stroke: var(--focus); stroke-width: 2px; vector-effect: non-scaling-stroke; }
 .pfd-unit text, .pfd-chip, .pfd-port, .pfd-id, .pfd-pressure, .pfd-flow-reading, .pfd-level, .pfd-samples, .pfd-junctions { pointer-events: none; }
+.pfd-port[data-feed-tag] { cursor: pointer; pointer-events: auto; }
+.pfd-port[data-feed-tag]:is(:hover,:focus-visible,[aria-pressed="true"]) rect { stroke: var(--tracked); stroke-width: 2; }
+.pfd-port[aria-pressed="true"] text { fill: var(--tracked); }
 
 .telemetry-modes button { padding: 0.22rem 0.55rem; font-size: 0.80rem; }
 .response-view { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 0.50rem 0.65rem 0.65rem; }
@@ -451,7 +456,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .model-tag.tracked:not(.in-alarm) small, .pfd-pressure.tracked:not(.in-alarm), .pfd-flow-reading.tracked { color: var(--tracked); fill: var(--tracked); }
 .pfd-stream.tracked { --display-pipe: var(--tracked); }
 .pfd-stream.tracked .pipe-line { stroke-width: 3.5; marker-end: url(#arrow-tracked); }
-.pfd-unit.tracked:not(.in-alarm) .pfd-chip, .pfd-symbol.tracked:not(.in-alarm), .pfd-valve.tracked path { stroke: var(--tracked); stroke-width: 2; }
+.pfd-unit.tracked:not(.in-alarm, .tracking-feed [data-area="feeds"]) .pfd-chip, .pfd-symbol.tracked:not(.in-alarm), .pfd-valve.tracked path { stroke: var(--tracked); stroke-width: 2; }
 
 @container (max-width: 560px) {
   .toolbar-label, .orbit-hint { display: none; }

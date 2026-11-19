@@ -178,7 +178,7 @@ export function rotary(group, kind) {
 }
 
 export function feeds(group, offsets) {
-  for (const [index, z] of offsets.entries()) {
+  return offsets.map((z, index) => {
     const skid = new T.Group();
     skid.position.z = z;
     group.add(skid);
@@ -191,7 +191,8 @@ export function feeds(group, offsets) {
     rod(skid, [0.96, 0.8, 0], [1.5, 0.8, 0], 0.14, hardware);
     gauge(skid, [-0.36, 1.57, 0.15], 0.74);
     box(skid, [0.28, 0.13, 0.04], [0.12 + index * 0.06, 0.9, 0.52], dark);
-  }
+    return skid;
+  });
 }
 
 export function analyzer(group) {

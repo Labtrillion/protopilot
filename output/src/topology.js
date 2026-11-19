@@ -136,3 +136,6 @@ export const STREAMS = PIPES.map((pipe) => {
   return { ...pipe, from, to, circuit };
 });
 
+export const FEED_TAGS = Object.fromEntries(STREAMS.filter(({ area, tag }) => area === 'feeds' && tag)
+  .map(({ id, tag }) => [id, codeFor(tag)]));
+

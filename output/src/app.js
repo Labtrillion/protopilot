@@ -490,6 +490,10 @@ renderAlarms(status, alarmTab, channels);
 attachEvents();
 plantView = mountPlantView({
   selectArea: focus,
+  selectFeed: (tag) => {
+    plantView.reveal(tag);
+    selectTag(tag);
+  },
   selectValve: (tag) => {
     const channel = channels.get(tag);
     if (channel) { focus(channel.area, tag); openControls?.(tag); }

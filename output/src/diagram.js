@@ -1,4 +1,4 @@
-import { AREAS, CORE_PRESSURES, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
+import { AREAS, CORE_PRESSURES, FEED_TAGS, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { ANCHORS, BODIES, BOUNDARY_PORTS, FEEDS, FLOW_READOUTS, JUNCTIONS, ROUTES, SAMPLES, VALVES, VIEWBOX } from './schematic.js';
 import { flowReading, reading } from './ui.js';
 
@@ -19,7 +19,7 @@ const path = (d) => `<path d="${d}"/>`;
 const vessel = (x,y,w,h) => rect(x,y,w,h,w / 2.3);
 const pump = (x,y) => `<circle cx="${x}" cy="${y}" r="15"/><path d="M${x-15} ${y}h-6m36 0h6m-29-6 11 6-11 6z"/>`;
 const ports = [
-  ...FEEDS.map(([id, name]) => [ROUTES[id][0][0] - 42, ROUTES[id][0][1], name]),
+  ...FEEDS.map(([id, name]) => [ROUTES[id][0][0] - 42, ROUTES[id][0][1], name, FEED_TAGS[id]]),
   ...BOUNDARY_PORTS.map(([id, name, end]) => {
     const [x, y] = ROUTES[id].at(end === 'start' ? 0 : -1);
     return [x === 317 ? x - 49 : x, y, name];
@@ -41,20 +41,21 @@ function equipment() {
   ].join('');
 }
 
-export function mountDiagram(host, selectArea, selectCircuit, openValve) {
+export function mountDiagram(host, selectArea, selectCircuit, openValve, selectFeed) {
   const lines = STREAMS.map((stream) => {
     const d = routePath(ROUTES[stream.id]);
     const { colorToken } = MEDIA[stream.media];
-    const hit = stream.circuit ? `<path class="pipe-hit" d="${d}" vector-effect="non-scaling-stroke"/>` : '';
-    return `<g class="pfd-stream" data-stream="${stream.id}" data-circuit="${stream.circuit ?? ''}" style="--pipe:var(${colorToken})">
+    const feedTag = FEED_TAGS[stream.id];
+    const hit = stream.circuit || feedTag ? `<path class="pipe-hit" d="${d}" vector-effect="non-scaling-stroke"/>` : '';
+    return `<g class="pfd-stream" data-stream="${stream.id}" data-circuit="${stream.circuit ?? ''}" ${feedTag ? `data-feed-tag="${feedTag}"` : ''} style="--pipe:var(${colorToken})">
       <title>${stream.id} · ${stream.from} → ${stream.to}</title>
       <path class="pipe-sleeve" d="${d}"/><path class="pipe-line" d="${d}" marker-end="url(#arrow-${stream.media})"/>
       <path class="pipe-ticks" d="${d}"/>${hit}</g>`;
   }).join('');
   const arrows = Object.entries({ ...MEDIA, tracked: { colorToken: '--tracked' }, muted: { colorToken: '--pipe-muted' } }).map(([id, { colorToken }]) =>
     `<marker id="arrow-${id}" viewBox="0 0 9 8" refX="8" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 9 4 0 8 2 4Z" fill="var(${colorToken})"/></marker>`).join('');
-  const portsMarkup = ports.map(([x,y,name]) =>
-    `<g class="pfd-port" transform="translate(${x} ${y})"><rect x="0" y="-10" width="${x === 1040 ? 78 : 47}" height="20" rx="3"/>
+  const portsMarkup = ports.map(([x,y,name,tag]) =>
+    `<g class="pfd-port" ${tag ? `data-feed-tag="${tag}" role="button" tabindex="0" aria-pressed="false" aria-label="${name} 원료 유량 추적"` : ''} transform="translate(${x} ${y})"><rect x="0" y="-10" width="${x === 1040 ? 78 : 47}" height="20" rx="3"/>
       <text x="${x === 1040 ? 39 : 23}" y="4">${name}</text></g>`).join('');
   const meterMarkup = METERS.map(([id,x,y]) => `<text class="pfd-id" x="${x}" y="${y}">#${id}</text>`).join('');
   const target = '<rect class="pfd-hit" aria-hidden="true" rx="3"/>';
@@ -107,8 +108,10 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     const valve = node.closest('[data-valve]');
     const unit = node.closest('.pfd-unit, .pfd-symbol');
     const stream = node.closest('[data-circuit]');
+    const feed = node.closest('[data-feed-tag]');
     if (valve) openValve(valve.dataset.valve);
     else if (unit) selectArea(unit.dataset.area ?? unit.dataset.symbol);
+    else if (feed) selectFeed(feed.dataset.feedTag);
     else if (stream?.dataset.circuit) selectCircuit(stream.dataset.circuit);
   }
   svg.addEventListener('click', (event) => {
@@ -126,7 +129,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     activate(node);
   });
   svg.addEventListener('keydown', (event) => {
-    if (!(event.key === 'Enter' || event.key === ' ') || !event.target.matches('.pfd-unit, .pfd-valve')) return;
+    if (!(event.key === 'Enter' || event.key === ' ') || !event.target.matches('.pfd-unit, .pfd-valve, .pfd-port[data-feed-tag]')) return;
     event.preventDefault();
     activate(event.target);
   });
@@ -135,17 +138,19 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
   }));
   const flowByStream = new Map([...svg.querySelectorAll('[data-flow-reading]')].map((node) => [node.dataset.flowReading, node]));
   const linesById = new Map([...svg.querySelectorAll('.pfd-stream')].map((line) => [line.dataset.stream, line]));
+  const feedPorts = new Map([...svg.querySelectorAll('.pfd-port[data-feed-tag]')].map((port) => [port.dataset.feedTag, port]));
   return {
     focus(area, reset, tag) {
       for (const unit of svg.querySelectorAll('[data-area],[data-symbol]')) unit.classList.toggle('selected', (unit.dataset.area || unit.dataset.symbol) === area);
       if (reset) host.scrollLeft = 0;
-      else if (area !== 'plant' && ANCHORS[area] && !host.hidden) {
+      else if (area !== 'plant' && ANCHORS[area] && !host.hidden && !feedPorts.has(tag)) {
         const valve = VALVES.find(([id]) => `XMV(${id})` === tag);
         const center = (valve?.[1] ?? ANCHORS[area][0]) / VIEWBOX[0] * svg.clientWidth;
         host.scrollLeft = Math.max(0, center - host.clientWidth / 2);
       }
     },
     track(area, tag) {
+      let trackingFeed = false;
       for (const unit of svg.querySelectorAll('[data-area],[data-symbol],[data-pressure]')) {
         const tracked = unit.dataset.pressure ? codeFor(CORE_PRESSURES[unit.dataset.pressure]) === tag : (unit.dataset.area || unit.dataset.symbol) === area;
         unit.classList.toggle('tracked', tracked);
@@ -155,7 +160,13 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
         const tracked = streamMatchesTag(line, tag);
         linesById.get(line.id).classList.toggle('tracked', tracked);
         flowByStream.get(line.id)?.classList.toggle('tracked', tracked);
+        const port = feedPorts.get(FEED_TAGS[line.id]);
+        if (port) {
+          port.setAttribute('aria-pressed', tracked);
+          trackingFeed ||= tracked;
+        }
       }
+      svg.classList.toggle('tracking-feed', trackingFeed);
     },
     circuit(id) {
       for (const line of linesById.values()) {

@@ -1,12 +1,13 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { AREAS, CORE_PRESSURES, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
+import { AREAS, CORE_PRESSURES, FEED_TAGS, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { buildInternals } from './internals.js';
 import { EQUIPMENT_LAYOUT, FEED_OFFSETS, FLOW_POINTS, LABEL_POINTS, OVERVIEW, PORTS_3D, ROUTES_3D, SAMPLE_ROUTES_3D,
   VESSELS, pipePath, scenePoint, valvePosition } from './layout.js';
 import { flowReading, reading } from './ui.js';
 import { readColor } from './palette.js';
+import { FEEDS } from './schematic.js';
 import * as geo from './geometry.js';
 
 const initialOffset = geo.v3(OVERVIEW.offset);
@@ -83,7 +84,12 @@ function buildEquipment(scene) {
     group.add(model);
     scene.add(group);
   }
-  geo.feeds(models.feeds, FEED_OFFSETS);
+  const skids = geo.feeds(models.feeds, FEED_OFFSETS);
+  const feedSkids = new Map(FEEDS.map(([id], index) => {
+    const skid = skids[index], tag = FEED_TAGS[id];
+    skid.userData.feedTag = tag;
+    return [tag, skid];
+  }));
   for (const [area, spec] of Object.entries(VESSELS)) {
     sight[area] = { tag: spec.levelTag, ...geo.vessel(models[area], spec) };
   }
@@ -110,13 +116,14 @@ function buildEquipment(scene) {
     geometry.translate(-group.position.x, -group.position.y, -group.position.z);
     group.add(new T.Mesh(geometry, geo.hardware));
   }
-  return { groups, models, sight };
+  return { groups, models, sight, feedSkids };
 }
 
 function buildStreams(scene, groups) {
   const markerGeometry = new T.ConeGeometry(0.103, 0.31, 9);
   const markerMaterial = new T.MeshBasicMaterial({ color: readColor('--flow-marker'), toneMapped: false });
   return STREAMS.map((def) => {
+    const feedTag = FEED_TAGS[def.id];
     const path = pipePath(ROUTES_3D[def.id]), length = path.getLength();
     const color = new T.Color(readColor(MEDIA[def.media].colorToken));
     // Diagram and 3D pipes use the same media colors under any scene lighting.
@@ -124,6 +131,7 @@ function buildStreams(scene, groups) {
     const radius = ['06','07','07B','08','08I','08R','08M','10','10S','11','11S'].includes(def.id) ? 0.114 : 0.079;
     const tube = new T.Mesh(new T.TubeGeometry(path, Math.ceil(Math.max(18, length * 10)), radius, 12), material);
     tube.userData.circuit = def.circuit;
+    tube.userData.feedTag = feedTag;
     scene.add(tube);
     const count = Math.max(1, Math.ceil(length / (def.tag ? 2.15 : 4.0)));
     const markers = new T.InstancedMesh(markerGeometry, markerMaterial, count);
@@ -134,7 +142,9 @@ function buildStreams(scene, groups) {
       const fraction = Math.min(0.97, point / length);
       const p = path.getPointAt(fraction), d = path.getTangentAt(fraction);
       if (length > 1.3 && !['M','08I','08B','08R','08M'].includes(def.id)) {
-        flanges.push(geo.flange(scene, p.toArray(), d.toArray(), radius));
+        const flange = geo.flange(scene, p.toArray(), d.toArray(), radius);
+        flange.userData.feedTag = feedTag;
+        flanges.push(flange);
       }
     }
     let valve = null;
@@ -144,7 +154,7 @@ function buildStreams(scene, groups) {
       valve = geo.controlValve(group, point.sub(group.position), tangent, def.valve);
       valve.userData.area = def.area;
     }
-    return { def, path, length, tube, markers, material, color, valve, phase: 0, flanges };
+    return { def, feedTag, path, length, tube, markers, material, color, valve, phase: 0, flanges };
   });
 }
 
@@ -166,15 +176,22 @@ function createLabels(host, onSelect) {
   return labels;
 }
 
-function makePortLabels(host) {
-  return PORTS_3D.map(([text, point, medium, circuit]) => {
-    const el = document.createElement('span');
+function makePortLabels(host, selectFeed) {
+  return PORTS_3D.map(([text, point, medium, circuit, feedTag]) => {
+    const el = document.createElement(feedTag ? 'button' : 'span');
     el.className = 'model-port';
     el.textContent = text;
     el.style.setProperty('--route-color', `var(${MEDIA[medium].colorToken})`);
     el.dataset.circuit = circuit;
+    if (feedTag) {
+      el.type = 'button';
+      el.dataset.feedTag = feedTag;
+      el.setAttribute('aria-label', `${text} 원료 유량 추적`);
+      el.setAttribute('aria-pressed', 'false');
+      el.addEventListener('click', () => selectFeed(feedTag));
+    }
     host.append(el);
-    return { el, point, circuit, width: Math.max(22, text.length * 6.5 + 10), height: 20 };
+    return { el, point, circuit, feedTag, width: Math.max(22, text.length * 6.5 + 10), height: 20 };
   });
 }
 
@@ -205,7 +222,7 @@ function makePartLabels(host, parts, onPick) {
   });
 }
 
-export function mountScene(container, host, select, pick, selectCircuit) {
+export function mountScene(container, host, select, pick, selectCircuit, selectFeed) {
   const scene = new T.Scene();
   scene.background = new T.Color(readColor('--stage'));
   const renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -257,9 +274,13 @@ export function mountScene(container, host, select, pick, selectCircuit) {
   rim.position.set(8, 6, -12);
   scene.add(rim);
 
-  const { groups, models, sight } = buildEquipment(scene);
+  const { groups, models, sight, feedSkids } = buildEquipment(scene);
   const streams = buildStreams(scene, groups);
-  const pickable = [...Object.values(groups), ...streams.filter(({ def }) => def.circuit).map(({ tube }) => tube)];
+  const pickable = [...Object.values(groups)];
+  for (const { def, feedTag, tube, flanges } of streams) {
+    if (def.circuit || feedTag) pickable.push(tube);
+    if (feedTag) pickable.push(...flanges);
+  }
   const valveTargets = streams.filter(({ valve }) => valve).map(({ valve }) => ({ valve, x: 0, y: 0, onScreen: false }));
   const largerTargets = matchMedia('(max-width: 600px), (pointer: coarse)');
   const overviewFrame = setupSite(scene, groups);
@@ -267,7 +288,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
   const labels = createLabels(host, select);
   const labelEntries = Object.entries(labels);
   const parts = makePartLabels(host, internal.parts, pick);
-  const ports = makePortLabels(host);
+  const ports = makePortLabels(host, selectFeed);
   const flowLabels = makeFlowLabels(host);
   const sized = new Map([
     ...labelEntries.map(([, label]) => [label.button, label]), ...parts.map((part) => [part.button, part]),
@@ -302,6 +323,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
   const box = new T.Box3();
   let width = 1, height = 1, focus = 'plant', showFlow = true, showPressure = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
   let trackedArea = '', trackedTag = '';
+  let trackedFeed, focusedValve;
   let down = null, framing = false, valveRadius = 14;
   let panX = 0, cameraDirty = true, lastRender = 0, lastProcessFrame = -Infinity;
   const alertAreas = new Set();
@@ -337,22 +359,35 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     focus = area;
     container.dataset.focus = area;
     const group = groups[area];
+    focusedValve = streams.find((line) => line.valve?.userData.valve === tag && line.def.area === area)?.valve;
+    if (showInternals) applyInternals();
+    moveHighlight();
+    // Keep the visible route in frame when the user picks a feed line.
+    if (area === 'feeds' && trackedFeed?.feedTag === tag && !resetOrientation) {
+      frame = null;
+      return;
+    }
     desired.copy(group ? group.position : home);
-    if (area !== 'plant') desired.y = Math.min(4, groups[area].userData.top * 0.47);
-    const valve = streams.find((line) => line.valve?.userData.valve === tag && line.def.area === area)?.valve;
-    const zoom = area === 'plant' ? 1 : Math.min(3.3, Math.max(2.04, 19.2 / (groups[area].userData.top + 1.9)));
-    if (valve) {
-      valve.getWorldPosition(desired);
+    if (group) desired.y = Math.min(4, group.userData.top * 0.47);
+    const zoom = group ? Math.min(3.3, Math.max(2.04, 19.2 / (group.userData.top + 1.9))) : 1;
+    if (focusedValve) {
+      focusedValve.getWorldPosition(desired);
       desired.y = Math.max(1.3, desired.y);
     }
     frame = { zoom, offset: resetOrientation ? initialOffset : null, panX: 0 };
-    if (showInternals) applyInternals();
-    highlight.visible = area !== 'plant';
-    if (highlight.visible) {
-      highlight.position.copy(valve ? valve.getWorldPosition(new T.Vector3()) : group.position);
-      highlight.position.y = 0.247;
-      highlight.scale.setScalar(valve ? 0.44 : geometryBounds[area]);
-    }
+  }
+
+  function moveHighlight() {
+    const group = groups[focus];
+    highlight.visible = Boolean(group);
+    if (!group) return;
+    const feed = focus === 'feeds' ? trackedFeed : null;
+    const valve = feed ? (feed.valve?.userData.valve === trackedTag ? feed.valve : null) : focusedValve;
+    const skid = feedSkids.get(feed?.feedTag);
+    const target = valve || skid || group;
+    target.getWorldPosition(highlight.position);
+    highlight.position.y = 0.247;
+    highlight.scale.setScalar(valve ? 0.44 : skid ? 1.25 : geometryBounds[focus]);
   }
 
   // A selected unit with an interior shows only its own section; otherwise every interior is shown.
@@ -443,7 +478,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
       label.button.style.left = `${x}px`;
       label.button.style.top = `${y}px`;
       label.button.style.setProperty('--tag-leader', `${Math.max(0, anchor - y)}px`);
-      label.button.classList.toggle('selected', focus === area);
+      label.button.classList.toggle('selected', focus === area && !(area === 'feeds' && trackedFeed));
       label.button.classList.toggle('in-alarm', alertAreas.has(area));
       label.button.classList.toggle('has-pressure', showPressure && Boolean(CORE_PRESSURES[area]));
       let pressure = '';
@@ -481,7 +516,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     pointer.set(x / width * 2 - 1, 1 - y / height * 2);
     ray.setFromCamera(pointer, camera);
     let object = ray.intersectObjects(pickable, true)[0]?.object;
-    while (object && !object.userData.area && !object.userData.circuit) object = object.parent;
+    while (object && !object.userData.area && !object.userData.circuit && !object.userData.feedTag) object = object.parent;
     return object?.userData;
   }
 
@@ -528,6 +563,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     const exact = hitAt(x, y);
     const hit = exact?.valve ? exact : nearbyValve(x, y) ?? exact;
     if (hit?.circuit) selectCircuit(hit.circuit);
+    else if (hit?.feedTag) selectFeed(hit.feedTag);
     else if (hit?.area) select(hit.area, hit.valve);
   });
   renderer.domElement.addEventListener('lostpointercapture', (event) => {
@@ -633,8 +669,13 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     track(area, tag) {
       trackedArea = area;
       trackedTag = tag;
-      for (const [key, label] of Object.entries(labels)) label.button.classList.toggle('tracked', key === area);
+      trackedFeed = streams.find((line) => line.feedTag && streamMatchesTag(line.def, tag));
+      moveHighlight();
+      for (const [key, label] of labelEntries) label.button.classList.toggle('tracked', key === area && !trackedFeed);
       for (const line of streams) line.tracked = streamMatchesTag(line.def, tag);
+      for (const { el, feedTag } of ports) {
+        if (feedTag) el.setAttribute('aria-pressed', feedTag === trackedFeed?.feedTag);
+      }
       for (const { el, def } of flowLabels) el.classList.toggle('tracked', streamMatchesTag(def, tag));
     },
     // Camera pose for returning to a previous investigation position.

@@ -3,7 +3,7 @@ import { mountDiagram } from './diagram.js';
 import { mountScene } from './scene.js';
 import { byId, escape, legend } from './ui.js';
 
-export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag }) {
+export function mountPlantView({ selectArea, selectFeed, selectValve, onCircuit, trackTag }) {
   const canvas = byId('canvas'), labels = byId('model-labels'), diagramRoot = byId('diagram');
   const threeButton = byId('view-3d'), twoButton = byId('view-2d');
   const flows = byId('view-flow'), pressure = byId('view-pressure'), internals = byId('toggle-internals'), tags = byId('toggle-tags');
@@ -11,12 +11,12 @@ export function mountPlantView({ selectArea, selectValve, onCircuit, trackTag })
   const circuitButtons = [...document.querySelectorAll('.circuit-controls button[data-circuit]')];
   let scene, area = 'plant', circuit = '', visible = '3d', tracked = '', focusedTag = '';
   const flags = { flows: true, pressure: true, internals: false, tags: true };
-  const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve);
+  const diagram = mountDiagram(diagramRoot, selectArea, chooseCircuit, selectValve, selectFeed);
   try {
     scene = mountScene(canvas, labels, (unit, valve) => {
       if (valve) selectValve(valve);
       else selectArea(unit);
-    }, trackTag, chooseCircuit);
+    }, trackTag, chooseCircuit, selectFeed);
   } catch (error) {
     console.warn('WebGL scene unavailable', error);
     threeButton.disabled = true;
