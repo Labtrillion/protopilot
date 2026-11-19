@@ -14,7 +14,7 @@ ADJUSTMENTS = {"mv", "setpoint", "disturbance", "offset", "limit", "pressure_tes
 
 
 def numeric(value, lower=-1e9, upper=1e9):
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+    if type(value) not in (int, float) or (type(value) is float and not math.isfinite(value)):
         raise ValueError("유한한 숫자를 입력하세요.")
     if not lower <= value <= upper:
         raise ValueError(f"{lower:g} ~ {upper:g} 범위 값을 입력하세요.")

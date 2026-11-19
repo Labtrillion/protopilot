@@ -104,8 +104,9 @@ def _local_plan(text, history):
     if not re.search(r"실행|시뮬레이션|비교|\brun\b|\bsimulate\b|\bidv\s*\(?\d|baseline", normalized):
         return "describe_plant", {}
     mode = re.search(r"(?:mode|모드)\s*([1-6])\b", normalized)
-    horizon = re.search(r"(\d+(?:\.\d+)?)\s*(?:시간|hours?\b|h\b)", normalized)
     onset = re.search(r"(\d+(?:\.\d+)?)\s*(?:시간|hours?\b|h\b)\s*(?:후|부터|이후|onset)", normalized)
+    duration = normalized if onset is None else normalized[:onset.start()] + normalized[onset.end():]
+    horizon = re.search(r"(\d+(?:\.\d+)?)\s*(?:시간|hours?\b|h\b)", duration)
     seed = re.search(r"(?:seed|시드)\s*(\d+)\b", normalized)
     faults = list(dict.fromkeys(re.findall(r"\bidv\s*\(?\s*0*(\d{1,2})\b", normalized)))
     config = {
@@ -143,16 +144,19 @@ def _summary(result, route, run_ids):
 
 def respond(text, history, tools, trace_path):
     model, confidence, fallback_reason = "Zoro-1", None, None
+    route, ids = "describe_plant", []
     try:
-        route, arguments, confidence = _zoro_plan(text, history, tools)
-    except (KeyError, IndexError, TypeError, ValueError, URLError, TimeoutError) as error:
-        model = FALLBACK
-        fallback_reason = type(error).__name__ if os.environ.get("ZORO_BASE_URL") else "not_configured"
-        route, arguments = _local_plan(text, history)
-    before = set(tools.store.ids())
-    try:
+        try:
+            route, arguments, confidence = _zoro_plan(text, history, tools)
+        except (AttributeError, KeyError, IndexError, TypeError, ValueError, URLError, TimeoutError) as error:
+            model = FALLBACK
+            fallback_reason = type(error).__name__ if os.environ.get("ZORO_BASE_URL") else "not_configured"
+            route, arguments = _local_plan(text, history)
         result = tools.dispatch(route, arguments)
-        ids = [run_id for run_id in tools.store.ids() if run_id not in before]
+        if route == "run_scenario" and result.get("ok"):
+            ids = [result["run_id"]]
+        if route == "run_sweep":
+            ids = [run["run_id"] for run in result.get("runs", result.get("completed_runs", []))]
         answer = _summary(result, route, ids)
     except (TypeError, ValueError, KeyError, RuntimeError) as error:
         result, ids, answer = {"ok": False}, [], str(error)

@@ -111,6 +111,9 @@ def channel(group, var):
         "unit": unit_label,
         "group": group, "area": unit, "period": var.sample_period_hours,
         "delay": (var.sample_period_hours or 0) * var.delay_samples,
+        "lower": var.lower, "upper": var.upper, "nominal": var.nominal,
+        "available_online": var.available_online, "stream": var.stream,
+        "component": var.component, "physical_type": var.physical_type, "measurement_noise": var.measurement_noise,
     }
 
 
@@ -119,7 +122,8 @@ METADATA = {
     "channels": list(CHANNELS.values()),
     "groups": [{"id": group, "label": label, "count": len(getattr(TEP_SCHEMA, group))} for group, label in GROUPS],
     "disturbances": [
-        {"id": v.legacy_symbol, "label": v.description, "area": DISTURBANCES[v.index]}
+        {"id": v.legacy_symbol, "name": v.name, "label": v.description, "area": DISTURBANCES[v.index],
+         "perturbation_model": v.perturbation_model, "root_cause_status": v.root_cause_status}
         for v in TEP_SCHEMA.disturbances
     ],
     "setpoints": [
@@ -129,4 +133,7 @@ METADATA = {
         for key, (label, unit, area, lo, hi) in SETPOINTS.items()
     ],
     "controller_flags": CONTROL_FLAGS,
+    "states": [{"name": v.name, "unit": v.unit, "description": v.description} for v in TEP_SCHEMA.states],
+    "constraints": [{"id": c.name, "channel": TEP_SCHEMA.variable("measurements", c.variable).legacy_symbol,
+                     "kind": c.kind, "limit": c.limit, "unit": c.unit} for c in TEP_SCHEMA.constraints],
 }

@@ -8,6 +8,7 @@ from dataclasses import asdict, replace
 
 import numpy as np
 from tep_studio import RickerMultiLoopController, TEP_SCHEMA, TennesseeEastmanProcess
+from tep_studio.control.metrics import MetricsAccumulator
 
 from .catalog import CHANNELS, CONTROL_FLAGS, DISTURBANCES, GROUPS, OPERATING_LIMITS, PROTECTIONS, SETPOINTS, TRIPS
 from .recording import Recording, timestamp
@@ -39,8 +40,10 @@ class Plant:
         self.measurements, info = self.sim.reset(mode="mode1", seed=self.seed)
         self.controller.reset(self.measurements, time=self.sim.time)
         self.base_setpoints = self.controller.setpoints
+        self.metrics = MetricsAccumulator(setpoints=self.controller.setpoints)
         self.xmv = info["implemented_action"]
         self.idv = np.zeros(len(TEP_SCHEMA.disturbances))
+        self.disturbance_onsets = {}
         self.manual = {}
         self.offsets = {}
         self.limits = dict(OPERATING_LIMITS)
@@ -58,6 +61,7 @@ class Plant:
         self.output = self.sim.kernel.outputs(self.sim.time, self.sim.state)
         self.apply_scheduled()
         self.capture()
+        self.recording.save_scenario(self.scenario())
 
     def tick(self):
         self.apply_scheduled()
@@ -76,6 +80,7 @@ class Plant:
                     continue
                 action[index] = value
             result = self.sim.advance(action, control_interval=STEP_HOURS, disturbances=self.idv)
+            self.metrics.update(result)
             self.measurements = result.measurements
             self.xmv = result.implemented_action
             self.requested = result.requested_action
@@ -89,6 +94,8 @@ class Plant:
         if self.step == self.replay_end:
             self.running = False
         self.capture()
+        if not self.running:
+            self.recording.save_scenario(self.scenario())
 
     def apply_scheduled(self):
         while self.pending and self.pending[0]["step"] == self.step:
@@ -129,6 +136,13 @@ class Plant:
             "offsets": self.offsets.copy(), "disturbances": self.active_disturbances(),
             "setpoints": {name: getattr(self.controller.setpoints, name) for name in SETPOINTS},
             "actuators": {f"XMV({i + 1})": float(value) for i, value in enumerate(self.sim.state[38:50])},
+            "state": {var.name: float(value) if math.isfinite(value) else None
+                      for var, value in zip(TEP_SCHEMA.states, self.sim.state, strict=True)},
+            "requested_action": {f"XMV({i + 1})": float(value) for i, value in enumerate(self.requested)},
+            "implemented_action": {f"XMV({i + 1})": float(value) for i, value in enumerate(self.xmv)},
+            "hours_since_onset": {tag: round(self.sim.time - start, 8) for tag, start in self.disturbance_onsets.items()},
+            "constraint_margins": {key: float(value) if math.isfinite(value) else None
+                                   for key, value in TEP_SCHEMA.constraint_margins(self.measurements).items()},
             "derived": {"YA": 100.0 * a / total if total else total, "YAC": total},
             "controller_flags": {key: getattr(self.controller, f"enable_{key}") for key in CONTROL_FLAGS},
             "control": asdict(self.control) if self.control is not None else None,
@@ -188,6 +202,7 @@ class Plant:
             "manual": {f"XMV({i + 1})": value for i, value in self.manual.items()},
             "limits": self.limits, "disturbances": self.active_disturbances(),
             "replay_end": self.replay_end, "scheduled_changes": len(self.pending),
+            "step_hours": STEP_HOURS, "metrics": self.metrics.finalize(),
         }
 
     def scenario(self):
@@ -211,6 +226,7 @@ class Plant:
             self.events.appendleft(alarm)
             self.recording.event(alarm)
         self.capture()
+        self.recording.save_scenario(self.scenario())
         self.recording_pages.append(key)
 
     def command(self, body):
@@ -232,10 +248,13 @@ class Plant:
             if body.get("enabled") and self.step == self.replay_end:
                 self.replay_end = None
             self.running = bool(body.get("enabled"))
+            if not self.running:
+                self.recording.save_scenario(self.scenario())
         elif op in ADJUSTMENTS:
             change = adjustment(body)
             self.adjust(op, change)
             self.timeline.append({"step": self.step, **change})
+            self.recording.save_scenario(self.scenario())
         elif op == "ack":
             alarm = next((a for a in self.active.values() if a["id"] == body.get("id")), None)
             if alarm is None:
@@ -262,10 +281,15 @@ class Plant:
             label, _, area, _, _ = SETPOINTS[tag]
             target = getattr(self.base_setpoints, tag) if value is None else value
             self.controller.setpoints = replace(self.controller.setpoints, **{tag: target})
+            self.metrics.setpoints = self.controller.setpoints
             self.event("change", label + " 설정값 변경", area, tag=tag, value=target)
             self.capture()
         elif op == "disturbance":
             i = int(tag[4:-1]) - 1
+            if value:
+                self.disturbance_onsets.setdefault(tag, self.sim.time)
+            else:
+                self.disturbance_onsets.pop(tag, None)
             self.idv[i] = value
             self.event("change", f"{tag} 외란 {'적용' if self.idv[i] else '해제'}", DISTURBANCES[i], tag=tag, value=int(self.idv[i]))
         elif op == "pressure_test":

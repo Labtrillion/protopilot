@@ -31,7 +31,7 @@ export function mountScenario(command, onReplay) {
       lines.push(`생산 지수 ${reading(latest.control.fp)} · 분리기 온도 목표 ${reading(latest.control.setpoints.separator_temperature)} °C`);
     }
     if (latest?.replay_end != null && latest.step < latest.replay_end) {
-      lines.push(`재실행 종료 ${elapsed(latest.replay_end * 0.0005)} · 예약 조작 ${latest.scheduled_changes}건`);
+      lines.push(`재실행 종료 ${elapsed(latest.replay_end * latest.step_hours)} · 예약 조작 ${latest.scheduled_changes}건`);
     }
     byId('controller-detail').textContent = lines.join(' / ');
   }

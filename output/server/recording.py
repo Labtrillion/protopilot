@@ -45,3 +45,9 @@ class Recording:
     def event(self, event):
         with self.events_path.open("a", encoding="utf-8") as file:
             file.write(encode(event) + "\n")
+
+    def save_scenario(self, document):
+        target = self.directory / "scenario.json"
+        temp = target.with_suffix(".tmp")
+        temp.write_text(encode(document) + "\n", encoding="utf-8")
+        temp.replace(target)

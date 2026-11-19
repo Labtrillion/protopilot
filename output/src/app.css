@@ -376,6 +376,8 @@ dialog::backdrop { background: var(--back); }
 .response-chart-wrap { height: clamp(150px, 30vh, 290px); border: 1px solid var(--line-soft); }
 #response-chart { display: block; width: 100%; height: 100%; }
 .controller-panel { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); color: var(--subtext); font-size: 0.8rem; }
+.header-link { display: inline-flex; align-items: center; flex: none; padding: 0.4rem 0.62rem; border: 1px solid var(--line); border-radius: 4px; color: var(--text); text-decoration: none; font-size: 0.85rem; }
+.header-link:hover, .header-link:focus-visible { border-color: var(--plot-sp); }
 .controller-panel summary { cursor: pointer; }
 #protection-state { margin-inline-start: 0.35rem; color: var(--muted); }
 #protection-state.protection-active { color: var(--warning); font-weight: 700; }
