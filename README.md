@@ -4,7 +4,7 @@
 
 ProtoPilot은 Tennessee Eastman Process(TEP)에서 알람 발생 시점의 공정 상태를 재현합니다. 표준운전절차(SOP)와 계측·조작 이력을 바탕으로 Zoro-1이 제안한 대응안을 시험하고, 공정 제약 충족 여부와 비용·생산량을 비교합니다.
 
-**[Brev 라이브 데모](https://protopilot-rx8cin03n.gobrev.dev/)** · [해커톤 발표 자료](https://docs.google.com/presentation/d/1OP7zI-4293JVnL-ZUxfro8mzeUhKAqT7yBn7WfbLIVM/edit?slide=id.p1#slide=id.p1) · [데모 영상](https://drive.google.com/file/d/1iA_0NsVXWJF3tzQqJ_xo5plWEqI_3RkR/view) · [제출 에이전트 로그](docs/agent-log.md) · [기술 문서](#기술과-관련-문서)
+**[Brev 라이브 데모](https://protopilot-rx8cin03n.gobrev.dev/)** · [해커톤 발표 자료](https://docs.google.com/presentation/d/1bgcx8pAuoYJmDbQtc9s5CnXDlUcaZEuaN1V5nX1---U/edit?usp=sharing) · [데모 영상](https://drive.google.com/file/d/1iA_0NsVXWJF3tzQqJ_xo5plWEqI_3RkR/view) · [제출 에이전트 로그](docs/agent-log.md) · [기술 문서](#기술과-관련-문서)
 
 <h2 align="center">팀 소개</h2>
 
@@ -266,7 +266,7 @@ Feature 1의 검색 근거가 부족하거나 응답에 문제가 있으면 **�
 
 | 자료 | 내용 |
 | --- | --- |
-| [해커톤 발표 자료](https://docs.google.com/presentation/d/1OP7zI-4293JVnL-ZUxfro8mzeUhKAqT7yBn7WfbLIVM/edit?slide=id.p1#slide=id.p1) | 문제 배경과 초기 시연 구상. 열람에는 Drive 접근 권한이 필요합니다. |
+| [해커톤 발표 자료](https://docs.google.com/presentation/d/1bgcx8pAuoYJmDbQtc9s5CnXDlUcaZEuaN1V5nX1---U/edit?usp=sharing) | 문제 배경과 초기 시연 구상. 열람에는 Drive 접근 권한이 필요합니다. |
 | [제출 에이전트 로그](docs/agent-log.md) | 해커톤 제출 사례와 공개 데모 베스트 케이스의 실행 기록 |
 | [시나리오 명세](docs/scenarios/DEMO_SCENARIOS.md) | 배포 데모 시나리오 5개의 예약 조작과 알람 기준 |
 | [Feature 1](features/feature1-setpoint-gate/README.md) · [Feature 2](features/feature2-sop-ranking/README.md) · [Zoro-1 클라이언트](zoro/README.md) | 모델 판단 기준, 분기 평가와 API 응답 형식 |
