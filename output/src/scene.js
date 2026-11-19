@@ -1,9 +1,10 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { ANALYZER_TAPS, AREAS, CORE_PRESSURES, MEDIA, PORTS, STREAMS, codeFor, streamMatchesTag } from './topology.js';
+import { AREAS, CORE_PRESSURES, MEDIA, STREAMS, codeFor, streamMatchesTag } from './topology.js';
 import { buildInternals } from './internals.js';
-import { OVERVIEW, VESSELS, pipePath, sampleRoute, valvePosition } from './layout.js';
+import { EQUIPMENT_LAYOUT, FEED_OFFSETS, LABEL_POINTS, OVERVIEW, PORTS_3D, ROUTES_3D, SAMPLE_ROUTES_3D,
+  VESSELS, pipePath, scenePoint, valvePosition } from './layout.js';
 import { reading } from './ui.js';
 import { readColor } from './palette.js';
 import * as geo from './geometry.js';
@@ -13,82 +14,87 @@ const initialOrbit = new T.Spherical().setFromVector3(initialOffset);
 const orbitLimit = T.MathUtils.degToRad(25);
 const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
-const primary = {
-  feeds: 2.2, reactor: 7.05, condenser: 4.9, separator: 6.2, compressor: 2.55,
-  stripper: 8.95, reboiler: 3.48, purge: 2.02, product: 1.54,
-  gc_feed: 2.05, gc_purge: 2.05, gc_product: 2.05, pump_sep: 1.28, pump_prod: 1.28,
-};
 const visibleLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'compressor', 'stripper', 'product', 'purge']);
 
 function setupSite(scene) {
   const floor = new T.Group();
   scene.add(floor);
-  const ground = geo.box(floor, [40, 0.27, 22], [0, -0.19, -0.63], geo.base, true);
+  const start = scenePoint([10, 30], 0);
+  const end = scenePoint([1130, 472], 0);
+  const width = end.x - start.x, depth = end.z - start.z;
+  const center = (start.z + end.z) / 2;
+  const ground = geo.box(floor, [width, 0.27, depth], [0, -0.19, center], geo.base, true);
   ground.castShadow = false;
   const slab = new T.MeshStandardMaterial({ color: readColor('--model-floor'), roughness: 0.99 });
-  geo.box(floor, [38.9, 0.035, 20.9], [0, -0.045, -0.65], slab, true).castShadow = false;
+  geo.box(floor, [width - 0.8, 0.035, depth - 0.8], [0, -0.045, center], slab, true).castShadow = false;
   const lines = new T.LineSegments(
-    new T.EdgesGeometry(new T.BoxGeometry(40, 0.29, 22)),
+    new T.EdgesGeometry(new T.BoxGeometry(width, 0.29, depth)),
     new T.LineBasicMaterial({ color: readColor('--model-line') }),
   );
-  lines.position.set(0, -0.18, -0.63);
+  lines.position.set(0, -0.18, center);
   scene.add(lines);
-  for (const x of [-18.8, 18.8]) for (const z of [-10.5, 9.35]) {
+  for (const x of [start.x + 0.7, end.x - 0.7]) for (const z of [start.z + 0.7, end.z - 0.7]) {
     geo.box(floor, [0.48, 0.12, 0.48], [x, 0.045, z], geo.edge);
   }
   const rack = new T.Group();
   scene.add(rack);
-  for (const x of [-10.5, -6.8, -2.7, 3.4, 7.68]) {
-    geo.support(rack, x, -7.58, 2.92);
-    geo.rod(rack, [x, 2.83, -8.1], [x, 2.83, -6.82], 0.055, geo.edge);
+  for (const [id, index, fractions] of [['07', 1, [0.52]], ['05', 1, [0.3, 0.7]], ['08M', 0, [0.32, 0.74]], ['04', 0, [0.29, 0.61, 0.83]]]) {
+    const points = ROUTES_3D[id];
+    for (const fraction of fractions) {
+      const { x, y, z } = points[index].clone().lerp(points[index + 1], fraction);
+      geo.support(rack, x, z, y - 0.13);
+    }
   }
-  for (const x of [-2.7, 3.9, 10.1]) {
-    geo.support(rack, x, -7.51, 7.97);
-    geo.rod(rack, [x, 7.98, -8.1], [x, 7.98, -6.86], 0.063, geo.edge);
-  }
-  for (const z of [-6.8, -0.2, 6.25]) geo.support(rack, -11.65, z, 0.38);
 }
 
 function buildEquipment(scene) {
-  const groups = {}, sight = {};
-  for (const [key, area] of Object.entries(AREAS)) {
-    if (key === 'plant') continue;
+  const groups = {}, models = {}, sight = {};
+  for (const [key, { position, scale }] of Object.entries(EQUIPMENT_LAYOUT)) {
     const group = new T.Group();
-    group.position.copy(geo.v3(area.position));
+    group.position.copy(position);
     group.userData.area = key;
     groups[key] = group;
+    const model = new T.Group();
+    if (scale) model.scale.set(...scale);
+    models[key] = model;
+    group.add(model);
     scene.add(group);
   }
-  geo.feeds(groups.feeds);
+  geo.feeds(models.feeds, FEED_OFFSETS);
   for (const [area, spec] of Object.entries(VESSELS)) {
-    sight[area] = { tag: spec.levelTag, ...geo.vessel(groups[area], spec) };
+    sight[area] = { tag: spec.levelTag, ...geo.vessel(models[area], spec) };
   }
-  sight.condenser = geo.condenser(groups.condenser);
-  geo.rotary(groups.compressor, 'compressor');
-  geo.terminal(groups.product, 0.70);
-  geo.terminal(groups.purge, 1.2);
-  for (const area of Object.keys(ANALYZER_TAPS)) geo.analyzer(groups[area]);
-
-  for (const area of ['pump_sep', 'pump_prod']) {
-    const model = new T.Group();
-    groups[area].add(model);
-    geo.rotary(model, 'pump');
-    for (const z of [-0.76,0.80]) geo.flange(groups[area], [0,0.70,z], [0,0,1], 0.113);
+  sight.condenser = geo.condenser(models.condenser);
+  for (const area of ['product', 'purge']) geo.terminal(models[area], EQUIPMENT_LAYOUT[area].terminalHeight);
+  for (const [area, left, right] of [
+    ['compressor', ROUTES_3D['08R'][0], ROUTES_3D['08I'].at(-1)],
+    ['pump_sep', ROUTES_3D['10S'].at(-1), ROUTES_3D['10'][0]],
+    ['pump_prod', ROUTES_3D['11S'].at(-1), ROUTES_3D['11'][0]],
+  ]) {
+    const model = models[area];
+    geo.rotary(model, area === 'compressor' ? 'compressor' : 'pump');
+    for (const endpoint of [left, right]) {
+      const port = endpoint.clone().sub(groups[area].position).toArray();
+      const [x, y, z] = port;
+      geo.rod(model, [x * 0.68, y, z], port, 0.135, geo.hardware);
+      geo.flange(model, port, [1,0,0], 0.113);
+    }
   }
-  for (const area of Object.keys(ANALYZER_TAPS)) {
+  for (const [area, points] of Object.entries(SAMPLE_ROUTES_3D)) {
+    geo.analyzer(models[area]);
     const group = groups[area];
-    const geometry = new T.TubeGeometry(pipePath(sampleRoute(area)), 20, 0.028, 6);
+    const geometry = new T.TubeGeometry(pipePath(points), 20, 0.028, 6);
     geometry.translate(-group.position.x, -group.position.y, -group.position.z);
     group.add(new T.Mesh(geometry, geo.hardware));
   }
-  return { groups, sight };
+  return { groups, models, sight };
 }
 
 function buildStreams(scene, groups) {
   const markerGeometry = new T.ConeGeometry(0.103, 0.31, 9);
   const markerMaterial = new T.MeshBasicMaterial({ color: readColor('--flow-marker'), toneMapped: false });
   return STREAMS.map((def) => {
-    const path = pipePath(def.points), length = path.getLength();
+    const path = pipePath(ROUTES_3D[def.id]), length = path.getLength();
     const color = new T.Color(readColor(MEDIA[def.media].colorToken));
     // Diagram and 3D pipes use the same media colors under any scene lighting.
     const material = new T.MeshBasicMaterial({ color, toneMapped: false });
@@ -109,10 +115,9 @@ function buildStreams(scene, groups) {
     }
     let valve = null;
     if (def.valve) {
-      const [number, distance] = def.valve;
-      const { point, tangent } = valvePosition(path, distance, length);
+      const { point, tangent } = valvePosition(def);
       const group = groups[def.area];
-      valve = geo.controlValve(group, point.sub(group.position), tangent, number);
+      valve = geo.controlValve(group, point.sub(group.position), tangent, def.valve);
     }
     return { def, path, length, markers, material, color, valve, phase: 0, flanges };
   });
@@ -120,7 +125,7 @@ function buildStreams(scene, groups) {
 
 function createLabels(host, onSelect) {
   const labels = {};
-  for (const [key, y] of Object.entries(primary)) {
+  for (const [key, position] of Object.entries(LABEL_POINTS)) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'model-tag';
@@ -129,26 +134,19 @@ function createLabels(host, onSelect) {
     button.innerHTML = `<small>${AREAS[key].code}</small><b>${AREAS[key].name}</b><span></span>`;
     button.addEventListener('click', () => onSelect(key));
     host.append(button);
-    const position = geo.v3(AREAS[key].position);
-    position.y = y;
-    if (key === 'compressor') position.x -= 1.0;
-    if (key === 'separator') position.x += 0.22;
-    if (key === 'stripper') position.x += 1.15;
     labels[key] = { button, position, value: button.querySelector('span'), width: 70, height: 36 };
   }
   return labels;
 }
 
 function makePortLabels(host) {
-  return PORTS.map(([text, origin, medium, circuit]) => {
+  return PORTS_3D.map(([text, point, medium, circuit]) => {
     const el = document.createElement('span');
     el.className = 'model-port';
     el.textContent = text;
     el.style.setProperty('--route-color', `var(${MEDIA[medium].colorToken})`);
     el.dataset.circuit = circuit;
     host.append(el);
-    const point = geo.v3(origin);
-    point.y += circuit ? 0.44 : 0.02;
     return { el, point, circuit };
   });
 }
@@ -220,9 +218,9 @@ export function mountScene(container, host, select, pick = () => {}) {
   scene.add(rim);
 
   setupSite(scene);
-  const { groups, sight } = buildEquipment(scene);
+  const { groups, models, sight } = buildEquipment(scene);
   const streams = buildStreams(scene, groups);
-  const internal = buildInternals(groups, sight);
+  const internal = buildInternals(models, sight);
   const labels = createLabels(host, select);
   const labelEntries = Object.entries(labels);
   const parts = makePartLabels(host, internal.parts, pick);
@@ -264,8 +262,8 @@ export function mountScene(container, host, select, pick = () => {}) {
     // Large auxiliary pipes/pumps belong to the unit but the orbit centers on its vessel.
     const spans = { reactor: 2.25, separator: 1.69, stripper: 1.56, feeds: 4.2, condenser: 2.33, compressor: 1.7 };
     geometryBounds[area] = spans[area] ?? 0.77;
-    box.setFromObject(group);
-    group.userData.top = primary[area] ?? Math.min(box.max.y, 6);
+    box.setFromObject(models[area]);
+    group.userData.top = box.max.y;
   }
 
   new ResizeObserver(() => {
@@ -284,8 +282,8 @@ export function mountScene(container, host, select, pick = () => {}) {
   function go(area, resetOrientation = false, tag) {
     focus = area;
     container.dataset.focus = area;
-    const equipment = AREAS[area];
-    desired.copy(area === 'plant' ? home : geo.v3(equipment.position));
+    const group = groups[area];
+    desired.copy(group ? group.position : home);
     if (area !== 'plant') desired.y = Math.min(4, groups[area].userData.top * 0.47);
     const valve = streams.find((line) => line.valve?.userData.valve === tag && line.def.area === area)?.valve;
     const zoom = area === 'plant' ? 1 : Math.min(3.3, Math.max(2.04, 19.2 / (groups[area].userData.top + 1.9)));
@@ -297,7 +295,7 @@ export function mountScene(container, host, select, pick = () => {}) {
     if (showInternals) applyInternals();
     highlight.visible = area !== 'plant';
     if (highlight.visible) {
-      highlight.position.copy(valve ? valve.getWorldPosition(new T.Vector3()) : geo.v3(equipment.position));
+      highlight.position.copy(valve ? valve.getWorldPosition(new T.Vector3()) : group.position);
       highlight.position.y = 0.247;
       highlight.scale.setScalar(valve ? 0.44 : geometryBounds[area]);
     }

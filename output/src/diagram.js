@@ -6,7 +6,7 @@ import { reading } from './ui.js';
 const routePath = (points) => 'M' + points.map(([x, y]) => `${x} ${y}`).join('L');
 const METERS = [
   ['05', 554, 112], ['06', 222, 300], ['07', 357, 128], ['08', 693, 67],
-  ['09', 819, 131], ['10', 824, 266], ['11', 983, 407], ['12', 371, 384], ['13', 517, 316],
+  ['09', 819, 131], ['10', 824, 266], ['11', 976, 428], ['12', 371, 384], ['13', 517, 316],
 ];
 const LEVELS = {
   reactor: { tag: 8, body: BODIES.reactor, datum: 354, range: 65 },
@@ -78,7 +78,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
   const flowReadouts = Object.entries(FLOW_READOUTS).map(([id, [x, y]]) =>
     `<text class="pfd-flow-reading" data-flow-reading="${id}" x="${x}" y="${y}"></text>`
   ).join('');
-  const samples = Object.values(SAMPLES).flatMap(([, from, to]) => routePath([from, to])).join('');
+  const samples = Object.values(SAMPLES).map(([, from, to]) => routePath([from, to])).join('');
   host.innerHTML = `<svg role="group" aria-label="Downs와 Vogel Fig. 1 공정 흐름도" class="pfd-svg" viewBox="0 0 ${VIEWBOX.join(' ')}">
     <defs>${arrows}${levelClips}</defs>${lines}
     <g class="pfd-samples">${path(samples)}</g>

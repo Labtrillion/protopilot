@@ -175,11 +175,10 @@ export function rotary(group, kind) {
   box(core, [0.5, 0.3, 0.37], [-0.49, 1.62, 0], dark);
   box(core, [0.46, 0.055, 0.31], [-0.49, 1.79, 0], lightSteel);
   gauge(core, [0.58, 1.85, 0.55], 0.75);
-  if (!large) group.rotation.y = Math.PI / 2;
 }
 
-export function feeds(group) {
-  for (const [index, z] of [-3.45, -1.25, 0.95, 3.15].entries()) {
+export function feeds(group, offsets) {
+  for (const [index, z] of offsets.entries()) {
     const skid = new T.Group();
     skid.position.z = z;
     group.add(skid);
@@ -202,7 +201,7 @@ export function analyzer(group) {
   box(group, [0.39, 0.26, 0.032], [0, 1.2, 0.286], dark);
   box(group, [0.28, 0.12, 0.011], [0, 1.22, 0.307], display);
   for (let i = 0; i < 4; i++) box(group, [0.45, 0.023, 0.02], [0, 0.58 + i * 0.062, 0.285], dark);
-  rod(group, [0.22, 1.55, 0], [0.22, 1.84, 0], 0.042, hardware);
+  rod(group, [0, 1.55, 0], [0, 1.84, 0], 0.042, hardware);
 }
 
 export function terminal(group, y) {
@@ -213,7 +212,8 @@ export function terminal(group, y) {
 export function controlValve(group, point, tangent, number) {
   const valve = new T.Group();
   valve.position.copy(point);
-  valve.rotation.y = -Math.atan2(tangent.z, tangent.x);
+  if (tangent.x < 0) tangent.negate();
+  valve.quaternion.setFromUnitVectors(new T.Vector3(1, 0, 0), tangent);
   group.add(valve);
   valve.userData = { valve: `XMV(${number})` };
   rod(valve, [-0.24, 0, 0], [0.24, 0, 0], 0.175, valveColor, 12);
