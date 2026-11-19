@@ -4,7 +4,7 @@
 
 ProtoPilot은 Tennessee Eastman Process(TEP)에서 알람 발생 시점의 공정 상태를 재현합니다. 표준운전절차(SOP)와 계측·조작 이력을 바탕으로 Zoro-1이 제안한 대응안을 시험하고, 공정 제약 충족 여부와 비용·생산량을 비교합니다.
 
-**[Brev 라이브 데모](https://protopilot-rx8cin03n.gobrev.dev/)** · [해커톤 발표 자료](https://docs.google.com/presentation/d/1OP7zI-4293JVnL-ZUxfro8mzeUhKAqT7yBn7WfbLIVM/edit?slide=id.p1#slide=id.p1) · [데모 영상](#데모-영상) · [제출 에이전트 로그](docs/agent-log.md) · [기술 문서](#기술과-관련-문서)
+**[Brev 라이브 데모](https://protopilot-rx8cin03n.gobrev.dev/)** · [해커톤 발표 자료](https://docs.google.com/presentation/d/1OP7zI-4293JVnL-ZUxfro8mzeUhKAqT7yBn7WfbLIVM/edit?slide=id.p1#slide=id.p1) · [데모 영상](docs/media/protopilot-demo.mp4) · [제출 에이전트 로그](docs/agent-log.md) · [기술 문서](#기술과-관련-문서)
 
 <h2 align="center">팀 소개</h2>
 
@@ -94,12 +94,6 @@ ProtoPilot은 Tennessee Eastman Process(TEP)에서 알람 발생 시점의 공�
 </table>
 
 공개 데모는 한국 IP에서 로그인 없이 이용할 수 있습니다. [데모 시나리오 목록](#데모-시나리오)
-
-## 데모 영상
-
-[해커톤 데모 영상 보기 · 2분 30초](docs/media/protopilot-demo.mp4)
-
-라이브 데모에서 시나리오 4의 재생, 알람 대응 검토 및 분기 비교를 확인할 수 있습니다. [Brev 라이브 데모](https://protopilot-rx8cin03n.gobrev.dev/)
 
 ## 공개 데모 검증 결과
 
