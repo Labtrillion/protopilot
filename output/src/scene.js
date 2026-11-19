@@ -10,8 +10,9 @@ import { readColor } from './palette.js';
 import * as geo from './geometry.js';
 
 const initialOffset = geo.v3(OVERVIEW.offset);
-const initialOrbit = new T.Spherical().setFromVector3(initialOffset);
-const orbitLimit = T.MathUtils.degToRad(25);
+const initialPolarAngle = new T.Spherical().setFromVector3(initialOffset).phi;
+const verticalOrbitLimit = T.MathUtils.degToRad(25);
+const clickSlop = 5;
 const home = geo.v3(OVERVIEW.target);
 const up = new T.Vector3(0, 1, 0);
 const primaryLabels = new Set(['feeds', 'reactor', 'condenser', 'separator', 'stripper']);
@@ -225,12 +226,14 @@ export function mountScene(container, host, select, pick, selectCircuit) {
   camera.position.copy(home).add(initialOffset);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.copy(home);
+  // Horizontal left-button panning shares the canvas's click/drag detection below.
   controls.enablePan = false;
+  controls.mouseButtons.LEFT = null;
   controls.mouseButtons.MIDDLE = null;
-  controls.mouseButtons.RIGHT = null;
-  controls.minAzimuthAngle = initialOrbit.theta - orbitLimit;
-  controls.maxAzimuthAngle = initialOrbit.theta + orbitLimit;
-  controls.minPolarAngle = controls.maxPolarAngle = initialOrbit.phi;
+  controls.mouseButtons.RIGHT = T.MOUSE.ROTATE;
+  controls.minPolarAngle = initialPolarAngle - verticalOrbitLimit;
+  controls.maxPolarAngle = initialPolarAngle + verticalOrbitLimit;
+  controls.cursorStyle = 'grab';
   controls.rotateSpeed = 0.35;
   controls.minZoom = 1;
   controls.maxZoom = 3.5;
@@ -492,13 +495,21 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     if (event.button === 0) down = { id: event.pointerId, x: event.clientX, y: event.clientY };
   });
   renderer.domElement.addEventListener('pointermove', (event) => {
-    if (down?.id === event.pointerId && Math.hypot(event.clientX - down.x, event.clientY - down.y) > 5) down = null;
+    if (down?.id !== event.pointerId) return;
+    const dx = event.clientX - down.x;
+    if (!down.dragged && Math.hypot(dx, event.clientY - down.y) <= clickSlop) return;
+    down.dragged = true;
+    down.x = event.clientX;
+    if (event.pointerType === 'touch' || dx === 0) return;
+    frame = null;
+    camera.updateMatrix();
+    controls.pan(dx, 0);
   });
   renderer.domElement.addEventListener('pointerup', (event) => {
     if (event.button !== 0 || down?.id !== event.pointerId) return;
-    const withinClickDistance = Math.hypot(event.clientX - down.x, event.clientY - down.y) <= 5;
+    const isClick = !down.dragged && Math.hypot(event.clientX - down.x, event.clientY - down.y) <= clickSlop;
     down = null;
-    if (!withinClickDistance) return;
+    if (!isClick) return;
     const bounds = renderer.domElement.getBoundingClientRect();
     const x = event.clientX - bounds.left, y = event.clientY - bounds.top;
     const exact = hitAt(x, y);
