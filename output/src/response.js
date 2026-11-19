@@ -78,7 +78,7 @@ function draw(canvas, points, unit) {
   }
 }
 
-export function mountResponse(onSetpoint) {
+export function mountResponse(onSetpoint, onSelect) {
   const select = byId('response-select'), adjust = byId('response-adjust');
   const label = byId('response-values'), canvas = byId('response-chart');
   const histories = new Map();
@@ -101,7 +101,7 @@ export function mountResponse(onSetpoint) {
     }
     draw(canvas, points, spec?.unit);
   };
-  select.addEventListener('change', () => { selected = select.value; render(); });
+  select.addEventListener('change', () => { selected = select.value; onSelect(selected); });
   adjust.addEventListener('click', () => onSetpoint(selected));
   new ResizeObserver(render).observe(canvas.parentElement);
   return {

@@ -1,7 +1,7 @@
 import { AREAS } from './topology.js';
 import { byId, option, reading } from './ui.js';
 
-export function setupControls(schema, current, command, focus) {
+export function setupControls(schema, current, command, onAdjustment) {
   const dialog = byId('adjust-dialog');
   const type = byId('adjust-kind');
   const target = byId('adjust-target');
@@ -90,7 +90,7 @@ export function setupControls(schema, current, command, focus) {
     apply.disabled = release.disabled = true;
     error.hidden = true;
     try {
-      await command(body, () => focus(item.area, id, kind));
+      await command(body, () => onAdjustment(kind, item));
       dialog.close();
     } catch (failure) {
       error.textContent = failure.message;

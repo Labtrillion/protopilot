@@ -1,7 +1,8 @@
-import { AREAS } from './topology.js';
+import { AREAS, codeFor } from './topology.js';
 import { mountPlantView } from './plant-view.js';
 import { mountResponse } from './response.js';
 import { setupControls } from './controls.js';
+import { mountSignal, signalTag } from './signal.js';
 import {
   byId, elapsed, icon, initIcons, option, renderAlarms, renderInspector, renderKpis, renderRows, wallTime,
 } from './ui.js';
@@ -13,10 +14,11 @@ const connection = byId('connection'), soundBtn = byId('sound');
 const pageId = crypto.randomUUID();
 let plantView, openControls, status, audio, buzzer = false, noticeTimer, pageRecorded = false;
 let circuit = '', setpoints = [], telemetryView = 'values';
-let focusedArea = 'plant', selectedTag = '', alarmTab = 'active', connected = false;
+let focusedArea = 'plant', selection, alarmTab = 'active', connected = false;
 let seenAlarms = new Set(), visibleChannels = [];
 
-const response = mountResponse((id) => openControls?.(id));
+const signal = mountSignal();
+const response = mountResponse((id) => openControls?.(id), (id) => trackSetpoint(id));
 
 function showTelemetry(view, setpoint) {
   telemetryView = view;
@@ -29,19 +31,40 @@ function showTelemetry(view, setpoint) {
 }
 
 function inspector() {
-  const configured = setpoints.find((item) => item.id === selectedTag) ?? setpoints.find((item) => item.area === focusedArea);
-  const channel = channels.get(selectedTag);
-  renderInspector(focusedArea, status, channels, circuit, configured, channel?.group === 'manipulated_variables' ? channel : null);
+  const chosen = selection?.item.area === focusedArea ? selection : null;
+  const configured = chosen?.kind === 'setpoint' ? chosen.item : setpoints.find((item) => item.area === focusedArea);
+  renderInspector(focusedArea, status, channels, circuit, configured, chosen?.kind === 'mv' ? chosen.item : null, signalTag(selection));
 }
 
-function focus(area, tag = '', resetCamera = false) {
+function follow(next) {
+  selection = next;
+  signal.select(next);
+  plantView?.track(next.item.area, signalTag(next));
+}
+
+function focus(area, tag = '', resetCamera = false, next) {
   if (!(area in AREAS)) return;
+  const channel = channels.get(tag || codeFor(AREAS[area].tags[0]));
+  if (next) follow(next);
+  else if (channel && (tag || area !== 'plant')) {
+    follow({ kind: channel.group === 'manipulated_variables' ? 'mv' : 'channel', item: channel });
+  }
   focusedArea = area;
-  selectedTag = tag;
   select.value = area;
   plantView?.focus(area, resetCamera, tag);
   inspector();
-  renderRows(visibleChannels, status, selectedTag);
+  renderRows(visibleChannels, status, signalTag(selection));
+}
+
+function trackSetpoint(id, jump = false) {
+  const item = setpoints.find((entry) => entry.id === id);
+  if (!item) return;
+  focus(item.area, item.pv, false, { kind: 'setpoint', item });
+  showTelemetry('response', id);
+  if (jump) {
+    byId('response-select').focus({ preventScroll: true });
+    byId('response-view').scrollIntoView({ block: 'nearest' });
+  }
 }
 
 function note(message, isError = false) {
@@ -78,7 +101,7 @@ function filter() {
     return (!group || group === ch.group) && (!area || area === ch.area) && text.includes(query);
   });
   byId('matches').textContent = `${visibleChannels.length}개`;
-  renderRows(visibleChannels, status, selectedTag);
+  renderRows(visibleChannels, status, signalTag(selection));
 }
 
 function renderConnection() {
@@ -91,6 +114,7 @@ function renderConnection() {
   byId('open-controls').disabled = !connected;
   byId('pressure-test').disabled = !connected;
   byId('clear-test').disabled = !connected;
+  byId('tab-response').disabled = !setpoints.length;
   response.enable(connected);
   byId('record-light').classList.toggle('online', connected && !status?.error);
   byId('record-status').textContent = connected && !status?.error && status ? `로컬 기록 · ${status.sample.toLocaleString('ko-KR')} 샘플` : '로컬 기록 연결 확인';
@@ -131,11 +155,12 @@ function receive(next) {
   if (document.activeElement !== speed) speed.value = status.speed;
   byId('clear-test').hidden = !('XMEAS(7)' in status.offsets);
   if (sampled) renderKpis(status, channels, trends);
-  renderRows(visibleChannels, status, selectedTag);
+  renderRows(visibleChannels, status, signalTag(selection));
   inspector();
   renderAlarms(status, alarmTab, channels);
   plantView?.update(status);
   response.update(status);
+  signal.update(status, connected);
 }
 
 async function request(path, options = {}) {
@@ -145,12 +170,12 @@ async function request(path, options = {}) {
   return data;
 }
 
-async function command(body, beforeReceive) {
+async function command(body, onSuccess) {
   const result = await request('/api/command', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
-  beforeReceive?.(result);
   if (!status || result.version >= status.version) receive(result);
+  onSuccess?.(result);
 }
 const doCommand = (body, callback) => command(body, callback).catch((error) => note(error.message, true));
 
@@ -171,6 +196,7 @@ function selectTag(tag, navigate = false) {
 function attachEvents() {
   run.addEventListener('click', () => doCommand({ op: 'run', enabled: !status.running }));
   reset.addEventListener('click', () => doCommand({ op: 'reset' }, () => {
+    follow({ kind: 'channel', item: channels.get('XMEAS(7)') });
     focus('plant', '', true);
     note('Mode 1 새 실행을 생성했습니다.');
   }));
@@ -181,10 +207,19 @@ function attachEvents() {
     focus('plant', '', true);
   });
   byId('tab-values').addEventListener('click', () => showTelemetry('values'));
-  byId('tab-response').addEventListener('click', () => showTelemetry('response'));
+  byId('tab-response').addEventListener('click', () => {
+    showTelemetry('response', setpoints.find((item) => item.pv === signalTag(selection))?.id);
+  });
+  byId('signal-locate').addEventListener('click', () => {
+    const tag = signalTag(selection);
+    plantView.reveal(tag);
+    focus(selection.item.area, tag, false, selection);
+    byId('stage').scrollIntoView({ block: 'nearest' });
+  });
+  byId('signal-response').addEventListener('click', () => trackSetpoint(selection?.item.id, true));
   byId('inspector-content').addEventListener('click', (event) => {
     const responseButton = event.target.closest('[data-response]');
-    if (responseButton) showTelemetry('response', responseButton.dataset.response);
+    if (responseButton) trackSetpoint(responseButton.dataset.response, true);
     const controlButton = event.target.closest('[data-control]');
     if (controlButton) openControls?.(controlButton.dataset.control);
   });
@@ -195,7 +230,12 @@ function attachEvents() {
   for (const id of ['inspector-content', 'kpis', 'rows']) {
     byId(id).addEventListener('click', (event) => {
       const button = event.target.closest('button[data-tag]');
-      if (button) selectTag(button.dataset.tag, id !== 'rows');
+      if (!button) return;
+      selectTag(button.dataset.tag, id === 'inspector-content');
+      if (id !== 'inspector-content') {
+        byId('signal-heading').focus({ preventScroll: true });
+        byId('signal-detail').scrollIntoView({ block: 'nearest' });
+      }
     });
   }
   for (const [id, tab] of [['active-tab', 'active'], ['history-tab', 'history']]) {
@@ -216,7 +256,7 @@ function attachEvents() {
     plantView?.showPressure();
     focus('reactor', 'XMEAS(7)');
   }));
-  byId('clear-test').addEventListener('click', () => doCommand({ op: 'offset', id: 'XMEAS(7)', value: 0 }));
+  byId('clear-test').addEventListener('click', () => doCommand({ op: 'offset', id: 'XMEAS(7)', value: 0 }, () => selectTag('XMEAS(7)')));
   soundBtn.addEventListener('click', async () => {
     if (buzzer) {
       buzzer = false;
@@ -244,10 +284,14 @@ async function poll() {
       byId('channel-group').insertAdjacentHTML('beforeend', schema.groups.map((g) => option(g.id, `${g.label} · ${g.count}`)).join(''));
       setpoints = schema.setpoints;
       response.init(setpoints);
-      openControls = setupControls(schema, () => status, command, (area, id, kind) => {
-        focus(area, id);
-        if (kind === 'setpoint') showTelemetry('response', id);
+      openControls = setupControls(schema, () => status, command, (kind, item) => {
+        const next = { kind, item };
+        const tag = signalTag(next);
+        plantView.reveal(tag);
+        focus(item.area, tag, false, next);
+        if (kind === 'setpoint') showTelemetry('response', item.id);
       });
+      follow({ kind: 'channel', item: channels.get('XMEAS(7)') });
       filter();
       inspector();
     }
@@ -260,6 +304,7 @@ async function poll() {
   } catch {
     connected = false;
     renderConnection();
+    signal.update(status, connected);
   } finally {
     setTimeout(poll, connected ? 430 : 1400);
   }
