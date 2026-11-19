@@ -40,7 +40,8 @@ function describe(signal, status, format) {
   }
   if (kind === 'setpoint') {
     const location = LEVEL_TAGS.has(tag) ? '설비 액위 목표선' : `${tag} 실측 추세`;
-    return [location, `표시 PV ${format(measured)}${paused}`, 'SP 목표'];
+    const test = offset != null ? ` · 센서 시험 표시값 ${format(measured)}` : '';
+    return [location, `실측 PV ${format(native ?? measured)}${test}${paused}`, 'SP 목표'];
   }
   if (kind === 'disturbance') return ['시뮬레이션 외란', `외란 상태가 모델 입력에 반영됩니다${paused}`, '적용 상태'];
   if (kind === 'limit') {
@@ -97,7 +98,7 @@ function drawTrace(canvas, values, min, max, discrete, color) {
   }
 }
 
-export function mountSignal() {
+export function mountSignal(loopFor = () => null) {
   const nodes = Object.fromEntries(['frame', 'detail', 'tag', 'name', 'value-label', 'value', 'previous', 'trace-count', 'trace-range',
     'chart', 'location', 'effect', 'response', 'locate'].map((name) => [name, byId(`signal-${name}`)]));
   const stage = byId('stage-signal'), stageTag = byId('stage-signal-tag'), stageValue = byId('stage-signal-value');
@@ -133,11 +134,13 @@ export function mountSignal() {
     nodes.location.textContent = `${code} · ${location}`;
     nodes.effect.textContent = effect;
     nodes.effect.hidden = !effect;
-    nodes.response.hidden = kind !== 'setpoint';
+    nodes.response.hidden = kind !== 'setpoint' && !loopFor(tag);
     nodes.locate.hidden = item.area === 'plant';
     stage.classList.toggle('alarming', alarming);
     nodes.detail.classList.toggle('alarming', alarming);
-    stageTag.textContent = `${code} · ${tag}${kind === 'setpoint' ? ' SP' : kind === 'mv' ? ' 명령' : ''}`;
+    const tested = kind !== 'setpoint' && tag in status.offsets;
+    stageTag.textContent = `${code} · ${tag}${kind === 'setpoint' ? ' SP' : kind === 'mv' ? ' 명령' : ''}${tested ? ' · 시험' : ''}`;
+    stage.classList.toggle('tested', tested);
     stageValue.textContent = format(current);
 
     const numeric = values.filter(Number.isFinite);

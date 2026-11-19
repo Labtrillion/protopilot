@@ -189,6 +189,8 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
     flow(on) { svg.classList.toggle('show-flow', on); },
     pressure(on) { svg.classList.toggle('show-pressure', on); },
     update(status) {
+      // Displayed numbers carry a visible marker while a sensor test offset is active.
+      const testMark = (tag) => (tag && tag in status.offsets ? ' · 시험' : '');
       svg.classList.toggle('running', status.running);
       for (const stream of STREAMS) {
         const tag = codeFor(stream.tag);
@@ -199,7 +201,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
         line.classList.toggle('no-flow', ratio < 0.015);
         line.style.setProperty('--speed', `${Math.min(5, 1.5 / Math.max(0.28, ratio))}s`);
         const label = flowByStream.get(stream.id);
-        if (label) label.textContent = `${reading(value)} ${stream.media === 'gas' ? 'kscm/h' : 'm³/h'}`;
+        if (label) label.textContent = `${reading(value)} ${stream.media === 'gas' ? 'kscm/h' : 'm³/h'}${testMark(tag)}`;
       }
       for (const node of svg.querySelectorAll('.pfd-unit,.pfd-symbol,.pfd-pressure')) {
         const area = node.dataset.area ?? node.dataset.symbol ?? node.dataset.pressure;
@@ -217,7 +219,8 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve) {
         line.setAttribute('y2', y);
       }
       for (const node of svg.querySelectorAll('.pfd-pressure')) {
-        node.textContent = `${reading(status.values[codeFor(CORE_PRESSURES[node.dataset.pressure])])} kPa(g)`;
+        const tag = codeFor(CORE_PRESSURES[node.dataset.pressure]);
+        node.textContent = `${reading(status.values[tag])} kPa(g)${testMark(tag)}`;
       }
     },
   };

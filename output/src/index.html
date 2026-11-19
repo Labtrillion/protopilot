@@ -30,6 +30,7 @@
             <button id="view-3d" type="button" data-icon="box" aria-pressed="true">3D 모델</button>
             <button id="view-2d" type="button" data-icon="diagram" aria-pressed="false">2D 공정도</button>
           </div>
+          <button id="return-back" type="button" class="return-back" data-icon="reset" hidden><span id="return-label">이전 위치로 돌아가기</span></button>
           <button id="overview" type="button" data-icon="scan">전체 보기</button>
         </div>
       </div>
@@ -45,12 +46,13 @@
           <button id="view-flow" type="button" data-icon="flow" aria-pressed="true">유량</button>
           <button id="view-pressure" type="button" data-icon="gauge" aria-pressed="true">가스 압력</button>
           <button id="toggle-tags" type="button" data-icon="tag" aria-label="3D 설비 태그 표시" aria-pressed="true" title="설비 태그 표시"></button>
-          <button id="toggle-internals" type="button" data-icon="layers" aria-pressed="false">내부 전체</button>
+          <button id="toggle-internals" type="button" data-icon="layers" aria-pressed="false"><span id="internals-label">내부 전체</span></button>
         </div>
       </div>
       <div class="stage" id="stage" data-view="3d">
         <div class="stage-meta">
           <div class="stage-caption"><span class="crosshair">+</span><span id="stage-caption-text">공정 모델</span></div>
+          <div id="interior-parts" class="interior-parts" role="group" aria-label="내부 부품 태그" hidden></div>
           <div id="stage-signal" class="stage-signal" hidden><code id="stage-signal-tag"></code><b id="stage-signal-value"></b></div>
         </div>
         <div class="stage-display">
@@ -135,7 +137,11 @@
       </div>
       <div id="channel-view" class="channel-view">
         <div class="filter-bar">
-          <label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="태그 또는 계측명 검색" aria-label="태그 또는 계측명 검색"></label>
+          <div class="segments channel-scope" role="group" aria-label="채널 범위">
+            <button type="button" id="scope-primary" aria-pressed="true">주요 계측</button>
+            <button type="button" id="scope-all" aria-pressed="false">전체 채널</button>
+          </div>
+          <label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="전체 채널에서 태그 또는 계측명 검색" aria-label="전체 채널에서 태그 또는 계측명 검색"></label>
           <label><span class="sr-only">채널 유형</span><select id="channel-group"><option value="">모든 채널</option></select></label>
           <label><span class="sr-only">설비 필터</span><select id="channel-area"><option value="">모든 설비</option></select></label>
           <span id="matches" class="matches"></span>

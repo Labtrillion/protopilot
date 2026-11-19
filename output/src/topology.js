@@ -79,6 +79,14 @@ export const CORE_PRESSURES = {
   reactor: 7, separator: 13, stripper: 16,
 };
 
+// Instruments mounted on interior parts of the 3D vessels: [tag, part name].
+export const INTERIOR_PARTS = {
+  reactor: [['XMEAS(8)', '액면'], ['XMV(12)', '교반기'], ['XMEAS(21)', '냉각 코일']],
+  separator: [['XMEAS(12)', '액면']],
+  stripper: [['XMEAS(15)', '액면']],
+};
+export const INTERIOR_TAGS = new Set(Object.values(INTERIOR_PARTS).flat().map(([tag]) => tag));
+
 export const CIRCUITS = {
   recycle: {
     title: '재순환', colorToken: MEDIA.gas.colorToken, paths: [

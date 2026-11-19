@@ -10,6 +10,8 @@ const COLORS = {
   grid: readColor('--plot-grid'), label: readColor('--muted'),
 };
 const CHANGES = 360;
+// Deviation and the PV trend use the raw measurement; a sensor test offset only changes the displayed value.
+const measuredPv = (status, tag) => status.native_values?.[tag] ?? status.values[tag];
 
 function draw(canvas, points, unit) {
   const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -91,18 +93,23 @@ export function mountResponse(onSetpoint, onSelect) {
     if (!visible) return;
     const spec = definitions.find((entry) => entry.id === selected);
     const points = histories.get(selected) ?? [];
-    const last = points.at(-1);
+    // Cards read the latest status so test apply/clear shows at once, even while paused.
+    const last = latest && spec ? { pv: measuredPv(latest, spec.pv), sp: latest.setpoints[spec.id] } : points.at(-1);
     if (spec) {
       const n = (v) => reading(v, spec.unit);
       const delta = Number.isFinite(last?.pv) && Number.isFinite(last?.sp) ? last.pv - last.sp : null;
       const control = relatedControl[selected];
       const command = latest?.manual?.[control] ?? latest?.values[control];
+      const offset = latest?.offsets?.[spec.pv];
+      const tested = offset != null;
       label.innerHTML = `
-        <div><span>PV 실측 · ${spec.pv}</span><b>${n(last?.pv)} <small>${spec.unit}</small></b></div>
+        <div><span>PV 실측${tested ? ' (원계측)' : ''} · ${spec.pv}</span><b>${n(last?.pv)} <small>${spec.unit}</small></b></div>
         <div><span>SP 목표</span><b>${n(last?.sp)} <small>${spec.unit}</small></b></div>
-        <div><span>편차 (PV − SP)</span><b>${delta > 0 ? '+' : ''}${n(delta)} <small>${spec.unit}</small></b></div>
-        <div><span>${control} · 실제 / 명령</span><b>${reading(latest?.actuators?.[control])}% <small>/ ${reading(command)}%</small></b></div>`;
-      canvas.setAttribute('aria-label', `${spec.label} 추세, 실측 ${n(last?.pv)} ${spec.unit}, 목표 ${n(last?.sp)} ${spec.unit}`);
+        <div><span>편차 (실측 PV − SP)</span><b>${delta > 0 ? '+' : ''}${n(delta)} <small>${spec.unit}</small></b></div>
+        ${control ? `<div><span>${control} · 실제 / 명령</span><b>${reading(latest?.actuators?.[control])}% <small>/ ${reading(command)}%</small></b></div>` : ''}
+        ${tested ? `<div class="response-test"><span>센서 시험 표시값 · 제어·편차 계산에 미사용</span><b>${n(latest.values[spec.pv])} <small>${spec.unit}</small></b>
+          <span>시험 오프셋 ${offset > 0 ? '+' : ''}${n(offset)} ${spec.unit}</span></div>` : ''}`;
+      canvas.setAttribute('aria-label', `${spec.label} 추세, 실측 ${n(last?.pv)} ${spec.unit}, 목표 ${n(last?.sp)} ${spec.unit}${tested ? `, 센서 시험 표시값 ${n(latest.values[spec.pv])} ${spec.unit}` : ''}`);
     }
     draw(canvas, points, spec?.unit);
   };
@@ -115,6 +122,7 @@ export function mountResponse(onSetpoint, onSelect) {
       select.innerHTML = items.map((item) => option(item.id, `${item.label} · ${item.pv}`)).join('');
       select.value = selected;
     },
+    selected: () => selected,
     enable(connected) { select.disabled = !connected; adjust.disabled = !connected; },
     show(enabled, id) {
       if (id && definitions.some((item) => item.id === id)) selected = id;
@@ -128,7 +136,7 @@ export function mountResponse(onSetpoint, onSelect) {
       for (const item of definitions) {
         const series = histories.get(item.id) ?? [];
         const before = series.at(-1);
-        const point = { time: status.time_hours, sample: status.sample, pv: status.values[item.pv], sp: status.setpoints[item.id] };
+        const point = { time: status.time_hours, sample: status.sample, pv: measuredPv(status, item.pv), sp: status.setpoints[item.id] };
         if (!before || before.sample !== point.sample || before.sp !== point.sp) {
           series.push(point);
           if (series.length > CHANGES) series.shift();

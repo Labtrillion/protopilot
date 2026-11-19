@@ -178,7 +178,23 @@ function makePortLabels(host) {
   });
 }
 
-export function mountScene(container, host, select) {
+function makePartLabels(host, parts, onPick) {
+  return parts.map((part) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'model-part';
+    button.dataset.tag = part.tag;
+    button.hidden = true;
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', `${AREAS[part.area].code} 내부 ${part.name} · ${part.tag} 추적`);
+    button.innerHTML = `<b>${part.name}</b><small>${part.tag}</small>`;
+    button.addEventListener('click', () => onPick(part.tag, part.area));
+    host.append(button);
+    return { ...part, button, width: 64, height: 30, point: new T.Vector3() };
+  });
+}
+
+export function mountScene(container, host, select, pick = () => {}) {
   const scene = new T.Scene();
   const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(1.65, window.devicePixelRatio));
@@ -234,14 +250,16 @@ export function mountScene(container, host, select) {
   const internal = buildInternals(groups, sight);
   const labels = createLabels(host, select);
   const labelEntries = Object.entries(labels);
+  const parts = makePartLabels(host, internal.parts, pick);
+  const sized = new Map([...labelEntries.map(([, label]) => [label.button, label]), ...parts.map((part) => [part.button, part])]);
   const labelSizes = new ResizeObserver((entries) => {
     for (const { target, borderBoxSize } of entries) {
       const { inlineSize, blockSize } = borderBoxSize[0];
       if (!inlineSize || !blockSize) continue;
-      Object.assign(labels[target.dataset.area], { width: inlineSize, height: blockSize });
+      Object.assign(sized.get(target), { width: inlineSize, height: blockSize });
     }
   });
-  for (const [, label] of labelEntries) labelSizes.observe(label.button);
+  for (const button of sized.keys()) labelSizes.observe(button);
   const ports = makePortLabels(host);
   const selectionColor = readColor('--accent');
   const warningColor = readColor('--warning');
@@ -261,7 +279,7 @@ export function mountScene(container, host, select) {
   const cameraOffset = new T.Vector3();
   const box = new T.Box3();
   let width = 1, height = 1, focus = 'plant', showFlow = true, showPressure = true, activeCircuit = '', showLabels = true, showInternals = false, displayed = true, frame = null, data = null;
-  let trackedArea = '';
+  let trackedArea = '', trackedTag = '';
   let down = null, last = 0, framing = false;
   const alertAreas = new Set();
   const geometryBounds = {};
@@ -299,12 +317,46 @@ export function mountScene(container, host, select) {
       valve.getWorldPosition(desired);
       desired.y = Math.max(1.3, desired.y);
     }
-    frame = { zoom, resetOrientation };
+    frame = { zoom, offset: resetOrientation ? initialOffset : null };
+    if (showInternals) applyInternals();
     highlight.visible = area !== 'plant';
     if (highlight.visible) {
       highlight.position.copy(valve ? valve.getWorldPosition(new T.Vector3()) : geo.v3(equipment.position));
       highlight.position.y = 0.247;
       highlight.scale.setScalar(valve ? 0.44 : geometryBounds[area]);
+    }
+  }
+
+  // A selected unit with an interior shows only its own section; otherwise every interior is shown.
+  function applyInternals() {
+    const shown = internal.show(showInternals, focus in sight ? focus : '');
+    container.dataset.internals = shown.join(',');
+    renderer.shadowMap.needsUpdate = true;
+  }
+
+  function projectParts(placed) {
+    for (const part of parts) {
+      const { button } = part;
+      const own = focus === part.area;
+      if (!showInternals || !internal.visible(part.area) || (!showLabels && !own)) {
+        button.hidden = true;
+        continue;
+      }
+      part.anchor.getWorldPosition(part.point);
+      projected.copy(part.point).project(camera);
+      const x = (projected.x + 1) * width / 2, y = (1 - projected.y) * height / 2;
+      const left = x - part.width / 2, right = x + part.width / 2, top = y - part.height / 2, bottom = y + part.height / 2;
+      const outside = Math.abs(projected.x) > 0.97 || Math.abs(projected.y) > 0.95 || projected.z > 1;
+      // Overlapping part tags hide; the selected unit keeps a stable button strip outside the canvas.
+      const blocked = placed.some((other) => left < other.right + 2 && right > other.left - 2 && top < other.bottom + 2 && bottom > other.top - 2);
+      button.hidden = outside || blocked;
+      if (button.hidden) continue;
+      placed.push({ left, right, top, bottom });
+      button.style.left = `${x}px`;
+      button.style.top = `${y}px`;
+      const tracked = part.tag === trackedTag;
+      button.classList.toggle('tracked', tracked);
+      button.setAttribute('aria-pressed', tracked);
     }
   }
 
@@ -338,12 +390,14 @@ export function mountScene(container, host, select) {
       label.button.classList.toggle('in-alarm', alertAreas.has(area));
       label.button.classList.toggle('has-pressure', showPressure && Boolean(CORE_PRESSURES[area]));
       if (showPressure && CORE_PRESSURES[area] && data) {
-        const value = data.values[codeFor(CORE_PRESSURES[area])];
-        label.value.textContent = Number.isFinite(value) ? `${reading(value, 'kPa(g)')} kPa(g)` : '';
+        const tag = codeFor(CORE_PRESSURES[area]);
+        const value = data.values[tag];
+        label.value.textContent = Number.isFinite(value) ? `${reading(value, 'kPa(g)')} kPa(g)${tag in data.offsets ? ' · 시험' : ''}` : '';
       } else {
         label.value.textContent = '';
       }
     }
+    projectParts(placed);
     for (const { el, point, circuit } of ports) {
       projected.copy(point).project(camera);
       el.hidden = !showLabels || Math.abs(projected.x) > 0.95 || Math.abs(projected.y) > 0.94 ||
@@ -358,7 +412,7 @@ export function mountScene(container, host, select) {
   controls.addEventListener('change', () => {
     if (frame && !framing) {
       // Manual orbit and zoom can take over while the selected target stays centered.
-      frame.resetOrientation = false;
+      frame.offset = null;
       frame.zoom = null;
     }
   });
@@ -415,11 +469,11 @@ export function mountScene(container, host, select) {
     if (frame) {
       cameraOffset.subVectors(camera.position, controls.target);
       const settled = controls.target.distanceTo(desired) < 0.006 &&
-        (!frame.resetOrientation || cameraOffset.distanceTo(initialOffset) < 0.006) &&
+        (!frame.offset || cameraOffset.distanceTo(frame.offset) < 0.006) &&
         (frame.zoom === null || Math.abs(camera.zoom - frame.zoom) < 0.006);
       const ease = motionReduced || settled ? 1 : 1 - Math.exp(-8 * dt);
       controls.target.lerp(desired, ease);
-      if (frame.resetOrientation) cameraOffset.lerp(initialOffset, ease);
+      if (frame.offset) cameraOffset.lerp(frame.offset, ease);
       camera.position.copy(controls.target).add(cameraOffset);
       if (frame.zoom !== null) {
         camera.zoom = T.MathUtils.lerp(camera.zoom, frame.zoom, ease);
@@ -475,8 +529,18 @@ export function mountScene(container, host, select) {
     go, updateVisuals,
     track(area, tag) {
       trackedArea = area;
+      trackedTag = tag;
       for (const [key, label] of Object.entries(labels)) label.button.classList.toggle('tracked', key === area);
       for (const line of streams) line.tracked = streamMatchesTag(line.def, tag);
+    },
+    // Camera pose for returning to a previous investigation position.
+    view() {
+      return { target: controls.target.clone(), offset: camera.position.clone().sub(controls.target), zoom: camera.zoom };
+    },
+    restoreView(saved) {
+      if (!saved) return;
+      desired.copy(saved.target);
+      frame = { zoom: saved.zoom, offset: saved.offset.clone() };
     },
     flow(enabled) { showFlow = enabled; },
     pressure(enabled) { showPressure = enabled; },
@@ -485,9 +549,7 @@ export function mountScene(container, host, select) {
     tags(visible) { showLabels = visible; },
     internals(visible) {
       showInternals = visible;
-      internal.show(visible);
-      container.dataset.internals = visible ? Object.keys(sight).join(',') : '';
-      renderer.shadowMap.needsUpdate = true;
+      applyInternals();
     },
   };
 }

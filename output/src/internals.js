@@ -1,6 +1,6 @@
 import * as T from 'three';
 import { steel, edge, lightSteel, gold, box, rod, v3 } from './geometry.js';
-import { CORE_PRESSURES, codeFor } from './topology.js';
+import { CORE_PRESSURES, INTERIOR_PARTS, codeFor } from './topology.js';
 import { readColor } from './palette.js';
 
 const glass = new T.MeshPhysicalMaterial({
@@ -75,15 +75,19 @@ function inventory(group, radius, bottom, height) {
     }),
   ), goalMaterial);
   line.computeLineDistances();
-  group.add(body, top, line);
+  // Label anchor rides on the liquid surface at the left rim.
+  const anchor = new T.Object3D();
+  anchor.position.set(-radius * 0.72, bottom, radius * 0.5);
+  group.add(body, top, line, anchor);
   return {
-    shown: null, target: null,
+    shown: null, target: null, anchor,
     draw(pv, goal, dt) {
       this.shown = this.shown === null ? pv : T.MathUtils.lerp(this.shown, pv, 1 - Math.exp(-8 * dt));
       const filled = Math.max(0.003, limit(this.shown / 100)) * height;
       body.scale.y = filled;
       body.position.y = bottom + filled / 2;
       top.position.y = bottom + filled;
+      anchor.position.y = bottom + filled;
       line.visible = Number.isFinite(goal);
       if (line.visible) line.position.y = bottom + limit(goal / 100) * height;
     },
@@ -117,16 +121,37 @@ export function buildInternals(groups, equipment) {
     separator: { tag: 12, meter: inventory(sep, 1.075, 0.89, 1.96) },
     stripper: { tag: 15, meter: inventory(interiors.stripper, 0.94, 0.86, 1.60) },
   };
+  const fixedAnchor = (group, position) => {
+    const anchor = new T.Object3D();
+    anchor.position.set(...position);
+    group.add(anchor);
+    return anchor;
+  };
+  // Anchors sit on the modeled parts: shaft above the top impeller and the outer coil turn.
+  const anchors = {
+    'XMEAS(8)': levels.reactor.meter.anchor,
+    'XMV(12)': fixedAnchor(interiors.reactor, [0, 4.02, 0]),
+    'XMEAS(21)': fixedAnchor(interiors.reactor, [1.07, 2.32, 0.35]),
+    'XMEAS(12)': levels.separator.meter.anchor,
+    'XMEAS(15)': levels.stripper.meter.anchor,
+  };
+  const parts = Object.entries(INTERIOR_PARTS).flatMap(([area, list]) =>
+    list.map(([tag, name]) => ({ area, tag, name, anchor: anchors[tag] })));
   return {
-    show(enabled) {
+    parts,
+    // Show every interior, or only the selected unit's section when `only` names one.
+    show(enabled, only = '') {
       for (const [key, interior] of Object.entries(interiors)) {
-        interior.visible = enabled;
+        const on = enabled && (!only || only === key);
+        interior.visible = on;
         for (const shell of equipment[key].casing) {
-          shell.material = enabled ? glass : steel;
-          shell.castShadow = !enabled;
+          shell.material = on ? glass : steel;
+          shell.castShadow = !on;
         }
       }
+      return Object.keys(interiors).filter((key) => interiors[key].visible);
     },
+    visible(area) { return Boolean(interiors[area]?.visible); },
     animate(status, dt, moving) {
       if (!status) return;
       for (const [key, { meter, tag }] of Object.entries(levels)) {

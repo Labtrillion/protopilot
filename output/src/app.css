@@ -505,3 +505,37 @@ dialog::backdrop { background: var(--scrim); }
   .topbar { flex-wrap: wrap; }
   .dialog-fields select, .dialog-fields input { min-height: var(--control-size); }
 }
+
+/* Interior part tags, alarm return point, sensor test and channel scope. */
+.interior-parts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; min-width: 0; margin-right: auto; }
+.interior-parts .toolbar-label { margin-right: 0.1rem; font-size: 0.74rem; }
+.interior-parts button { min-height: 2rem; padding: 0.16rem 0.48rem; gap: 0.32rem; font-size: 0.76rem; }
+.interior-parts code { color: var(--muted); font: 0.68rem var(--mono); }
+.interior-parts button[aria-pressed=true] { color: var(--tracked); border-color: var(--tracked-line); background: var(--tracked-bg); }
+.interior-parts button[aria-pressed=true] code { color: var(--tracked); }
+.model-part {
+  position: absolute; transform: translate(-50%, -50%); display: grid; gap: 0.05rem; justify-items: start; min-height: 1.9rem; min-width: 0;
+  padding: 0.16rem 0.38rem; line-height: 1.12; background: var(--inset); border-color: var(--process-liquid); pointer-events: auto; z-index: 1;
+}
+.model-part b { font-size: 0.72rem; color: var(--text); }
+.model-part small { font: 0.64rem var(--mono); color: var(--subtext); }
+.model-part.tracked { border-color: var(--tracked); background: var(--tracked-bg); z-index: 2; }
+.model-part.tracked small { color: var(--tracked); }
+.model-part:focus-visible { z-index: 4; }
+.return-back { color: var(--tracked); border-color: var(--tracked); background: var(--tracked-bg); }
+.return-back:hover:not(:disabled) { border-color: var(--tracked); background: var(--selected); }
+#active-tab[data-new] { color: var(--warning); border-color: var(--warning-line); background: var(--warning-bg); }
+.channel-scope { grid-column: 1 / -1; justify-self: start; }
+.channel-scope button { padding: 0.2rem 0.55rem; font-size: 0.78rem; }
+.kpi-state { display: block; min-height: 0.9rem; margin-top: 0.12rem; font: normal 600 0.68rem var(--mono); color: var(--tracked); position: relative; z-index: 1; overflow-wrap: anywhere; }
+.kpis button.alarming .kpi-state { color: var(--warning); }
+.kpis button.tested { box-shadow: inset 0 0 0 1px var(--warning-line); }
+.kpis button.tested .kpi-state { color: var(--warning); }
+.kpis button.tested:not(.alarming) b, .inspect-value.tested:not(.alarming) b, tr.tested-row:not(.alarm-row) .numeric > span, .pressure-overview button.tested:not(.alarming) small { color: var(--warning); }
+tr.tested-row .channel-state { color: var(--warning); }
+tr.selected-row:not(.alarm-row, .tested-row) .channel-state { color: var(--tracked); }
+.stage-signal.tested:not(.alarming) { border-style: dashed; border-color: var(--warning-line); }
+.response-values .response-test { grid-column: 1 / -1; border-style: dashed; border-color: var(--warning-line); background: var(--warning-bg); }
+.response-values .response-test b { color: var(--warning); }
+.response-values .response-test span:last-child { margin-top: 0.12rem; color: var(--warning); font: 0.72rem var(--mono); }
+.stage-meta { flex-wrap: wrap; }

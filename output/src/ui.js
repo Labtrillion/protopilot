@@ -67,8 +67,10 @@ export function renderPressures(status, enabled, tracked = '') {
     const alarming = status?.alarms.some((alarm) => alarm.tag === tag);
     const value = status?.values[tag];
     const formatted = reading(value, 'kPa(g)');
-    row.querySelector('b').innerHTML = `${formatted}<small>kPa(g)</small>`;
+    const tested = tag in (status?.offsets ?? {});
+    row.querySelector('b').innerHTML = `${formatted}<small>kPa(g)${tested ? ' · 시험' : ''}</small>`;
     row.classList.toggle('alarming', alarming);
+    row.classList.toggle('tested', tested);
     row.toggleAttribute('data-tracked', tag === tracked);
     row.setAttribute('aria-current', tag === tracked);
   }
@@ -98,18 +100,34 @@ function drawTrend(canvas, values) {
   ctx.stroke();
 }
 
-const kpis = [[7, '반응기 압력'], [9, '반응기 온도'], [6, '반응기 입구 유량'], [17, '제품 유량']];
+// Always-on summary: safety/process state first, then production.
+export const KPI_TAGS = [[7, '반응기 압력'], [9, '반응기 온도'], [12, '분리기 액위'], [17, '제품 유량']].map(([i, label]) => [codeFor(i), label]);
+// Combined text state so alarm / sensor test / tracking never rely on color alone.
+export function stateText(tag, status, tracked) {
+  return [
+    status?.alarms.some((event) => event.tag === tag) && '경보',
+    tag in (status?.offsets ?? {}) && '시험',
+    tag === tracked && '추적',
+  ].filter(Boolean);
+}
 export function renderKpis(status, metadata, trends, tracked) {
   const root = byId('kpis');
-  if (!root.children.length) root.innerHTML = kpis.map(([i, label]) =>
-    `<button type="button" data-tag="${codeFor(i)}"><span>${label}</span><b>—</b><small></small><canvas width="88" height="34" aria-hidden="true"></canvas></button>`).join('');
+  if (!root.children.length) root.innerHTML = KPI_TAGS.map(([tag, label]) =>
+    `<button type="button" data-tag="${tag}"><span>${label}</span><b>—</b><small></small><em class="kpi-state"></em><canvas width="88" height="34" aria-hidden="true"></canvas></button>`).join('');
   for (const card of root.children) {
     const tag = card.dataset.tag;
-    const { unit } = metadata.get(tag);
+    const unit = metadata.get(tag)?.unit ?? '';
+    const states = stateText(tag, status, tracked);
+    const tested = tag in status.offsets;
     card.querySelector('b').textContent = reading(status.values[tag], unit);
     card.querySelector('small').textContent = unit;
-    card.classList.toggle('alarming', status.alarms.some((event) => event.tag === tag));
+    card.querySelector('em').textContent = tested
+      ? `${states.filter((s) => s !== '시험').concat('시험 표시값').join(' · ')} · 원계측 ${reading(status.native_values?.[tag], unit)} ${unit}`
+      : states.join(' · ');
+    card.classList.toggle('alarming', states.includes('경보'));
+    card.classList.toggle('tested', tested);
     card.toggleAttribute('data-tracked', tag === tracked);
+    card.setAttribute('aria-pressed', tag === tracked);
     drawTrend(card.querySelector('canvas'), trends.get(tag) ?? []);
   }
 }
@@ -147,8 +165,11 @@ export function renderInspector(areaKey, status, metadata, circuit = '', setpoin
   const activeAlarms = new Set(status?.alarms.map((alarm) => alarm.tag));
   for (const button of root.querySelector('.inspect-values').children) {
     const tag = button.dataset.tag;
+    const tested = tag in (status?.offsets ?? {});
     button.classList.toggle('alarming', activeAlarms.has(tag));
+    button.classList.toggle('tested', tested);
     button.querySelector('b span').textContent = reading(values[tag], metadata.get(tag)?.unit);
+    button.querySelector('b small').textContent = `${metadata.get(tag)?.unit ?? ''}${tested ? ' · 시험' : ''}`;
     button.toggleAttribute('data-tracked', tag === tracked);
     button.setAttribute('aria-current', tag === tracked);
   }
@@ -177,15 +198,21 @@ export function renderRows(channels, status, selected) {
     const tr = holder.children[i];
     const isAlarm = active.has(ch.id);
     const isOffset = ch.id in (status?.offsets ?? {});
+    const isSelected = selected === ch.id;
     const manual = ch.id in (status?.manual ?? {});
     tr.classList.toggle('selected-row', selected === ch.id);
     if (selected === ch.id) tr.cells[0].firstElementChild.setAttribute('aria-current', 'true');
     else tr.cells[0].firstElementChild.removeAttribute('aria-current');
     tr.classList.toggle('alarm-row', isAlarm);
+    tr.classList.toggle('tested-row', isOffset);
     tr.cells[1].firstElementChild.textContent = reading(status?.values[ch.id], ch.unit);
+    tr.cells[1].lastElementChild.textContent = `${ch.unit ?? ''}${isOffset ? `${ch.unit ? ' · ' : ''}시험` : ''}`;
+    tr.cells[1].title = isOffset ? `센서 시험 표시값 · 원계측 ${reading(status.native_values?.[ch.id], ch.unit)} ${ch.unit ?? ''} · 오프셋 ${reading(status.offsets[ch.id])}` : '';
     const pending = manual && status.manual[ch.id] !== status.values[ch.id];
-    const state = isAlarm ? '경보' : isOffset ? '시험' : pending ? '명령 대기' : manual ? '수동' : ch.period ? `${ch.period} h 샘플` : ch.group.endsWith('monitors') ? '진단' : '정상';
-    tr.cells[2].textContent = state;
+    const base = pending ? '명령 대기' : manual ? '수동' : ch.period ? `${ch.period} h 샘플` : ch.group.endsWith('monitors') ? '진단' : '정상';
+    const flags = [isAlarm && '경보', isOffset && '시험', isSelected && '추적'].filter(Boolean);
+    // Manual / pending-command state stays visible next to alarm, test and tracking flags.
+    tr.cells[2].textContent = (flags.length && !manual ? flags : [...flags, base]).join(' · ');
     if (ch.period) tr.cells[2].title = `갱신 ${ch.period} h / 지연 ${ch.delay} h`;
   });
 }
@@ -201,7 +228,7 @@ export function renderAlarms(status, tab, metadata) {
   const focusKey = panel.contains(focused) && (focused.dataset.ack ?? focused.dataset.eventId);
   const focusAttribute = focused.dataset.ack ? 'data-ack' : 'data-event-id';
   const items = !events?.length ? `<div class="alarm-empty">${icon('check')}<b>${tab === 'active' ? '활성 알람 없음' : '기록된 이벤트 없음'}</b>
-      <span>${tab === 'active' ? '새 알람이 발생하면 관련 설비로 이동합니다.' : '공정 조작과 알람 내역이 여기에 표시됩니다.'}</span></div>`
+      <span>${tab === 'active' ? '새 알람은 배지와 소리로 알립니다. 항목을 선택하면 관련 설비로 이동합니다.' : '공정 조작과 알람 내역이 여기에 표시됩니다.'}</span></div>`
     : events.map((e) => {
       const unit = metadata.get(e.tag)?.unit;
       const detail = [e.tag, e.value == null ? '' : `${reading(e.value, unit)} ${unit ?? ''}`,
