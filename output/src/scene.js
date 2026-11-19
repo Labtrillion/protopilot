@@ -400,7 +400,7 @@ export function mountScene(container, host, select, pick, selectCircuit) {
     const placed = [];
     // Reserve the valve silhouettes for labels. The larger hit radius helps with aim on the canvas.
     const pixelsPerUnit = height * camera.zoom / (camera.top - camera.bottom);
-    const clearance = Math.max(5, 0.4 * pixelsPerUnit);
+    const clearance = Math.max(largerTargets.matches ? 12 : 5, 0.4 * pixelsPerUnit);
     valveRadius = Math.max(largerTargets.matches ? 18 : 14, clearance);
     for (const target of valveTargets) {
       target.valve.localToWorld(projected.set(0, 0.16, 0)).project(camera);
