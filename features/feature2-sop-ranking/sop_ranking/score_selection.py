@@ -2,11 +2,11 @@
 
 from itertools import combinations, product
 from math import fsum, isclose
-from urllib.error import URLError
 
 from zoro.client import zoro_decide
 
 COVERAGE = 0.90
+SCORE_BATCH_SIZE = 12
 SETPOINT_MOVES = (("decrease_10pct", -0.10), ("increase_10pct", 0.10))
 
 
@@ -64,10 +64,15 @@ def select_candidates(handoff, state, *, timeout, request_id):
         }
         for name, description in descriptions.items()
     }
+    scores = {}
+    names = sorted(questions)
     try:
-        answers = zoro_decide(context, questions, timeout=timeout, request_id=f"{request_id}-score")
-        scores = {name: float(answers[name]["score"]) for name in candidates}
-    except (AttributeError, KeyError, TypeError, ValueError, URLError, TimeoutError) as error:
+        for start in range(0, len(names), SCORE_BATCH_SIZE):
+            batch = {name: questions[name] for name in names[start:start + SCORE_BATCH_SIZE]}
+            batch_id = start // SCORE_BATCH_SIZE + 1
+            answers = zoro_decide(context, batch, timeout=timeout, request_id=f"{request_id}-score-{batch_id}")
+            scores.update({name: float(answers[name]["score"]) for name in batch})
+    except (AttributeError, KeyError, TypeError, ValueError, OSError) as error:
         return {**selection, "reason": f"score_unavailable:{type(error).__name__}"}
     total = fsum(scores.values())
     if total == 0:
@@ -96,7 +101,7 @@ def select_candidates(handoff, state, *, timeout, request_id):
                                        request_id=f"{request_id}-choice")["first"]["choice"]
             selected.remove(first_choice)
             selected.insert(0, first_choice)
-        except (AttributeError, KeyError, TypeError, ValueError, URLError, TimeoutError) as error:
+        except (AttributeError, KeyError, TypeError, ValueError, OSError) as error:
             choice_error = type(error).__name__
     return {
         "scores": {name: {"score": scores[name], "weight": weights[name]} for name in candidates},

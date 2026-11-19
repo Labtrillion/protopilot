@@ -21,6 +21,7 @@ def test_console_evaluates_only_candidates_covering_ninety_percent(tmp_path, mon
     monkeypatch.setenv("ZORO_BASE_URL", "http://zoro.invalid")
     monkeypatch.setattr("setpoint_gate.setpoint_decision.BRANCH_HOURS", 20 * STEP_HOURS)
     score_questions = []
+    score_batches = []
     locked = {"production_rate", "reactor_pressure"}
 
     def reply(url, payload, *, timeout, request_id=None):
@@ -31,6 +32,7 @@ def test_console_evaluates_only_candidates_covering_ninety_percent(tmp_path, mon
             scores = {"production_rate": 0.98, "reactor_pressure": 0.95, "reactor_temperature": 0.90}
             answers = {name: {"type": "noul", "noul": scores.get(name, 0.1)} for name in questions}
         elif qtype == "score":
+            score_batches.append(len(questions))
             score_questions.extend(sorted(questions))
             for name, question in questions.items():
                 moves = [part.split(":") for part in name.split("+")]
@@ -55,6 +57,7 @@ def test_console_evaluates_only_candidates_covering_ninety_percent(tmp_path, mon
     data = handler.respond.call_args.args[0]
     assert {item["setpoint"] for item in data["handoff"]["baseline_changes"]} == locked
     feature2 = data["feature2"]
+    assert score_batches == [12] * 5
     assert feature2["selection"]["coverage"] == 0.9
     assert [case["id"] for case in feature2["evaluated"]] == [score_questions[i] for i in (2, 0, 1)]
     for case in feature2["evaluated"]:
