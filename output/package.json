@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Local Three.js console for the Tennessee Eastman Process",
   "scripts": {
-    "build": "esbuild src/app.js --bundle --minify --outfile=dist/app.js && cp src/index.html src/app.css dist/ && mkdir -p dist/fortran && cp -R vendor/tep-rust-studio/. dist/fortran/",
+    "build": "esbuild src/app.js --bundle --minify --outfile=dist/app.js && cp src/index.html src/app.css dist/ && rm -rf dist/fortran",
     "start": "npm run build && .venv/bin/python -m server.app"
   },
   "type": "module",

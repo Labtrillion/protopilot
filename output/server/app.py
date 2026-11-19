@@ -7,16 +7,18 @@ import sys
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from threading import Event, RLock, Thread
+from threading import BoundedSemaphore, Event, RLock, Thread
 from urllib.parse import parse_qs, urlsplit
 from wsgiref.simple_server import ServerHandler, WSGIRequestHandler, WSGIServer
 
+from .alarm_response import analyze_alarm
 from .catalog import CHANNELS, METADATA
 from .experiments import EXPERIMENTS_PATH, create_experiments
 from .plant import Plant, TICK_SECONDS
 from .recording import ArchivedRecording, encode
 
 ROOT = Path(__file__).resolve().parents[1]
+ALARM_STUDY = BoundedSemaphore()
 
 
 class ConsoleServer(ThreadingHTTPServer):
@@ -82,10 +84,11 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             super().do_HEAD()
 
     def do_POST(self):
-        if urlsplit(self.path).path.startswith(EXPERIMENTS_PATH):
+        path = urlsplit(self.path).path
+        if path.startswith(EXPERIMENTS_PATH):
             self.serve_experiments()
             return
-        if self.path != "/api/command":
+        if path not in {"/api/command", "/api/alarm-response"}:
             self.send_error(404)
             return
         if self.headers.get_content_type() != "application/json":
@@ -98,6 +101,9 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):
                 raise ValueError("요청 형식을 확인하세요.")
+            if path == "/api/alarm-response":
+                self.alarm_response(body)
+                return
             with self.lock:
                 self.plant.command(body)
                 self.respond(self.plant.status())
@@ -106,6 +112,23 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
         except OSError:
             logging.exception("Could not record operator command")
             self.respond({"error": "로컬 기록 쓰기에 실패했습니다."}, 500)
+
+    def alarm_response(self, body):
+        alarm_id = body.get("alarm_id")
+        if type(alarm_id) is not int:
+            raise ValueError("알람 식별자를 확인하세요.")
+        with self.lock:
+            checkpoint = self.plant.alarm_checkpoints.get(alarm_id) if body.get("run") == self.plant.recording.id else None
+        if checkpoint is None:
+            self.respond({"error": "알람 발생 시점의 상태를 찾을 수 없습니다. 현재 기록에서 알람을 다시 선택하세요."}, 404)
+            return
+        if not ALARM_STUDY.acquire(blocking=False):
+            self.respond({"error": "다른 알람을 비교 중입니다. 잠시 후 다시 시도하세요."}, 409)
+            return
+        try:
+            self.respond(analyze_alarm(checkpoint, self.plant.root / "agent-trace.jsonl"))
+        finally:
+            ALARM_STUDY.release()
 
     def archive(self, path, query):
         try:

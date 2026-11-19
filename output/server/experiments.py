@@ -5,6 +5,7 @@ import json
 from dataclasses import replace
 from hashlib import sha256
 from threading import RLock
+from types import SimpleNamespace
 
 from dash import Dash, Input, Output, State, dcc, html, no_update
 from dash.exceptions import PreventUpdate
@@ -78,12 +79,29 @@ def _json_tab():
 
 def _layout():
     layout = build_layout()
+    tabs = next(component for component in layout._traverse() if getattr(component, "id", None) == "tabs")
+    dataset = next(tab for tab in tabs.children if tab.value == "dataset")
+    dataset_ids = {component.id for component in dataset._traverse() if isinstance(getattr(component, "id", None), str)}
+    tabs.children.remove(dataset)
+    next(tab for tab in tabs.children if tab.value == "assistant").children = _assistant_tab()
+    tabs.children.append(dcc.Tab(label="JSON 시나리오", value="json-scenario", children=_json_tab()))
+    simulate = next(tab.children for tab in tabs.children if tab.value == "simulate")
+    config_body = simulate.children[0].children
+    mode = next(child for child in config_body if any(
+        getattr(field, "id", None) == "mode-select" for field in getattr(child, "children", [])
+    ) if isinstance(getattr(child, "children", None), list))
+    advanced = [child for child in config_body if isinstance(child, html.Details)]
+    config_body.remove(mode)
+    for child in advanced:
+        config_body.remove(child)
+    position = next(index for index, child in enumerate(config_body) if getattr(child, "id", None) == "run-btn")
+    config_body.insert(position, html.Details(
+        [html.Summary("고급 설정"), mode, *advanced],
+        style={"marginBottom": "12px"},
+    ))
     for component in layout._traverse():
         if isinstance(component, dcc.Link) and component.href in {"/", "/about", "/mcp"}:
             component.href = EXPERIMENTS_PATH + component.href.lstrip("/")
-        if getattr(component, "id", None) == "tabs":
-            component.children[-1].children = _assistant_tab()
-            component.children.append(dcc.Tab(label="JSON 시나리오", value="json-scenario", children=_json_tab()))
         children = getattr(component, "children", None)
         if isinstance(children, list):
             for index, child in enumerate(children):
@@ -94,9 +112,35 @@ def _layout():
                     break
     header = layout.children[4]
     header.children[0].children[0].children = "ProtoPilot · TEP 실험"
+    header.children[0].children[1].children = "독립 시뮬레이션 · 실행 비교 · 실험 기록"
     header.children[1].children.insert(0, html.A("라이브 관제로 돌아가기", href="/"))
-    header.children[1].children.append(html.A("Fortran 브라우저 실행", href="/fortran/"))
-    return layout
+    return layout, dataset_ids
+
+
+def _register_demo_callbacks(app, store, dataset_ids):
+    def visible(register):
+        def callback(*dependencies, **kwargs):
+            if any(isinstance(getattr(dep, "component_id", None), str) and dep.component_id in dataset_ids
+                   for dep in dependencies):
+                return lambda function: function
+            return register(*dependencies, **kwargs)
+        return callback
+
+    register_callbacks(SimpleNamespace(callback=visible(app.callback),
+                                       clientside_callback=visible(app.clientside_callback)), store)
+
+    @app.callback(
+        Output("compare-table", "data"), Output("compare-table", "columns"),
+        Input("session-runs", "data"), Input("compare-var", "value"),
+    )
+    def update_compare(rows, _variables):
+        keys = ("run_id", "name", "loop_type", "terminated", "final_time", "peak_reactor_pressure",
+                "iae_reactor_pressure", "ise_reactor_pressure", "time_to_shutdown")
+        return rows or [], [{"name": key, "id": key} for key in keys]
+
+    @app.callback(Output("record-run", "options"), Input("session-runs", "data"), Input("record-run", "id"))
+    def update_records(rows, _id):
+        return [{"label": f"{row['name']} ({row['run_id']})", "value": row["run_id"]} for row in rows or []]
 
 
 def _config(text):
@@ -112,10 +156,10 @@ def create_experiments(root):
     app = Dash(__name__, title="ProtoPilot · TEP 실험", url_base_pathname=EXPERIMENTS_PATH,
                suppress_callback_exceptions=True)
     app.index_string = _INDEX_STRING
-    app.layout = _layout()
+    app.layout, dataset_ids = _layout()
     store = ExperimentStore()
     tools = TepToolset(store=store)
-    register_callbacks(app, store)
+    _register_demo_callbacks(app, store, dataset_ids)
 
     @app.callback(Output("tabs", "value"), Input("proto-open-json", "n_clicks"), prevent_initial_call=True)
     def open_json(_clicked):
