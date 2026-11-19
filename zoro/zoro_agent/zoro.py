@@ -224,7 +224,7 @@ class ZoroHttpConfig:
         if reasoning not in (True, False, "auto"):
             raise ZoroClientError("ZORO_REASONING 은 false|true|auto")
         return cls(
-            base_url=base.rstrip("/"),
+            base_url=base.rstrip("/").removesuffix("/v1"),  # ProtoPilot 서버처럼 /v1 까지 적어도 같은 주소
             api_key=os.environ.get("ZORO_API_KEY") or None,
             timeout_s=float(os.environ.get("ZORO_TIMEOUT_S", "30")),
             reasoning=reasoning,

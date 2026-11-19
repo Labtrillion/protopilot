@@ -342,6 +342,8 @@ def test_http_client_config_requires_env(monkeypatch):
     monkeypatch.setenv("ZORO_REASONING", "auto")
     cfg = ZoroHttpConfig.from_env()
     assert cfg.base_url == "http://localhost:30001" and cfg.reasoning == "auto"
+    monkeypatch.setenv("ZORO_BASE_URL", "http://localhost:30001/v1/")
+    assert ZoroHttpConfig.from_env().base_url == "http://localhost:30001"
 
 
 # ------------------------------------------------------------------ 시뮬레이터 case / 설정값 명령

@@ -29,13 +29,32 @@ python examples/run_demo.py
 
 비밀값은 코드에 넣지 않습니다(`.env.example` 참조). 결과의 `model_client_kind`(real/fake)와 `tools_virtual` 로 실제 호출 여부를 표시합니다.
 
+## ProtoPilot 시뮬레이터 연결
+
+저장소 루트의 시뮬레이터 서버가 알람마다 저장하는 체크포인트(모델·난수·제어기 메모리·수동 조작·활성 외란)에서
+에이전트가 고른 case 를 분기 실행합니다. 연결 코드는 `server/zoro_bridge.py` 입니다.
+
+```sh
+# 서버 실행 후 (저장소 루트 README 참고)
+curl -X POST localhost:8765/api/command -H 'Content-Type: application/json' -d '{"op":"cooling_demo"}'
+curl -X POST localhost:8765/api/zoro-agent -H 'Content-Type: application/json' -d '{"run":"<run>","alarm_id":<id>}'
+```
+
+- `ZORO_BASE_URL` 이 있으면 Zoro-1(`/v1/decide`), 없으면 고정 순서 규칙(결과에 `model_client_kind: fake`).
+- case 는 알람 시점 설정값과 팀 SOP 후보(유지·즉시/30분/60분 후 5% 감량)로 사건마다 생성합니다.
+- 활성 외란은 시뮬레이터 안에만 있고 에이전트 입력·결과에는 들어가지 않습니다.
+- 주의: `docs/SOP_TEP_STUDIO.md` 와 `tep_control.py` 는 CMU TEP Studio(Braatz, SETPT(19) 퍼지 B) 기준입니다.
+  ProtoPilot 시뮬레이터는 Ricker 제어기(설정값 9개: 반응기 압력·온도·액위, 생산량, 제품 G, ya/yac)라 그대로 적용되지 않습니다.
+
 ## 구조
 
 | 파일 | 역할 |
 |---|---|
 | `zoro_agent/inputs.py` | A: 사건·관측·알람·안전 검사 |
 | `zoro_agent/rag.py` | A: 정규화된 RAG 타입 + `ExampleRagV0Adapter` |
-| `zoro_agent/tep_control.py` | TEP Studio(Braatz) 제어 로직 이식: 20개 루프, 속도형 P/PI, 퍼지 오버라이드, 설정값 변경의 하위 루프 즉시 변화 계산 |
+| `zoro_agent/sim_tools.py` | **실제 시뮬레이터 어댑터** `SimulationToolkit`: ToolRequest → 분기 실행(BranchRunner) → 채점 → ToolResult. FakeToolkit 자리에 등록 |
+| `zoro_agent/protopilot_cases.py` | ProtoPilot 시뮬레이터(tep-studio, Ricker 제어기)용 사건별 카탈로그·벤치마크·정책, 팀 SOP(`server/demo-sops.json`) 근거 변환 |
+| `zoro_agent/tep_control.py` | CMU TEP Studio(tep-rust, Braatz) 제어 로직 이식. **ProtoPilot 시뮬레이터(Ricker)와는 제어 구조가 다르다** — 아래 참고 |
 | `rag_jiyeon/` | 지연님 RAG(검색 엔진). 정답 누출 차단·경보 태그 기반 SOP 후보·v1 경보 형식 등 수정, 센서별 SOP 추가 — `rag_jiyeon/README.md` |
 | `docs/SOP_TEP_STUDIO.md` | 생성된 센서별 대응 SOP 표 |
 | `zoro_agent/benchmark.py` | 심슨(SOP 단독) 대비 비용(USD/m³)·정확도 채점, 비교 규칙, case 탐색 종료 규칙 — `docs/BENCHMARK.md` |

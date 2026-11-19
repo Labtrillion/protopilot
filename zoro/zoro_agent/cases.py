@@ -4,7 +4,8 @@ TEP Studio 계약(zoro-rag/STUDIO.md 'Zoro 입력, 출력, 실행 경계')을 �
 - Zoro 출력은 hold 또는 propose_setpoint. 하위 P·PI 제어와 보호 기능은 그대로 두고 상위 목표만 바꾼다.
 - Zoro-1 은 등록된 선택지 중 하나만 고른다. 목표값·대상 루프·원복 조건은 모델이 만들지 않고
   여기 등록된 case 에서만 나온다. 밸브(XMV) 직접 명령은 등록할 수 없다.
-- 시뮬레이터 어댑터(장하)는 ResolvedSetpointChange 를 Scheme::set_setpoint(scheme_index, value) 로 적용한다.
+- 시뮬레이터 어댑터는 ResolvedSetpointChange 를 적용한다: tep-rust 는 Scheme::set_setpoint(scheme_index, value),
+  ProtoPilot(tep-studio Ricker 제어기)는 setpoints 의 setpoint_id 필드(예: reactor_pressure)를 바꾼다.
 """
 from __future__ import annotations
 
@@ -25,7 +26,7 @@ class SetpointSpec(Model):
     """감독기가 바꿀 수 있도록 허용한 상위 목표 하나 (= STUDIO 의 allowed_actions 항목)."""
 
     setpoint_id: str = Field(description="예: 'SETPT(19)'")
-    scheme_index: int = Field(description="Studio Scheme::set_setpoint 의 index")
+    scheme_index: int | None = Field(default=None, description="tep-rust Scheme::set_setpoint index. 다른 시뮬레이터는 null")
     loop_id: str = Field(description="대상 상위 루프. 예: 'CONTRL19'")
     controlled_tag: str = Field(description="루프가 추종하는 계측. 예: 'XMEAS(30)'")
     description: str
@@ -127,7 +128,7 @@ class ResolvedSetpointChange(Model):
     """시뮬레이터/감독기로 그대로 전달되는 변경 한 건."""
 
     setpoint_id: str
-    scheme_index: int
+    scheme_index: int | None
     loop_id: str
     controlled_tag: str
     from_value: float | None = Field(description="변경 전 값. null = 현재값 미제공")

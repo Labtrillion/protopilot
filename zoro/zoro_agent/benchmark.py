@@ -131,7 +131,8 @@ def cost_rates(x: dict[str, float]) -> tuple[float, float, float, float]:
 
 
 def score_timeseries(run_id: str, times_s: list[float], samples: list[dict[str, float]],
-                     tracked: list[TrackedVariable], policy: BenchmarkPolicy, tripped: bool = False) -> RunScore:
+                     tracked: list[TrackedVariable], policy: "BenchmarkPolicy | EvaluationSpec",
+                     tripped: bool = False) -> RunScore:
     """평가 구간 전체 표본(시각 오름차순, run 기준 초)으로 점수를 낸다. 동은 모듈의 참조 구현."""
     if len(times_s) < 2 or len(times_s) != len(samples):
         raise ValueError("표본 2개 이상, 시각과 표본 수 일치 필요")

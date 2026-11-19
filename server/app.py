@@ -69,7 +69,7 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         path = urlsplit(self.path).path
-        if path not in {"/api/command", "/api/alarm-response"}:
+        if path not in {"/api/command", "/api/alarm-response", "/api/zoro-agent"}:
             self.send_error(404)
             return
         if self.headers.get_content_type() != "application/json":
@@ -84,6 +84,9 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
                 raise ValueError("요청 형식을 확인하세요.")
             if path == "/api/alarm-response":
                 self.alarm_response(body)
+                return
+            if path == "/api/zoro-agent":
+                self.zoro_agent(body)
                 return
             with self.lock:
                 self.plant.command(body)
@@ -108,6 +111,23 @@ class ConsoleHandler(SimpleHTTPRequestHandler):
             return
         try:
             self.respond(analyze_alarm(checkpoint, self.plant.root / "agent-trace.jsonl"))
+        finally:
+            ALARM_STUDY.release()
+
+    def zoro_agent(self, body):
+        # Imported here so the console still starts when the agent package is absent.
+        from .zoro_bridge import run_zoro_agent
+
+        alarm_id = body.get("alarm_id")
+        if type(alarm_id) is not int or not isinstance(body.get("run"), str):
+            raise ValueError("실행 ID와 알람 식별자를 확인하세요.")
+        if not ALARM_STUDY.acquire(blocking=False):
+            self.respond({"error": "다른 알람을 비교 중입니다. 잠시 후 다시 시도하세요."}, 409)
+            return
+        try:
+            self.respond(run_zoro_agent(self.plant, self.lock, body["run"], alarm_id, self.plant.root / "agent-trace.jsonl"))
+        except LookupError as error:
+            self.respond({"error": str(error)}, 404)
         finally:
             ALARM_STUDY.release()
 
