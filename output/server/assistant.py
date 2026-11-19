@@ -44,27 +44,51 @@ def _request(url, payload, *, timeout):
         return json.loads(response.read(512 * 1024))
 
 
-def _zoro_plan(text, history, tools):
+def _zoro_endpoint():
     base = os.environ.get("ZORO_BASE_URL", "").rstrip("/")
     if not base:
         raise ValueError("ZORO_BASE_URL 설정 없음")
     endpoint = f"{base}/v1" if not base.endswith("/v1") else base
-    model = os.environ.get("ZORO_MODEL", "trillionlabs/Zoro-1")
-    state = {"request": text, "recent_turns": history[-4:]}
-    question = {"type": "choice", "instructions": "Choose the simulation tool that fulfills the request.", "criteria": ROUTES}
-    decision_request = {"state": state, "questions": {"tool": question}}
+    return endpoint, os.environ.get("ZORO_MODEL", "trillionlabs/Zoro-1")
+
+
+def zoro_choices(state, questions):
+    endpoint, model = _zoro_endpoint()
+    decision_request = {"state": state, "questions": questions}
     try:
         decision = _request(f"{endpoint}/systemone", {"model": model, **decision_request, "reasoning": False}, timeout=5)
     except HTTPError as error:
         if error.code not in (404, 405):
             raise
         decision = _request(f"{endpoint}/decide", {"request": decision_request, "reasoning": False}, timeout=5)
-    answer = decision["answers"]["tool"]
-    route, confidence = answer["choice"], float(answer["confidence"])
-    if route not in ROUTES or not math.isfinite(confidence) or not 0 <= confidence <= 1:
-        raise ValueError("Zoro-1 판단 형식 오류")
-    if confidence < 0.5:
-        raise ValueError("Zoro-1 판단 신뢰도가 낮음")
+    choices = {}
+    for name, question in questions.items():
+        answer = decision["answers"][name]
+        choice, confidence = answer["choice"], float(answer["confidence"])
+        if choice not in question["criteria"] or not math.isfinite(confidence) or not 0 <= confidence <= 1:
+            raise ValueError("Zoro-1 판단 형식 오류")
+        if confidence < 0.5:
+            raise ValueError("Zoro-1 판단 신뢰도가 낮음")
+        choices[name] = {"choice": choice, "confidence": confidence}
+    return choices
+
+
+def append_trace(path, trace):
+    try:
+        with TRACE_LOCK, path.open("a", encoding="utf-8") as stream:
+            stream.write(encode(trace) + "\n")
+    except OSError:
+        logging.exception("Could not write Zoro-1 execution trace")
+        return False
+    return True
+
+
+def _zoro_plan(text, history, tools):
+    endpoint, model = _zoro_endpoint()
+    state = {"request": text, "recent_turns": history[-4:]}
+    question = {"type": "choice", "instructions": "Choose the simulation tool that fulfills the request.", "criteria": ROUTES}
+    answer = zoro_choices(state, {"tool": question})["tool"]
+    route, confidence = answer["choice"], answer["confidence"]
     if route in {"describe_plant", "list_runs"}:
         return route, {}, confidence
     schema = next(spec["input_schema"] for spec in tools.tool_specs() if spec["name"] == route)
@@ -175,11 +199,7 @@ def respond(text, history, tools, trace_path):
                  {"summary": run.summary(), "scenario": run.scenario.to_dict()}
                  for run_id in ids if (run := tools.store.get(run_id)) is not None
              ]}
-    try:
-        with TRACE_LOCK, trace_path.open("a", encoding="utf-8") as stream:
-            stream.write(encode(trace) + "\n")
-    except OSError:
-        logging.exception("Could not write Zoro-1 execution trace")
+    if not append_trace(trace_path, trace):
         answer += "\n\n판단 로그를 저장할 수 없습니다."
     return AssistantTurn(f"**{model} · `{route}`**\n\n{answer}", ids,
                          [*history[-7:], {"request": text[:2000], "run_ids": ids}])
