@@ -52,6 +52,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: var(--back); color: var(--text); }
 button, select, input, a { font: inherit; }
+input[type=checkbox] { accent-color: var(--text); }
 button, select, input, .exports a {
   color: var(--text); border: 1px solid var(--line); background: var(--panel); border-radius: 5px;
 }
@@ -382,7 +383,7 @@ dialog::backdrop { background: var(--back); }
 #controller-options label { display: flex; align-items: center; gap: 0.25rem; }
 #controller-detail { margin: 0; line-height: 1.5; }
 #controller-detail:empty { display: none; }
-#scenario-dialog a { color: var(--plot-sp); }
+#scenario-dialog a { text-decoration: underline; text-underline-offset: 0.2em; }
 #scenario-error { margin: 0; color: var(--warning); }
 @media (prefers-reduced-motion: reduce) {
   .pfd-svg.show-flow.running .pipe-ticks { animation: none; }
