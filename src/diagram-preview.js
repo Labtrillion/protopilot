@@ -1,18 +1,38 @@
 import { placeAnnotation } from './annotation-layout.js';
-import { AREAS } from './topology.js';
+import { AREAS, LEVEL_TAGS, levelReading } from './topology.js';
+import { reading } from './ui.js';
 
 export function mountDiagramPreview(host, svg, draw) {
   const card = document.createElement('div');
   card.className = 'diagram-preview';
   card.hidden = true;
   card.setAttribute('role', 'img');
-  card.innerHTML = '<canvas width="128" height="112" aria-hidden="true"></canvas><span><code></code><b></b></span>';
+  card.innerHTML = `<div class="diagram-preview-heading"><code></code><b></b></div>
+    <canvas width="400" height="300" aria-hidden="true"></canvas><div class="diagram-preview-level" hidden></div>`;
   host.after(card);
   const canvas = card.querySelector('canvas');
-  const code = card.querySelector('code'), name = card.querySelector('b');
+  const code = card.querySelector('code'), name = card.querySelector('b'), level = card.querySelector('.diagram-preview-level');
   const chips = new Map([...svg.querySelectorAll('.pfd-chip')].map((chip) => [chip.parentElement.dataset.area, chip]));
   const obstacles = [...svg.querySelectorAll('.pfd-chip, .pfd-valve path, .pfd-pressure')];
-  let anchor, symbol, renderedArea;
+  let area, anchor, symbol, status, renderedArea, renderedLevel;
+
+  function render() {
+    if (!area) return;
+    const value = levelReading(status, area);
+    if (renderedArea === area && Object.is(renderedLevel, value)) return;
+    if (!draw(area, canvas)) {
+      card.hidden = true;
+      return;
+    }
+    renderedArea = area;
+    renderedLevel = value;
+    code.textContent = AREAS[area].code;
+    name.textContent = AREAS[area].name;
+    level.hidden = !(area in LEVEL_TAGS);
+    level.textContent = `액위 ${Number.isFinite(value) ? `${reading(value)}%` : '—'}`;
+    card.setAttribute('aria-label', `${code.textContent} ${name.textContent} 3D 미리보기${level.hidden ? '' : `, ${level.textContent}`}`);
+    card.hidden = false;
+  }
 
   function position() {
     if (card.hidden) return;
@@ -28,8 +48,10 @@ export function mountDiagramPreview(host, svg, draw) {
     const x = (left + right) / 2, y = (top + bottom) / 2;
     const w = card.offsetWidth, h = card.offsetHeight;
     const onScreen = x >= 0 && x <= width && y >= 0 && y <= height;
-    const occupied = (symbol ? [...obstacles, symbol] : obstacles).map(localRect).filter(Boolean);
-    const box = onScreen && placeAnnotation(x - w / 2, top - h - 8, w, h, width, height, occupied, 120);
+    const selected = (symbol ? [anchor, symbol] : [anchor]).map(localRect).filter(Boolean);
+    const occupied = [...obstacles.map(localRect).filter(Boolean), ...selected.slice(1)];
+    const place = (blocked, range) => placeAnnotation(x - w / 2, top - h - 8, w, h, width, height, blocked, range);
+    const box = onScreen && (place(occupied, w / 2) ?? place(selected, w) ?? place(selected.slice(0, 1), w));
     card.toggleAttribute('data-placed', Boolean(box));
     if (!box) return;
 
@@ -51,25 +73,21 @@ export function mountDiagramPreview(host, svg, draw) {
   sizes.observe(svg);
   sizes.observe(card);
   return {
-    show(area) {
-      anchor = chips.get(area);
+    show(next) {
+      anchor = chips.get(next);
       if (host.hidden || !anchor) {
+        area = renderedArea = undefined;
         card.hidden = true;
         return;
       }
-      if (renderedArea !== area) {
-        if (!draw(area, canvas)) {
-          card.hidden = true;
-          return;
-        }
-        renderedArea = area;
-        code.textContent = AREAS[area].code;
-        name.textContent = AREAS[area].name;
-        card.setAttribute('aria-label', `${AREAS[area].code} ${AREAS[area].name} 3D 미리보기`);
-      }
+      area = next;
       symbol = svg.querySelector(`[data-symbol="${area}"]`);
-      card.hidden = false;
+      render();
       position();
+    },
+    update(next) {
+      status = next;
+      render();
     },
     position,
   };

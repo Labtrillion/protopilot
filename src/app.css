@@ -446,19 +446,27 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
 .diagram { position: absolute; inset: 0; }
 .pfd-svg { display: block; width: 100%; height: 100%; }
 .diagram-preview {
-  position: absolute; display: flex; align-items: center; gap: 0.35rem;
-  inline-size: 9.5rem; padding: 0.25rem; pointer-events: none;
+  position: absolute; display: flex; flex-direction: column; pointer-events: none;
+  inline-size: min(18rem, 53%); block-size: min(16rem, 64%);
   border: 1px solid var(--focus); border-radius: 4px; background: var(--surface-raised);
+  box-shadow: 0 2px 6px rgb(36 42 48 / 14%);
 }
 .diagram-preview:not([data-placed]) { visibility: hidden; }
 .diagram-preview::after {
   content: ""; position: absolute; left: var(--leader-x); top: var(--leader-y); width: var(--leader-length);
   height: 1px; transform-origin: left; transform: rotate(var(--leader-angle)); background: var(--focus);
 }
-.diagram-preview canvas { display: block; flex: 0 0 auto; inline-size: 3.5rem; block-size: auto; }
-.diagram-preview span { display: grid; gap: 0.15rem; line-height: 1.2; }
-.diagram-preview code { color: var(--tracked); font: 650 0.75rem var(--mono); }
-.diagram-preview b { color: var(--text); font-size: 0.75rem; word-break: keep-all; }
+.diagram-preview canvas { display: block; flex: 1; min-block-size: 0; inline-size: 100%; object-fit: contain; }
+.diagram-preview-heading {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.1rem 0.4rem;
+  padding: 0.36rem 0.5rem; border-bottom: 1px solid var(--line-soft); line-height: 1.25;
+}
+.diagram-preview code { color: var(--tracked); font: 650 0.85rem var(--mono); }
+.diagram-preview b { font-size: 0.85rem; word-break: keep-all; }
+.diagram-preview-level {
+  padding: 0.28rem 0.5rem; border-top: 1px solid var(--line-soft); color: var(--tracked);
+  font: 650 0.85rem var(--mono); font-variant-numeric: tabular-nums;
+}
 .stage[data-view="2d"] .stage-controls { display: none; }
 .pfd-stream { --display-pipe: var(--pipe); }
 .pfd-stream .pipe-sleeve { stroke: var(--stage); stroke-width: 7; }
@@ -540,6 +548,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .model-toolbar { padding-inline: 0.54rem; }
   .model-toolbar button { padding-inline: 0.43rem; }
   .pfd-svg { min-width: 755px; min-height: 318px; }
+  .diagram-preview { inline-size: min(18rem, 42%); block-size: min(14rem, 76%); }
 }
 @media (max-width: 440px) {
   .telemetry-panel > .panel-head { padding-inline: 0.53rem; }

@@ -227,6 +227,7 @@ export function mountDiagram(host, selectArea, selectCircuit, openValve, selectF
         if (indicator.textContent !== state) indicator.textContent = state;
         node.classList.toggle('in-alarm', Boolean(alarm));
       }
+      preview.update(status);
     },
   };
 }

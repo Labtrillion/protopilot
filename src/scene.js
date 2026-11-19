@@ -130,8 +130,6 @@ function buildEquipment(scene) {
 }
 
 function equipmentPreview(renderer, environment, models) {
-  // Copy the exterior before cutaway groups are attached. Geometry and materials are shared.
-  const exteriors = Object.fromEntries(Object.entries(models).map(([area, model]) => [area, model.clone()]));
   const preview = new T.Scene();
   preview.background = new T.Color(readColor('--surface-raised'));
   preview.environment = environment;
@@ -146,29 +144,29 @@ function equipmentPreview(renderer, environment, models) {
   const originalSize = new T.Vector2();
 
   return (area, canvas) => {
-    const model = exteriors[area];
+    const model = models[area];
     if (!model || renderer.getContext().isContextLost()) return false;
-    bounds.setFromObject(model).getCenter(center);
-    camera.position.copy(center).addScaledVector(viewDirection, bounds.getSize(size).length() + 1);
-    camera.lookAt(center);
-    camera.updateMatrixWorld();
-    bounds.applyMatrix4(camera.matrixWorldInverse).getSize(size);
-    const aspect = canvas.width / canvas.height;
-    camera.top = Math.max(size.y, size.x / aspect) * 0.56;
-    camera.right = camera.top * aspect;
-    camera.bottom = -camera.top;
-    camera.left = -camera.right;
-    camera.updateProjectionMatrix();
-
-    // The main canvas is hidden in 2D. Copy this frame before restoring its size.
+    // Borrow the live model while the main canvas is hidden, including the current liquid geometry.
+    const parent = model.parent;
     renderer.getSize(originalSize);
     preview.add(model);
     try {
+      bounds.setFromObject(model).getCenter(center);
+      camera.position.copy(center).addScaledVector(viewDirection, bounds.getSize(size).length() + 1);
+      camera.lookAt(center);
+      camera.updateMatrixWorld();
+      bounds.applyMatrix4(camera.matrixWorldInverse).getSize(size);
+      const aspect = canvas.width / canvas.height;
+      camera.top = Math.max(size.y, size.x / aspect) * 0.55;
+      camera.right = camera.top * aspect;
+      camera.bottom = -camera.top;
+      camera.left = -camera.right;
+      camera.updateProjectionMatrix();
       renderer.setSize(canvas.width, canvas.height, false);
       renderer.render(preview, camera);
       canvas.getContext('2d').drawImage(renderer.domElement, 0, 0, canvas.width, canvas.height);
     } finally {
-      preview.remove(model);
+      parent.add(model);
       renderer.setSize(originalSize.x, originalSize.y, false);
     }
     return true;
