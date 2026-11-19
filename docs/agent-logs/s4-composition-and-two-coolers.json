@@ -1,0 +1,710 @@
+{
+  "scenario_id": "s4-composition-and-two-coolers",
+  "source": {
+    "deployment_commit": "3ca8f8ba4cd709982f4b8bcb71d8342c067ac24f",
+    "kernel_revision": "852f0c69ab974540750d61bd1dbfafd56bfd80bb",
+    "trace_flow": "live_setpoint_decision",
+    "trace_time_utc": "2026-11-19T22:40:37.440+00:00",
+    "public_job_result": "https://protopilot-rx8cin03n.gobrev.dev/api/setpoint-decision/20261119T223750Z-04feab7-1023",
+    "logged": true
+  },
+  "alarm": {
+    "id": 1023,
+    "time_utc": "2026-11-19T22:39:18.800+00:00",
+    "time_hours": 5.76,
+    "kind": "warning",
+    "label": "반응기 가스 압력 상한 초과",
+    "area": "reactor",
+    "tag": "XMEAS(7)",
+    "value": 2726.862290893707,
+    "limit": 2725,
+    "side": "high",
+    "source": "공정 계측"
+  },
+  "start": {
+    "checkpoint": "1637b8489eef",
+    "run_id": "20261119T223750Z-04feab7",
+    "step": 11520,
+    "time_hours": 5.76,
+    "horizon_hours": 4.0
+  },
+  "simulation_context": {
+    "mode": "mode1",
+    "seed": 1431655765.0,
+    "step_hours": 0.0005,
+    "setpoints": {
+      "reactor_level": 74.99999713824195,
+      "reactor_pressure": 2704.9999999536208,
+      "reactor_temperature": 120.40000000169141,
+      "separator_level": 49.9999987138136,
+      "stripper_level": 49.99999860074171,
+      "pct_g": 53.72397878932856,
+      "production_rate": 22.94873048163469,
+      "ya": 54.954954944157805,
+      "yac": 58.570902527728215
+    },
+    "manual_overrides": {},
+    "evaluation_faults": [
+      "IDV(8)",
+      "IDV(11)",
+      "IDV(12)"
+    ]
+  },
+  "decision_id": "60ecd985ce9c44159a776fa488318cb0",
+  "decision": {
+    "request_id": "60ecd985ce9c44159a776fa488318cb0",
+    "retrieved_rules": [
+      "GEN-1",
+      "GEN-2",
+      "ECO-1",
+      "LVL-1",
+      "COMP-1",
+      "PRESS-1",
+      "TEP-PRESSURE-01"
+    ],
+    "gate": {
+      "reactor_pressure": 0.8666,
+      "reactor_temperature": 0.0236,
+      "reactor_level": 0.0461,
+      "separator_level": 0.0595,
+      "stripper_level": 0.0625,
+      "production_rate": 0.8329,
+      "ya": 0.0138,
+      "yac": 0.0305
+    },
+    "moves": {
+      "reactor_pressure": {
+        "choice": "decrease_small",
+        "move": -0.02,
+        "confidence": 0.6841,
+        "probabilities": {
+          "-4%": 0.2052,
+          "-2%": 0.7631,
+          "+2%": 0.0263,
+          "+4%": 0.0055
+        }
+      },
+      "production_rate": {
+        "choice": "decrease_small",
+        "move": -0.05,
+        "confidence": 0.8318,
+        "probabilities": {
+          "-10%": 0.1244,
+          "-5%": 0.8738,
+          "+5%": 0.0012,
+          "+10%": 0.0006
+        }
+      }
+    },
+    "reason": null,
+    "rag_status": "evidence_retrieved",
+    "rag_event_id": "20261119T223750Z-04feab7:11520",
+    "model": "Zoro-1",
+    "fallback": false,
+    "changes": [
+      {
+        "setpoint": "reactor_pressure",
+        "from": 2705.0,
+        "to": 2650.9,
+        "move": -0.02
+      },
+      {
+        "setpoint": "production_rate",
+        "from": 22.9487,
+        "to": 21.801265,
+        "move": -0.05
+      }
+    ],
+    "status": "ready",
+    "decision_ms": 66961.53
+  },
+  "rag": {
+    "event_id": "20261119T223750Z-04feab7:11520",
+    "status": "evidence_retrieved",
+    "evidence": [
+      {
+        "evidence_id": "EVIDENCE-68B73AE6BCAB",
+        "evidence_type": "SAFETY",
+        "source_type": "authored_review_protocol",
+        "source_file": "tep_studio_braatz_sop.json",
+        "source_page": null
+      },
+      {
+        "evidence_id": "EVIDENCE-8ABF9B0E528F",
+        "evidence_type": "MEASUREMENT",
+        "source_type": "original_technical_reference",
+        "source_file": "README.md",
+        "source_page": null
+      },
+      {
+        "evidence_id": "EVIDENCE-EC64C2137A04",
+        "evidence_type": "SAFETY",
+        "source_type": "original_technical_reference",
+        "source_file": "APMonitor_Instructions.html",
+        "source_page": null
+      },
+      {
+        "evidence_id": "EVIDENCE-1AEA530CF402",
+        "evidence_type": "SAFETY",
+        "source_type": "original_technical_reference",
+        "source_file": "APMonitor_Instructions.html",
+        "source_page": null
+      },
+      {
+        "evidence_id": "EVIDENCE-C97A0C00697C",
+        "evidence_type": "SAFETY",
+        "source_type": "authored_review_protocol",
+        "source_file": "tep_studio_braatz_sop.json",
+        "source_page": null
+      }
+    ]
+  },
+  "branches": [
+    {
+      "id": "hold",
+      "changes": [],
+      "shutdown": null,
+      "window_hours": 4.0,
+      "violation_minutes": 0.0,
+      "final_window_inside": true,
+      "protection_minutes": 0.0,
+      "peak_pressure": 2730.928618820008,
+      "peak_temperature": 121.00557120091564,
+      "temperature_sd": 0.21317492761567963,
+      "peak_separator_level": 53.85933635059133,
+      "mean_production": 22.824471462249058,
+      "alarm_minutes": 52.8,
+      "observed_alarm_minutes": 52.8,
+      "alarm_minutes_by_rule": {
+        "LIMIT XMEAS(7) high": 14.82,
+        "LIMIT XMEAS(12) low": 1.2,
+        "LIMIT XMEAS(9) low": 0.12,
+        "LIMIT XMEAS(9) high": 6.06,
+        "LIMIT XMEAS(15) low": 32.37
+      },
+      "observed_alarm_minutes_by_rule": {
+        "LIMIT XMEAS(7) high": 14.82,
+        "LIMIT XMEAS(12) low": 1.2,
+        "LIMIT XMEAS(9) low": 0.12,
+        "LIMIT XMEAS(9) high": 6.06,
+        "LIMIT XMEAS(15) low": 32.37
+      },
+      "operating_cost": 933.9321598857618,
+      "produced_m3": 91.29788584899623,
+      "production_loss_m3": 0.497036077542532,
+      "cost_per_m3": 10.229504782076287,
+      "production_target": 22.94873048163469
+    },
+    {
+      "id": "rule",
+      "changes": [
+        {
+          "setpoint": "production_rate",
+          "from": 22.9487,
+          "to": 21.801265,
+          "move": -0.05
+        }
+      ],
+      "shutdown": null,
+      "window_hours": 4.0,
+      "violation_minutes": 0.0,
+      "final_window_inside": true,
+      "protection_minutes": 0.0,
+      "peak_pressure": 2730.900929376587,
+      "peak_temperature": 120.99579588238072,
+      "temperature_sd": 0.20950521586057042,
+      "peak_separator_level": 54.82936402423021,
+      "mean_production": 22.53900252123951,
+      "alarm_minutes": 19.02,
+      "observed_alarm_minutes": 19.02,
+      "alarm_minutes_by_rule": {
+        "LIMIT XMEAS(7) high": 14.07,
+        "LIMIT XMEAS(12) low": 0.3,
+        "LIMIT XMEAS(9) low": 0.12,
+        "LIMIT XMEAS(9) high": 4.56
+      },
+      "observed_alarm_minutes_by_rule": {
+        "LIMIT XMEAS(7) high": 14.07,
+        "LIMIT XMEAS(12) low": 0.3,
+        "LIMIT XMEAS(9) low": 0.12,
+        "LIMIT XMEAS(9) high": 4.56
+      },
+      "operating_cost": 850.316219228885,
+      "produced_m3": 90.15601008495804,
+      "production_loss_m3": 1.6389118415807218,
+      "cost_per_m3": 9.431608812630394,
+      "production_target": 21.801265
+    },
+    {
+      "id": "zoro",
+      "changes": [
+        {
+          "setpoint": "reactor_pressure",
+          "from": 2705.0,
+          "to": 2650.9,
+          "move": -0.02
+        },
+        {
+          "setpoint": "production_rate",
+          "from": 22.9487,
+          "to": 21.801265,
+          "move": -0.05
+        }
+      ],
+      "shutdown": null,
+      "window_hours": 4.0,
+      "violation_minutes": 65.82,
+      "final_window_inside": false,
+      "protection_minutes": 0.0,
+      "peak_pressure": 2729.208055280675,
+      "peak_temperature": 120.96921447314058,
+      "temperature_sd": 0.20822302722638386,
+      "peak_separator_level": 54.17702414181185,
+      "mean_production": 22.46489353269726,
+      "alarm_minutes": 128.58,
+      "observed_alarm_minutes": 128.58,
+      "alarm_minutes_by_rule": {
+        "LIMIT XMEAS(7) high": 5.19,
+        "LIMIT XMEAS(12) low": 16.38,
+        "LIMIT XMEAS(9) low": 0.39,
+        "LIMIT XMEAS(9) high": 4.17,
+        "LIMIT XMEAS(15) low": 114.72
+      },
+      "observed_alarm_minutes_by_rule": {
+        "LIMIT XMEAS(7) high": 5.19,
+        "LIMIT XMEAS(12) low": 16.38,
+        "LIMIT XMEAS(9) low": 0.39,
+        "LIMIT XMEAS(9) high": 4.17,
+        "LIMIT XMEAS(15) low": 114.72
+      },
+      "operating_cost": 1161.6453854407016,
+      "produced_m3": 89.85957413078904,
+      "production_loss_m3": 1.9353477957497205,
+      "cost_per_m3": 12.927341317575655,
+      "production_target": 21.801265
+    }
+  ],
+  "feature2": {
+    "request_id": "41d09f707790477f97398a3a6097e49b",
+    "policy_id": "tep-paired-evaluation-v1",
+    "selection": {
+      "scores": {
+        "reactor_level": {
+          "score": 0.3518
+        },
+        "reactor_temperature": {
+          "score": 0.2376
+        },
+        "separator_level": {
+          "score": 0.2321
+        },
+        "stripper_level": {
+          "score": 0.2709
+        },
+        "ya": {
+          "score": 0.1776
+        },
+        "yac": {
+          "score": 0.2257
+        }
+      },
+      "selected_setpoints": [
+        "reactor_level",
+        "stripper_level"
+      ],
+      "selected": [
+        {
+          "id": "reactor_level:decrease_10pct+stripper_level:increase_10pct",
+          "changes": [
+            {
+              "setpoint": "reactor_level",
+              "from": 75.0,
+              "to": 67.5,
+              "move": -0.1,
+              "unit": "%"
+            },
+            {
+              "setpoint": "stripper_level",
+              "from": 50.0,
+              "to": 55.0,
+              "move": 0.1,
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "id": "reactor_level:decrease_10pct+stripper_level:decrease_10pct",
+          "changes": [
+            {
+              "setpoint": "reactor_level",
+              "from": 75.0,
+              "to": 67.5,
+              "move": -0.1,
+              "unit": "%"
+            },
+            {
+              "setpoint": "stripper_level",
+              "from": 50.0,
+              "to": 45.0,
+              "move": -0.1,
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "id": "reactor_level:increase_10pct+stripper_level:decrease_10pct",
+          "changes": [
+            {
+              "setpoint": "reactor_level",
+              "from": 75.0,
+              "to": 82.5,
+              "move": 0.1,
+              "unit": "%"
+            },
+            {
+              "setpoint": "stripper_level",
+              "from": 50.0,
+              "to": 45.0,
+              "move": -0.1,
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "id": "reactor_level:increase_10pct+stripper_level:increase_10pct",
+          "changes": [
+            {
+              "setpoint": "reactor_level",
+              "from": 75.0,
+              "to": 82.5,
+              "move": 0.1,
+              "unit": "%"
+            },
+            {
+              "setpoint": "stripper_level",
+              "from": 50.0,
+              "to": 55.0,
+              "move": 0.1,
+              "unit": "%"
+            }
+          ]
+        }
+      ],
+      "reason": null,
+      "first_choice": "reactor_level:decrease_10pct+stripper_level:increase_10pct",
+      "choice_error": null
+    },
+    "baseline": {
+      "id": "feature1",
+      "changes": [
+        {
+          "setpoint": "reactor_pressure",
+          "from": 2705.0,
+          "to": 2650.9,
+          "move": -0.02
+        },
+        {
+          "setpoint": "production_rate",
+          "from": 22.9487,
+          "to": 21.801265,
+          "move": -0.05
+        }
+      ],
+      "cost_per_m3": 12.927341317575655,
+      "tracking_accuracy": 0.484981,
+      "production_loss_m3": 1.9353477957497205,
+      "produced_m3": 89.85957413078904,
+      "failed_gates": [
+        "final_window_inside"
+      ],
+      "eligible": false
+    },
+    "evaluated": [
+      {
+        "id": "reactor_level:decrease_10pct+stripper_level:increase_10pct",
+        "changes": [
+          {
+            "setpoint": "reactor_pressure",
+            "from": 2705.0,
+            "to": 2650.9,
+            "move": -0.02
+          },
+          {
+            "setpoint": "production_rate",
+            "from": 22.9487,
+            "to": 21.801265,
+            "move": -0.05
+          },
+          {
+            "setpoint": "reactor_level",
+            "from": 75.0,
+            "to": 67.5,
+            "move": -0.1,
+            "unit": "%"
+          },
+          {
+            "setpoint": "stripper_level",
+            "from": 50.0,
+            "to": 55.0,
+            "move": 0.1,
+            "unit": "%"
+          }
+        ],
+        "cost_per_m3": 9.067079709404997,
+        "tracking_accuracy": 0.439349,
+        "production_loss_m3": 1.0772223618125167,
+        "produced_m3": 90.71769956472625,
+        "failed_gates": [
+          "final_window_inside"
+        ],
+        "moves": [
+          {
+            "setpoint": "reactor_level",
+            "from": 75.0,
+            "to": 67.5,
+            "move": -0.1,
+            "unit": "%"
+          },
+          {
+            "setpoint": "stripper_level",
+            "from": 50.0,
+            "to": 55.0,
+            "move": 0.1,
+            "unit": "%"
+          }
+        ],
+        "eligible": false,
+        "reason": "ineligible"
+      },
+      {
+        "id": "reactor_level:decrease_10pct+stripper_level:decrease_10pct",
+        "changes": [
+          {
+            "setpoint": "reactor_pressure",
+            "from": 2705.0,
+            "to": 2650.9,
+            "move": -0.02
+          },
+          {
+            "setpoint": "production_rate",
+            "from": 22.9487,
+            "to": 21.801265,
+            "move": -0.05
+          },
+          {
+            "setpoint": "reactor_level",
+            "from": 75.0,
+            "to": 67.5,
+            "move": -0.1,
+            "unit": "%"
+          },
+          {
+            "setpoint": "stripper_level",
+            "from": 50.0,
+            "to": 45.0,
+            "move": -0.1,
+            "unit": "%"
+          }
+        ],
+        "cost_per_m3": 8.917889582061873,
+        "tracking_accuracy": 0.49024,
+        "production_loss_m3": 0.8617665581354288,
+        "produced_m3": 90.93315536840333,
+        "failed_gates": [],
+        "moves": [
+          {
+            "setpoint": "reactor_level",
+            "from": 75.0,
+            "to": 67.5,
+            "move": -0.1,
+            "unit": "%"
+          },
+          {
+            "setpoint": "stripper_level",
+            "from": 50.0,
+            "to": 45.0,
+            "move": -0.1,
+            "unit": "%"
+          }
+        ],
+        "eligible": true,
+        "reason": "상대가 부적격, 이쪽은 적격"
+      },
+      {
+        "id": "reactor_level:increase_10pct+stripper_level:decrease_10pct",
+        "changes": [
+          {
+            "setpoint": "reactor_pressure",
+            "from": 2705.0,
+            "to": 2650.9,
+            "move": -0.02
+          },
+          {
+            "setpoint": "production_rate",
+            "from": 22.9487,
+            "to": 21.801265,
+            "move": -0.05
+          },
+          {
+            "setpoint": "reactor_level",
+            "from": 75.0,
+            "to": 82.5,
+            "move": 0.1,
+            "unit": "%"
+          },
+          {
+            "setpoint": "stripper_level",
+            "from": 50.0,
+            "to": 45.0,
+            "move": -0.1,
+            "unit": "%"
+          }
+        ],
+        "cost_per_m3": 15.270812076348419,
+        "tracking_accuracy": 0.381907,
+        "production_loss_m3": 2.5833794497815035,
+        "produced_m3": 89.21154247675726,
+        "failed_gates": [
+          "final_window_inside"
+        ],
+        "moves": [
+          {
+            "setpoint": "reactor_level",
+            "from": 75.0,
+            "to": 82.5,
+            "move": 0.1,
+            "unit": "%"
+          },
+          {
+            "setpoint": "stripper_level",
+            "from": 50.0,
+            "to": 45.0,
+            "move": -0.1,
+            "unit": "%"
+          }
+        ],
+        "eligible": false,
+        "reason": "ineligible"
+      },
+      {
+        "id": "reactor_level:increase_10pct+stripper_level:increase_10pct",
+        "changes": [
+          {
+            "setpoint": "reactor_pressure",
+            "from": 2705.0,
+            "to": 2650.9,
+            "move": -0.02
+          },
+          {
+            "setpoint": "production_rate",
+            "from": 22.9487,
+            "to": 21.801265,
+            "move": -0.05
+          },
+          {
+            "setpoint": "reactor_level",
+            "from": 75.0,
+            "to": 82.5,
+            "move": 0.1,
+            "unit": "%"
+          },
+          {
+            "setpoint": "stripper_level",
+            "from": 50.0,
+            "to": 55.0,
+            "move": 0.1,
+            "unit": "%"
+          }
+        ],
+        "cost_per_m3": 15.317771896065167,
+        "tracking_accuracy": 0.39398,
+        "production_loss_m3": 2.789441149444798,
+        "produced_m3": 89.00548077709396,
+        "failed_gates": [
+          "final_window_inside"
+        ],
+        "moves": [
+          {
+            "setpoint": "reactor_level",
+            "from": 75.0,
+            "to": 82.5,
+            "move": 0.1,
+            "unit": "%"
+          },
+          {
+            "setpoint": "stripper_level",
+            "from": 50.0,
+            "to": 55.0,
+            "move": 0.1,
+            "unit": "%"
+          }
+        ],
+        "eligible": false,
+        "reason": "ineligible"
+      }
+    ],
+    "recommended": {
+      "id": "reactor_level:decrease_10pct+stripper_level:decrease_10pct",
+      "changes": [
+        {
+          "setpoint": "reactor_pressure",
+          "from": 2705.0,
+          "to": 2650.9,
+          "move": -0.02
+        },
+        {
+          "setpoint": "production_rate",
+          "from": 22.9487,
+          "to": 21.801265,
+          "move": -0.05
+        },
+        {
+          "setpoint": "reactor_level",
+          "from": 75.0,
+          "to": 67.5,
+          "move": -0.1,
+          "unit": "%"
+        },
+        {
+          "setpoint": "stripper_level",
+          "from": 50.0,
+          "to": 45.0,
+          "move": -0.1,
+          "unit": "%"
+        }
+      ],
+      "cost_per_m3": 8.917889582061873,
+      "tracking_accuracy": 0.49024,
+      "production_loss_m3": 0.8617665581354288,
+      "produced_m3": 90.93315536840333,
+      "failed_gates": [],
+      "moves": [
+        {
+          "setpoint": "reactor_level",
+          "from": 75.0,
+          "to": 67.5,
+          "move": -0.1,
+          "unit": "%"
+        },
+        {
+          "setpoint": "stripper_level",
+          "from": 50.0,
+          "to": 45.0,
+          "move": -0.1,
+          "unit": "%"
+        }
+      ],
+      "eligible": true,
+      "reason": "상대가 부적격, 이쪽은 적격"
+    },
+    "response_scores": {
+      "feature1": 0.7813,
+      "reactor_level:decrease_10pct+stripper_level:decrease_10pct": 0.6179,
+      "reactor_level:decrease_10pct+stripper_level:increase_10pct": 0.557,
+      "reactor_level:increase_10pct+stripper_level:decrease_10pct": 0.5511,
+      "reactor_level:increase_10pct+stripper_level:increase_10pct": 0.5134
+    },
+    "response_score_reason": null,
+    "status": "improved"
+  }
+}
