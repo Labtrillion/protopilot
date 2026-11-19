@@ -553,6 +553,18 @@ dialog::backdrop { background: color-mix(in srgb, var(--text) 24%, transparent);
   .panel-head { min-height: 2.75rem; }
 }
 
+@media (min-width: 960px) and (max-height: 780px) {
+  .setpoint-control {
+    display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content;
+    align-items: center; column-gap: 0.45rem; padding-block: 0.25rem;
+  }
+  .setpoint-readout { grid-column: 1 / -1; }
+  .setpoint-control input { grid-area: 2 / 2; }
+  .setpoint-bounds { display: contents; }
+  .setpoint-bounds span:first-child { grid-area: 2 / 1; }
+  .setpoint-bounds span:last-child { grid-area: 2 / 3; }
+}
+
 @media (max-width: 600px), (pointer: coarse) {
   :root { --control-size: 3.39rem; --map-tag-size: 2.77rem; }
   .topbar { flex-wrap: wrap; }
