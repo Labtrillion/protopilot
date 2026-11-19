@@ -130,6 +130,15 @@ Brev 배포본(`3888bda`)에서 **공정 시간 345.6분**에 발생한 반응�
 
 ## 서비스 아키텍처
 
+<p align="center">
+  <a href="docs/media/alarm-response-architecture.png"><img src="docs/media/alarm-response-architecture.png" width="960" alt="센서값, 조작 이력, SOP를 바탕으로 Zoro-1이 기준안을 선택하고 추가 후보를 시뮬레이션하는 흐름"></a>
+</p>
+
+ProtoPilot은 같은 알람 시점의 공정 상태에서 각 대응안을 공정 시간 4시간 동안 모의 실행하고, 운전 제약 충족 여부와 비용·추종 정확도·생산량을 비교합니다.
+
+<details>
+<summary>상세 아키텍처</summary>
+
 ### 전체 구조
 
 ```mermaid
@@ -245,6 +254,8 @@ sequenceDiagram
 | Feature 2 · `choice` | 선별한 조합 중 무엇을 먼저 시험할까? | 두 개 이상 선별되면 모델이 고른 조합을 맨 앞에서 시뮬레이션합니다. |
 
 Feature 1에서 근거가 부족하거나 두 변경을 확정할 수 없으면 **운영자 검토**로 표시합니다. Feature 2는 선별한 조합을 같은 상태에서 실행합니다. 점수 합이 0이면 기준안 평가만 진행합니다. 공정 제약·복귀·품질·생산량 기준을 충족한 분기들의 단위 생산 비용과 추종 정확도를 비교하고, 두 지표가 동률이면 목표 대비 생산 손실이 작은 쪽을 고릅니다. 적격 개선안이 없으면 적격 기준안을 유지하고, 적격 결과가 없으면 운영자 검토로 보냅니다. [Feature 1 구현](features/feature1-setpoint-gate/README.md) · [Feature 2 구현](features/feature2-sop-ranking/README.md) · [Zoro-1 응답 형식](zoro/README.md)
+
+</details>
 
 ## 데모 시나리오
 
