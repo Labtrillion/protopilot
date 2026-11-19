@@ -17,6 +17,7 @@ const GATES = {
 };
 const BRANCH_NAMES = { hold: '현재 목표 유지', rule: '로컬 규칙', zoro: 'Zoro-1 기준안', feature1: 'Zoro-1 기준안' };
 const quantity = (value, unit = '') => Number.isFinite(value) ? reading(value) + unit : '—';
+const scoreFormat = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 });
 
 function reasonText(reason) {
   return REASONS[reason?.split(':')[0]] ?? (reason ? 'Zoro-1 판단을 완료하지 못했습니다.' : '');
@@ -50,7 +51,8 @@ export function renderZoroSummary(data) {
 
 function renderBranch(branch, data, index, { legacy = false } = {}) {
   const selection = data.feature2.selection;
-  const score = selection?.scores[branch.id]?.score;
+  const score = selection?.scores?.[branch.id]?.score;
+  const displayedScore = Number.isFinite(score) ? `${scoreFormat.format(score * 50)} / 100점` : '—';
   const recommended = data.feature2.recommended?.id === branch.id;
   const name = BRANCH_NAMES[branch.id] ?? `대안 ${index}`;
   const gates = branch.failed_gates?.map((gate) => GATES[gate] ?? gate);
@@ -64,7 +66,7 @@ function renderBranch(branch, data, index, { legacy = false } = {}) {
       <div><dt>추종 정확도</dt><dd>${quantity(branch.tracking_accuracy)}</dd></div>
       <div><dt>누적 생산량</dt><dd>${quantity(branch.produced_m3, ' m³')}</dd></div>
       <div><dt>목표 대비 생산 손실</dt><dd>${quantity(branch.production_loss_m3, ' m³')}</dd></div>
-      ${Number.isFinite(score) ? `<div><dt>Zoro-1 적합도 (score)</dt><dd>${quantity(score)} / 2</dd></div>` : ''}
+      <div><dt>Zoro-1 후보 적합도</dt><dd>${displayedScore}</dd></div>
     </dl>
     ${gates?.length ? `<p class="simulation-unavailable">미충족 · ${escape(gates.join(' · '))}</p>` : ''}
     ${legacy && branch.shutdown ? '<p class="simulation-unavailable">보호 정지</p>' : ''}`}
