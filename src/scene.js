@@ -349,7 +349,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   let trackedArea = '', trackedTag = '';
   let trackedFeed, focusedValve;
   let down = null, framing = false, valveRadius = 14;
-  let panX = 0, cameraDirty = true, lastRender = 0, lastProcessFrame = -Infinity;
+  let panX = 0, panY = 0, cameraDirty = true, lastRender = 0, lastProcessFrame = -Infinity;
   largerTargets.addEventListener('change', () => { cameraDirty = true; });
   let alertAreas = new Set();
   const equipmentBounds = {}, geometryBounds = {};
@@ -370,7 +370,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   const casingAreas = Object.keys(casingBounds);
 
   function updateProjection() {
-    camera.setViewOffset(width, height, -panX * width, 0, width, height);
+    camera.setViewOffset(width, height, -panX * width, -panY * height, width, height);
     cameraDirty = true;
   }
 
@@ -455,7 +455,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       target.getWorldPosition(desired);
       desired.y = Math.max(1.3, desired.y);
     }
-    frame = { zoom, offset: resetOrientation ? initialOffset : null, panX: 0 };
+    frame = { zoom, offset: resetOrientation ? initialOffset : null, panX: 0, panY: 0 };
   }
 
   function moveHighlight() {
@@ -612,6 +612,7 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
       frame.offset = null;
       frame.zoom = null;
       frame.panX = null;
+      frame.panY = null;
     }
   }
 
@@ -649,12 +650,15 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
   renderer.domElement.addEventListener('pointermove', (event) => {
     if (down?.id !== event.pointerId || !(event.buttons & 1)) return;
     const dx = event.clientX - down.x;
-    if (!down.dragged && Math.hypot(dx, event.clientY - down.y) <= clickSlop) return;
+    const dy = event.clientY - down.y;
+    if (!down.dragged && Math.hypot(dx, dy) <= clickSlop) return;
     down.dragged = true;
     down.x = event.clientX;
-    if (event.pointerType === 'touch' || dx === 0) return;
+    down.y = event.clientY;
+    if (event.pointerType === 'touch' || (dx === 0 && dy === 0)) return;
     takeCameraControl();
     panX += dx / width;
+    panY += dy / height;
     updateProjection();
   });
   renderer.domElement.addEventListener('pointerup', (event) => {
@@ -718,7 +722,8 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     const settled = controls.target.distanceTo(desired) < 0.006 &&
       (!frame.offset || cameraOffset.distanceTo(frame.offset) < 0.006) &&
       (frame.zoom === null || Math.abs(camera.zoom - frame.zoom) < 0.006) &&
-      (frame.panX === null || Math.abs(panX - frame.panX) * width < 0.5);
+      (frame.panX === null || Math.abs(panX - frame.panX) * width < 0.5) &&
+      (frame.panY === null || Math.abs(panY - frame.panY) * height < 0.5);
     const ease = motionReduced || settled ? 1 : 1 - Math.exp(-8 * dt);
     controls.target.lerp(desired, ease);
     if (frame.offset) {
@@ -734,7 +739,8 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     camera.position.copy(controls.target).add(cameraOffset);
     if (frame.zoom !== null) camera.zoom = T.MathUtils.lerp(camera.zoom, frame.zoom, ease);
     if (frame.panX !== null) panX = T.MathUtils.lerp(panX, frame.panX, ease);
-    if (frame.zoom !== null || frame.panX !== null) updateProjection();
+    if (frame.panY !== null) panY = T.MathUtils.lerp(panY, frame.panY, ease);
+    if (frame.zoom !== null || frame.panX !== null || frame.panY !== null) updateProjection();
     framing = true;
     controls.update();
     framing = false;
@@ -853,12 +859,12 @@ export function mountScene(container, host, tagList, select, pick, selectCircuit
     },
     // Camera pose for returning to a previous investigation position.
     view() {
-      return { target: controls.target.clone(), offset: camera.position.clone().sub(controls.target), zoom: camera.zoom, panX };
+      return { target: controls.target.clone(), offset: camera.position.clone().sub(controls.target), zoom: camera.zoom, panX, panY };
     },
     restoreView(saved) {
       if (!saved) return;
       desired.copy(saved.target);
-      frame = { zoom: saved.zoom, offset: saved.offset.clone(), panX: saved.panX ?? 0 };
+      frame = { zoom: saved.zoom, offset: saved.offset.clone(), panX: saved.panX ?? 0, panY: saved.panY ?? 0 };
     },
     flow(enabled) {
       showFlow = enabled;
