@@ -4,12 +4,15 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import numpy as np
 from tep_studio.agent.tools import TepToolset
 
+from server.alarm_response import analyze_alarm, run_branch
 from server.assistant import respond
 from server.experiments import create_experiments
 from server.plant import Plant
 from server.recording import ArchivedRecording, encode
+from server.scenario import SPEEDS, STEP_HOURS
 
 
 class LiveScenarioTest(unittest.TestCase):
@@ -69,6 +72,50 @@ class LiveScenarioTest(unittest.TestCase):
             self.assertLess(advance.call_args_list[0].args[0][4], 100)
         self.assertTrue(any(e["tag"] == "XMEAS(7)" and e.get("active") for e in plant.events))
         self.assertTrue(any(e["tag"] == "XMEAS(8)" and e.get("active") for e in plant.events))
+
+    def test_cooling_alarm_branches_from_the_live_checkpoint(self):
+        plant = self.plant
+        plant.command({"op": "cooling_demo"})
+        while plant.running:
+            plant.tick()
+        alarm = next(alarm for alarm in plant.active.values() if alarm["tag"] == "XMEAS(9)")
+        checkpoint = plant.alarm_checkpoints[alarm["id"]]
+        self.assertEqual(checkpoint.step, plant.step)
+        self.assertEqual(plant.active_disturbances(), ["IDV(11)", "IDV(14)"])
+
+        state_before = plant.sim.snapshot().model_bytes
+        with patch("server.alarm_response.HORIZON_HOURS", 10 * STEP_HOURS):
+            baseline = run_branch(checkpoint, "hold")
+        self.assertEqual(plant.sim.snapshot().model_bytes, state_before)
+
+        plant.command({"op": "run", "enabled": True})
+        plant.speed = 15
+        observed = [plant.measurements]
+        with patch.dict(SPEEDS, {15: 1}):
+            for _ in range(10):
+                plant.tick()
+                observed.append(plant.measurements)
+        measurements = np.asarray(observed)
+        self.assertEqual(baseline["peak_temperature"], np.max(measurements[:, 8]))
+        self.assertEqual(baseline["mean_production"], np.mean(measurements[1:, 16]))
+
+        log = self.root / "agent-trace.jsonl"
+        answers = {"answers": {
+            "diagnosis": {"choice": "combined", "confidence": 0.91},
+            "response": {"choice": "reduce_30", "confidence": 0.85},
+        }}
+        with patch.dict("os.environ", {"ZORO_BASE_URL": "http://127.0.0.1:30001"}):
+            with patch("server.assistant._request", return_value=answers) as request:
+                with patch("server.alarm_response.HORIZON_HOURS", 1.01):
+                    result = analyze_alarm(checkpoint, log)
+        self.assertEqual(result["sop"]["id"], "TEP-COOL-01")
+        self.assertEqual(result["decision"]["response"]["choice"], "reduce_30")
+        self.assertEqual(result["start"]["step"], checkpoint.step)
+        self.assertEqual([branch["action_applied"] for branch in result["branches"]], [False, True, True, True])
+        self.assertIn("/v1/systemone", request.call_args.args[0])
+        self.assertNotIn("IDV", encode(request.call_args.args[1]))
+        trace = json.loads(log.read_text())
+        self.assertEqual(trace["simulation_context"]["evaluation_faults"], ["IDV(11)", "IDV(14)"])
 
 
 class ExperimentsTest(unittest.TestCase):
